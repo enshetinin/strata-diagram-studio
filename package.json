@@ -1,0 +1,52 @@
+{
+  "name": "strata-diagram-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "qa:screens": "playwright test --config playwright.qa.config.ts",
+    "fonts": "node scripts/copy-fonts.mjs",
+    "postinstall": "node scripts/copy-fonts.mjs"
+  },
+  "dependencies": {
+    "@fontsource/figtree": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "@xyflow/react": "^12.12.0",
+    "@xyflow/system": "0.0.83",
+    "elkjs": "^0.12.0",
+    "lucide-react": "^1.52.0",
+    "react": "~19.3.0",
+    "react-dom": "~19.3.0",
+    "three": "~0.186.1",
+    "troika-three-text": "^0.52.5",
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.19.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "~0.186.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0",
+    "jsdom": "^30.1.2",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}

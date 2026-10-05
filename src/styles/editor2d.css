@@ -1,0 +1,290 @@
+/* The 2D editor is a light grey sheet in both colour schemes, matching the SVG export. */
+.editor2d {
+  --sheet: #f4f5f8;
+  --sheet-ink: #0d1b2e;
+  --sheet-muted: #5c6675;
+  --sheet-edge: #8a93a3;
+  --sheet-raised: #ffffff;
+  --sheet-rule: #d9dde3;
+  --signal: #2563eb;
+  --focus: #2563eb;
+  --sheet-success: #17663a;
+  --sheet-error: #b42318;
+  --grid-dot: #d3d8e0;
+  --minimap-mask: rgb(244 245 248 / 0.72);
+  position: absolute;
+  inset: 0;
+  background: var(--sheet);
+  color: var(--sheet-ink);
+  color-scheme: light;
+}
+
+.strata-markers {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.editor2d .react-flow {
+  --xy-edge-stroke-default: var(--sheet-ink);
+  --xy-handle-background-color-default: var(--sheet);
+  --xy-handle-border-color-default: var(--sheet-ink);
+  --xy-selection-background-color-default: rgb(37 99 235 / 0.06);
+  --xy-selection-border-default: 1px dashed var(--signal);
+  --xy-controls-button-background-color-default: var(--sheet-raised);
+  --xy-controls-button-border-color-default: var(--sheet-rule);
+  --xy-minimap-background-color-default: var(--sheet-raised);
+  font-family: var(--font-ui);
+}
+
+/* Nodes */
+.strata-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  align-items: start;
+  gap: 0.625rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.6rem 0.75rem 0.5rem 0.875rem;
+  background: var(--sheet-raised);
+  border: 1px solid var(--sheet-ink);
+  border-radius: 0;
+  box-shadow: inset 3px 0 0 var(--accent);
+  overflow: visible;
+}
+
+.strata-node.is-selected {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.strata-node__glyph {
+  width: 1.375rem;
+  height: 1.375rem;
+  margin-top: 0.1rem;
+  fill: none;
+  stroke: var(--sheet-ink);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.strata-node__text {
+  display: grid;
+  min-width: 0;
+}
+
+.strata-node__kind {
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sheet-muted);
+}
+
+.strata-node__label {
+  font-weight: var(--weight-strong);
+  letter-spacing: -0.005em;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.strata-node__provider {
+  font-size: 0.6875rem;
+  color: var(--sheet-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Handles: visible ports, bigger hit area while connecting */
+.strata-handle.react-flow__handle {
+  width: 9px;
+  height: 9px;
+  border-radius: 0;
+  border: 1.5px solid var(--sheet-ink);
+  background: var(--sheet);
+  opacity: 0.55;
+}
+
+.strata-handle--in.react-flow__handle {
+  border-radius: 50%;
+}
+
+.strata-node:hover .strata-handle,
+.react-flow__node.selected .strata-handle,
+.react-flow.connecting .strata-handle {
+  opacity: 1;
+}
+
+.react-flow__handle.connectingto.valid,
+.react-flow__handle.valid {
+  background: var(--sheet-success);
+  border-color: var(--sheet-success);
+  opacity: 1;
+}
+
+.react-flow__handle.connectingto:not(.valid) {
+  background: var(--sheet-error);
+  border-color: var(--sheet-error);
+  opacity: 1;
+}
+
+/* Groups */
+.react-flow__node-group {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
+.react-flow__node-group.selected,
+.react-flow__node-group:focus,
+.react-flow__node-group:focus-visible {
+  box-shadow: none;
+}
+
+.strata-group {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--sheet-edge);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-top: 3px solid var(--accent);
+}
+
+.strata-group[data-depth='1'] {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border-style: solid;
+}
+
+.strata-group[data-depth='2'] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-style: dashed;
+}
+
+.strata-group.is-selected {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.strata-group__handle {
+  display: grid;
+  padding: 0.5rem 0.875rem;
+  cursor: grab;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.strata-group__kind {
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sheet-muted);
+}
+
+.strata-group__label {
+  font-weight: var(--weight-strong);
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+}
+
+.react-flow__node.is-dimmed {
+  opacity: 0.35;
+}
+
+.strata-group__resize-line {
+  border-color: var(--signal) !important;
+}
+
+.strata-group__resize-handle {
+  width: 9px !important;
+  height: 9px !important;
+  border-radius: 0 !important;
+  background: var(--signal) !important;
+  border: 0 !important;
+}
+
+/* Edges */
+.strata-edge-label {
+  position: absolute;
+  padding: 1px 6px;
+  font-size: 0.6875rem;
+  background: var(--sheet);
+  border: 1px solid var(--sheet-rule);
+  border-radius: 0;
+  pointer-events: all;
+  white-space: nowrap;
+  color: var(--sheet-ink);
+}
+
+.strata-edge-label.is-selected {
+  border-color: var(--signal);
+  font-weight: var(--weight-strong);
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  filter: none;
+}
+
+.editor2d__invalid {
+  position: absolute;
+  left: 50%;
+  top: 0.75rem;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.375rem 0.75rem;
+  background: var(--sheet-raised);
+  border: 1px solid var(--sheet-error);
+  border-left-width: 3px;
+  color: var(--sheet-error);
+  font-size: 0.8125rem;
+  z-index: 10;
+}
+
+/* Floating tools */
+.editor-toolbar {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--sheet-raised);
+  border: 1px solid var(--sheet-ink);
+  color: var(--sheet-ink);
+}
+
+.editor-toolbar .icon-button:hover:not(:disabled) {
+  background: var(--sheet);
+}
+
+.editor-toolbar .icon-button {
+  color: var(--sheet-ink);
+}
+
+.editor-toolbar .icon-button[aria-pressed='true'] {
+  background: var(--sheet);
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+.editor-toolbar__sep {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--sheet-rule);
+  margin: 0 2px;
+}
+
+.react-flow__controls {
+  box-shadow: none;
+  border: 1px solid var(--sheet-ink);
+}
+
+.react-flow__minimap {
+  border: 1px solid var(--sheet-rule);
+}

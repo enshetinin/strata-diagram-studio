@@ -1,0 +1,165 @@
+/*
+ * Design tokens — Fluid Tech Editorial.
+ * Light grey page, white header and blocks, navy ink, hairline grey rules.
+ * Oversized light display type against semibold section headings.
+ * Blue only as restrained accent: a pale blue primary action, a blue focus.
+ * Every visual value used by the chrome should come from here.
+ *
+ * Breakpoints (CSS custom properties cannot be used inside @media):
+ *   960px  panels become drawers
+ *   600px  phone layout
+ */
+:root {
+  /* Foundation */
+  --white: #ffffff;
+  --page: #f4f5f8;
+  --ink: #0d1b2e;
+  --accent: #2563eb; /* focus, live state */
+  --accent-soft: #bfd9f7; /* primary action fill */
+  --accent-soft-hover: #a8cbf3;
+  --signal: #2563eb; /* selection, active markers */
+
+  /* Roles */
+  --bg: var(--page);
+  --header: var(--white);
+  --header-rule: transparent; /* white band on grey needs no rule */
+  --block: var(--white);
+  --surface: #e9ecf1; /* hover, chips, disabled fills */
+  --surface-raised: var(--white);
+  --fg: var(--ink);
+  --muted: #5c6675;
+  --edge: #8a93a3; /* control boundaries (3:1) */
+  --edge-soft: #d9dde3; /* hairline rules */
+  --rule: var(--edge-soft);
+  --focus: var(--accent);
+  --signal-wash: rgb(37 99 235 / 0.07);
+
+  --success: #17663a;
+  --warning: #8a5a00;
+  --error: #b42318;
+  --info: #1f4f8a;
+
+  --grid-dot: #d3d8e0;
+  --minimap-mask: rgb(244 245 248 / 0.72);
+  --backdrop: rgb(13 27 46 / 0.4);
+
+  /* Type families */
+  --font-ui: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+  --font-display-face: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Type scale — functional */
+  --font-meta: 0.75rem;
+  --font-small: 0.8125rem;
+  --font-ui-size: 0.9375rem;
+  --font-body: 0.9375rem;
+  --font-lead: 1.125rem;
+  --font-title: 1.5rem;
+
+  /* Type scale — editorial (fluid, rem-based so zoom still works) */
+  --font-h3: 1.375rem;
+  --font-h2: clamp(1.75rem, 1.2rem + 1.4vw, 2.5rem);
+  --font-display: clamp(2.75rem, 1rem + 6cqi, 5rem);
+  --font-metric: clamp(2.75rem, 2rem + 1.5vw, 3.5rem);
+  --leading-display: 1;
+  --leading-heading: 1.12;
+  --leading-body: 1.5;
+  --tracking-display: -0.025em;
+  --tracking-heading: -0.015em;
+  --tracking-eyebrow: 0.1em;
+  --weight-display: 300; /* oversized type is light */
+  --weight-heading: 600; /* section headings are semibold */
+  --weight-strong: 600;
+
+  /* Space */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* Geometry */
+  --radius-0: 0;
+  --hairline: 1px;
+  --control-h: 2.5rem;
+  --control-h-small: 1.875rem;
+
+  /* Shell */
+  --topbar-h: 4rem;
+  --left-w: 21rem;
+  --right-w: 22rem;
+  --gutter: var(--space-6);
+  --measure: 62ch;
+
+  /* Elevation: transient layers only (menus, dialogs, drawers) */
+  --shadow-float: 0 18px 40px -24px rgb(13 27 46 / 0.28);
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-default: 180ms;
+  --duration-structural: 260ms;
+  --duration-reveal: 720ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0b1422;
+    --header: #0f1a2b;
+    --header-rule: #24344c;
+    --block: #132136;
+    --surface: #1b2a40;
+    --surface-raised: #132136;
+    --fg: #eef2f8;
+    --muted: #9aa6b8;
+    --edge: #5b6a82;
+    --edge-soft: #24344c;
+    --accent: #8db4ff;
+    --accent-soft: #bfd9f7;
+    --accent-soft-hover: #d6e7fb;
+    --signal: #8db4ff;
+    --signal-wash: rgb(141 180 255 / 0.1);
+    --success: #6fd39a;
+    --warning: #e8b85c;
+    --error: #ff8f85;
+    --info: #8cbcf0;
+    --grid-dot: #24344c;
+    --minimap-mask: rgb(11 20 34 / 0.7);
+    --backdrop: rgb(0 0 0 / 0.6);
+    --shadow-float: 0 18px 40px -20px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0b1422;
+  --header: #0f1a2b;
+  --header-rule: #24344c;
+  --block: #132136;
+  --surface: #1b2a40;
+  --surface-raised: #132136;
+  --fg: #eef2f8;
+  --muted: #9aa6b8;
+  --edge: #5b6a82;
+  --edge-soft: #24344c;
+  --accent: #8db4ff;
+  --accent-soft: #bfd9f7;
+  --accent-soft-hover: #d6e7fb;
+  --signal: #8db4ff;
+  --signal-wash: rgb(141 180 255 / 0.1);
+  --success: #6fd39a;
+  --warning: #e8b85c;
+  --error: #ff8f85;
+  --info: #8cbcf0;
+  --grid-dot: #24344c;
+  --minimap-mask: rgb(11 20 34 / 0.7);
+  --backdrop: rgb(0 0 0 / 0.6);
+  --shadow-float: 0 18px 40px -20px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
