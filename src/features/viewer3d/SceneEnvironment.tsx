@@ -70,6 +70,11 @@ export function SceneEnvironment() {
   const cz = (min.z + max.z) / 2;
   const key = theme.light.key;
   const shadowExtent = Math.max(width, depth) / 2 + 2;
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    gl.toneMappingExposure = theme.light.exposure;
+    invalidate();
+  }, [gl, theme.light.exposure, invalidate]);
 
   return (
     <>

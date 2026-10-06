@@ -71,7 +71,7 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
           scale={[group.sizeX * 0.98, 0.44, group.sizeZ * 0.98]}
         />
       ) : null}
-      {treatment === 'slab' || treatment === 'deck' || treatment === 'island' ? (
+      {treatment === 'slab' || treatment === 'deck' || treatment === 'island' || treatment === 'plate' ? (
         // Domain accent stripe along the title edge.
         <mesh geometry={unitGeometry('box')} material={materials.flat(dimColor(accent, theme.background, dim))} position={[group.x, group.top + 0.002, minZ + 0.03]} scale={[group.sizeX - 0.16, 0.004, 0.06]} />
       ) : null}
@@ -84,7 +84,7 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
           anchorX="left"
           anchorY="middle"
           outlineWidth={labelSize * 0.16}
-          outlineColor={theme.background}
+          outlineColor={theme.label.outline}
           renderOrder={12}
           material={LABEL_MATERIAL}
           onClick={(event) => selectGroup(event, group.id)}

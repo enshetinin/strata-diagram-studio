@@ -83,7 +83,7 @@ export function fitPerspectiveDistance(framing: Framing, fovDeg: number, aspect:
   const forHeight = (framing.height * margin) / 2 / Math.tan(vfov / 2);
   const forWidth = (framing.width * margin) / 2 / Math.tan(hfov / 2);
   // Extra distance compensates for the near half of the scene being closer.
-  return Math.max(forHeight, forWidth) * 1.12;
+  return Math.max(forHeight, forWidth) * 1.06;
 }
 
 /** Stand-alone camera for an off-screen render at a given aspect ratio. */
@@ -132,14 +132,14 @@ export function computeDefaultView(
 ): DefaultView {
   const framing = frameScene(model, direction);
   const narrow = size.width < 700;
-  const insets = presenting ? { top: 24, bottom: 170, left: 24, right: 24 } : narrow ? { top: 118, bottom: 70, left: 12, right: 12 } : { top: 210, bottom: 136, left: 32, right: 32 };
+  const insets = presenting ? { top: 24, bottom: 170, left: 24, right: 24 } : narrow ? { top: 118, bottom: 70, left: 12, right: 12 } : { top: 200, bottom: 128, left: 32, right: 32 };
   const usable = { width: Math.max(120, size.width - insets.left - insets.right), height: Math.max(120, size.height - insets.top - insets.bottom) };
   const right = new Vector3().crossVectors(new Vector3(0, 1, 0), direction).normalize();
   const up = new Vector3().crossVectors(direction, right).normalize();
   const shiftX = (insets.left - insets.right) / 2;
   const shiftY = (insets.top - insets.bottom) / 2;
   if (projection === 'orthographic') {
-    const zoom = fitOrthoZoom(framing, usable);
+    const zoom = fitOrthoZoom(framing, usable, 1.04);
     const center = framing.center.clone().addScaledVector(right, -shiftX / zoom).addScaledVector(up, shiftY / zoom);
     return { center, zoom, distance: 60, worldPerPixel: 1 / zoom };
   }

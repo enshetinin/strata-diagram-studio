@@ -59,7 +59,7 @@ const NodeMesh = memo(function NodeMesh({ node }: { node: SceneNode }) {
         if (!geometry) return null;
         return (
           <mesh key={role} geometry={geometry} material={material(role)} castShadow={shadows && role !== 'glass'} receiveShadow={shadows} renderOrder={role === 'glass' ? 1 : 0}>
-            {theme.node.edges && (role === 'body' || role === 'accent') ? <Edges threshold={24} color={edgeColor} /> : null}
+            {theme.node.edges && (role === 'body' || role === 'accent') ? <Edges threshold={24} color={edgeColor} transparent={theme.node.edgeOpacity < 1} opacity={theme.node.edgeOpacity} /> : null}
           </mesh>
         );
       })}

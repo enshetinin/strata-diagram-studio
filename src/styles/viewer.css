@@ -14,12 +14,14 @@
  * colophon (description + legend) along the bottom edge.
  */
 .viewer-overlay {
-  --o-fg: #0d1b2e;
-  --o-muted: #5c6675;
+  --o-fg: #0a0a0b;
+  --o-muted: #5f5f66;
   --o-bg: rgb(255 255 255 / 0.9);
-  --o-edge: rgb(13 27 46 / 0.16);
-  --o-disabled: rgb(13 27 46 / 0.08);
-  --o-signal: #2563eb;
+  --o-edge: rgb(10 10 11 / 0.14);
+  --o-disabled: rgb(10 10 11 / 0.06);
+  --o-signal: #1d5bd8;
+  --o-primary: #0a0a0b;
+  --o-primary-fg: #ffffff;
   position: absolute;
   inset: 0;
   container-type: inline-size;
@@ -28,12 +30,14 @@
 }
 
 .viewer-overlay--dark {
-  --o-fg: #eef2f8;
-  --o-muted: #aab4c4;
-  --o-bg: rgb(11 20 34 / 0.78);
-  --o-edge: rgb(238 242 248 / 0.22);
-  --o-disabled: rgb(238 242 248 / 0.1);
-  --o-signal: #8db4ff;
+  --o-fg: #f2f2f3;
+  --o-muted: #a3a3aa;
+  --o-bg: rgb(0 0 0 / 0.72);
+  --o-edge: rgb(242 242 243 / 0.2);
+  --o-disabled: rgb(242 242 243 / 0.08);
+  --o-signal: #7fa8ff;
+  --o-primary: #f2f2f3;
+  --o-primary-fg: #000000;
 }
 
 .viewer-overlay > * {
@@ -45,13 +49,13 @@
   position: absolute;
   top: var(--space-5);
   left: var(--gutter);
-  max-width: min(72cqi, 60rem);
+  max-width: min(100cqi - 26rem, 60rem);
   pointer-events: none;
 }
 
 .scene-title__style {
-  margin-bottom: var(--space-4);
-  color: var(--o-fg);
+  margin-bottom: var(--space-3);
+  color: var(--o-muted);
 }
 
 .scene-title h1 {
@@ -61,13 +65,14 @@
   font-size: var(--font-display);
   line-height: var(--leading-display);
   letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
   animation: text-rise var(--duration-reveal) var(--ease-out) both;
 }
 
 .scene-title__cursor {
   margin-left: 0.02em;
-  font-weight: 700;
-  color: var(--o-fg);
+  font-weight: 300;
+  color: var(--o-signal);
   animation: blink 1.1s steps(1) 3 var(--duration-reveal);
 }
 
@@ -86,26 +91,39 @@
   align-items: center;
 }
 
-/* Square outline controls; disabled ones become a flat grey block. */
+/* Square hairline controls follow the scene; hover inverts. */
 .viewer-actions .icon-button,
 .presentation .icon-button {
   width: var(--control-h);
   min-height: var(--control-h);
   background: transparent;
   color: var(--o-fg);
-  border: var(--hairline) solid var(--o-fg);
+  border: var(--hairline) solid var(--o-edge);
 }
 
 .viewer-actions .icon-button:hover:not(:disabled),
 .presentation .icon-button:hover:not(:disabled) {
-  background: var(--o-bg);
+  background: var(--o-fg);
+  border-color: var(--o-fg);
+  color: var(--o-primary-fg);
 }
 
 .viewer-actions .icon-button:disabled,
 .presentation .icon-button:disabled {
-  background: var(--o-disabled);
-  border-color: transparent;
+  background: transparent;
+  border-color: var(--o-disabled);
   color: var(--o-muted);
+  opacity: 0.6;
+}
+
+.viewer-actions .button--primary {
+  background: var(--o-primary);
+  border-color: var(--o-primary);
+  color: var(--o-primary-fg);
+}
+
+.viewer-actions .button--primary:hover {
+  opacity: 0.86;
 }
 
 .viewer-actions__edit {
@@ -158,7 +176,6 @@
 .legend__title {
   margin-bottom: var(--space-2);
   color: var(--o-muted);
-  font-weight: 400;
 }
 
 .legend ul {
@@ -199,8 +216,9 @@
   margin: 0;
   padding: var(--space-2) var(--space-3);
   background: var(--o-bg);
-  border-left: 2px solid var(--o-signal);
+  border-left: 1px solid var(--o-signal);
   font-size: var(--font-meta);
+  backdrop-filter: blur(8px);
   max-width: 22rem;
 }
 
@@ -223,7 +241,8 @@
   width: min(46rem, calc(100% - 2 * var(--gutter)));
   padding: var(--space-4) var(--space-5) var(--space-4);
   background: var(--o-bg);
-  border-top: var(--hairline) solid var(--o-fg);
+  border-top: var(--hairline) solid var(--o-edge);
+  backdrop-filter: blur(12px);
 }
 
 .presentation__caption {
@@ -233,8 +252,8 @@
 .presentation__caption h2 {
   margin: 0;
   font-family: var(--font-display-face);
-  font-weight: var(--weight-heading);
-  font-size: clamp(1.5rem, 1.1rem + 1.4cqi, 2.25rem);
+  font-weight: 500;
+  font-size: clamp(1.375rem, 1rem + 1.2cqi, 2rem);
   line-height: var(--leading-heading);
   letter-spacing: var(--tracking-heading);
 }
@@ -260,7 +279,7 @@
   top: -2px;
   left: 0;
   width: 100%;
-  height: 3px;
+  height: 2px;
   background: var(--o-signal);
   transform: scaleX(var(--progress, 0));
   transform-origin: left;

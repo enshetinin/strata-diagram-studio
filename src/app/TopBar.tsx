@@ -1,4 +1,4 @@
-import { Download, FileUp, Moon, PanelLeft, PanelRight, Play, Redo2, Save, Sun, Undo2, Workflow } from 'lucide-react';
+import { Download, FileUp, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
 import { useRef } from 'react';
 import { setDocumentInfo } from '../domain/commands';
 import { parseDocumentText } from '../domain/parse';
@@ -24,9 +24,15 @@ function SaveIndicator() {
           ? 'Error al guardar'
           : 'Sin cambios';
   return (
-    <span className={`save-indicator save-indicator--${status.state}`} role="status" title={status.message ?? undefined}>
-      {text}
-    </span>
+    <button
+      type="button"
+      className={`save-indicator save-indicator--${status.state}`}
+      title={status.message ?? 'Guardar ahora (Ctrl+S)'}
+      onClick={() => saveNow() && useUiStore.getState().notify('success', 'Guardado en este navegador.')}
+    >
+      <span role="status">{text}</span>
+      <span className="visually-hidden"> — Guardar ahora (Ctrl+S)</span>
+    </button>
   );
 }
 
@@ -110,7 +116,6 @@ export function TopBar() {
           icon={theme === 'dark' ? Sun : Moon}
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         />
-        <IconButton label="Guardar ahora (Ctrl+S)" icon={Save} onClick={() => saveNow() && useUiStore.getState().notify('success', 'Guardado en este navegador.')} />
         <IconButton label="Importar JSON" icon={FileUp} onClick={() => fileInput.current?.click()} />
         <input
           ref={fileInput}
@@ -136,9 +141,6 @@ export function TopBar() {
         <button type="button" className="button button--primary button--cta" title="Presentar" onClick={() => useUiStore.getState().setPresenting(true)}>
           <Play className="button__compact-icon" size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="button__label">Presentar</span>
-          <span className="button__arrow" aria-hidden="true">
-            →
-          </span>
         </button>
         <IconButton label={rightOpen ? 'Ocultar inspector' : 'Mostrar inspector'} icon={PanelRight} pressed={rightOpen} onClick={() => useUiStore.getState().setRight(!rightOpen)} />
       </div>

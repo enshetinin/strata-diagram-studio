@@ -1,8 +1,9 @@
 /*
- * Design tokens — Fluid Tech Editorial.
- * Light grey page, white header and blocks, navy ink, hairline grey rules.
- * Oversized light display type against semibold section headings.
- * Blue only as restrained accent: a pale blue primary action, a blue focus.
+ * Design tokens — Fluid Tech Editorial, mission-control register.
+ * Neutral greys only (no navy tint): white/near-white in light, true black
+ * in dark. Labels are small uppercase tracked caps; the primary action is a
+ * solid inverted block (ink on light, white on dark). Blue survives only as
+ * a restrained signal: focus, selection, live state.
  * Every visual value used by the chrome should come from here.
  *
  * Breakpoints (CSS custom properties cannot be used inside @media):
@@ -12,36 +13,38 @@
 :root {
   /* Foundation */
   --white: #ffffff;
-  --page: #f4f5f8;
-  --ink: #0d1b2e;
-  --accent: #2563eb; /* focus, live state */
-  --accent-soft: #bfd9f7; /* primary action fill */
-  --accent-soft-hover: #a8cbf3;
-  --signal: #2563eb; /* selection, active markers */
+  --page: #f6f6f6;
+  --ink: #0a0a0b;
+  --accent: #1d5bd8; /* focus, live state */
+  --accent-soft: #cfdcf5; /* text selection */
+  --signal: #1d5bd8; /* selection, active markers */
 
   /* Roles */
-  --bg: var(--page);
+  --bg: #fafafa;
   --header: var(--white);
-  --header-rule: transparent; /* white band on grey needs no rule */
+  --header-rule: #e6e6e6;
   --block: var(--white);
-  --surface: #e9ecf1; /* hover, chips, disabled fills */
+  --surface: #f0f0f1; /* hover, chips, disabled fills */
   --surface-raised: var(--white);
   --fg: var(--ink);
-  --muted: #5c6675;
-  --edge: #8a93a3; /* control boundaries (3:1) */
-  --edge-soft: #d9dde3; /* hairline rules */
+  --muted: #6a6a70;
+  --edge: #8e8e94; /* control boundaries (3:1) */
+  --edge-soft: #e6e6e8; /* hairline rules */
   --rule: var(--edge-soft);
   --focus: var(--accent);
-  --signal-wash: rgb(37 99 235 / 0.07);
+  --signal-wash: rgb(29 91 216 / 0.06);
+  --primary: var(--ink);
+  --primary-fg: var(--white);
+  --primary-hover: #2a2a2e;
 
   --success: #17663a;
   --warning: #8a5a00;
   --error: #b42318;
   --info: #1f4f8a;
 
-  --grid-dot: #d3d8e0;
-  --minimap-mask: rgb(244 245 248 / 0.72);
-  --backdrop: rgb(13 27 46 / 0.4);
+  --grid-dot: #dcdcdf;
+  --minimap-mask: rgb(246 246 246 / 0.72);
+  --backdrop: rgb(0 0 0 / 0.45);
 
   /* Type families */
   --font-ui: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
@@ -59,15 +62,17 @@
   /* Type scale — editorial (fluid, rem-based so zoom still works) */
   --font-h3: 1.375rem;
   --font-h2: clamp(1.75rem, 1.2rem + 1.4vw, 2.5rem);
-  --font-display: clamp(2.75rem, 1rem + 6cqi, 5rem);
+  --font-display: clamp(2.25rem, 0.75rem + 5cqi, 4.25rem);
   --font-metric: clamp(2.75rem, 2rem + 1.5vw, 3.5rem);
   --leading-display: 1;
   --leading-heading: 1.12;
   --leading-body: 1.5;
-  --tracking-display: -0.025em;
+  --tracking-display: 0.005em; /* display is set in caps */
   --tracking-heading: -0.015em;
-  --tracking-eyebrow: 0.1em;
-  --weight-display: 300; /* oversized type is light */
+  --tracking-eyebrow: 0.14em;
+  --tracking-caps: 0.08em; /* buttons, nav, tabs */
+  --weight-display: 500; /* oversized type: medium caps */
+  --weight-metric: 300; /* numerals stay light */
   --weight-heading: 600; /* section headings are semibold */
   --weight-strong: 600;
 
@@ -86,16 +91,17 @@
   --hairline: 1px;
   --control-h: 2.5rem;
   --control-h-small: 1.875rem;
+  --font-caps: 0.75rem;
 
   /* Shell */
-  --topbar-h: 4rem;
+  --topbar-h: 3.75rem;
   --left-w: 21rem;
-  --right-w: 22rem;
+  --right-w: 21rem;
   --gutter: var(--space-6);
   --measure: 62ch;
 
   /* Elevation: transient layers only (menus, dialogs, drawers) */
-  --shadow-float: 0 18px 40px -24px rgb(13 27 46 / 0.28);
+  --shadow-float: 0 18px 40px -24px rgb(0 0 0 / 0.3);
 
   /* Motion */
   --duration-fast: 120ms;
@@ -110,56 +116,60 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #0b1422;
-    --header: #0f1a2b;
-    --header-rule: #24344c;
-    --block: #132136;
-    --surface: #1b2a40;
-    --surface-raised: #132136;
-    --fg: #eef2f8;
-    --muted: #9aa6b8;
-    --edge: #5b6a82;
-    --edge-soft: #24344c;
-    --accent: #8db4ff;
-    --accent-soft: #bfd9f7;
-    --accent-soft-hover: #d6e7fb;
-    --signal: #8db4ff;
-    --signal-wash: rgb(141 180 255 / 0.1);
+    --bg: #050506;
+    --header: #000000;
+    --header-rule: #1c1c1f;
+    --block: #0d0d0f;
+    --surface: #17171a;
+    --surface-raised: #111113;
+    --fg: #f2f2f3;
+    --muted: #8d8d94;
+    --edge: #5a5a61;
+    --edge-soft: #1f1f23;
+    --accent: #7fa8ff;
+    --accent-soft: #263a66;
+    --signal: #7fa8ff;
+    --signal-wash: rgb(127 168 255 / 0.08);
+    --primary: #f2f2f3;
+    --primary-fg: #000000;
+    --primary-hover: #d4d4d8;
     --success: #6fd39a;
     --warning: #e8b85c;
     --error: #ff8f85;
     --info: #8cbcf0;
-    --grid-dot: #24344c;
-    --minimap-mask: rgb(11 20 34 / 0.7);
-    --backdrop: rgb(0 0 0 / 0.6);
-    --shadow-float: 0 18px 40px -20px rgb(0 0 0 / 0.7);
+    --grid-dot: #1f1f23;
+    --minimap-mask: rgb(5 5 6 / 0.7);
+    --backdrop: rgb(0 0 0 / 0.7);
+    --shadow-float: 0 18px 40px -20px rgb(0 0 0 / 0.9);
     color-scheme: dark;
   }
 }
 
 :root[data-theme='dark'] {
-  --bg: #0b1422;
-  --header: #0f1a2b;
-  --header-rule: #24344c;
-  --block: #132136;
-  --surface: #1b2a40;
-  --surface-raised: #132136;
-  --fg: #eef2f8;
-  --muted: #9aa6b8;
-  --edge: #5b6a82;
-  --edge-soft: #24344c;
-  --accent: #8db4ff;
-  --accent-soft: #bfd9f7;
-  --accent-soft-hover: #d6e7fb;
-  --signal: #8db4ff;
-  --signal-wash: rgb(141 180 255 / 0.1);
+  --bg: #050506;
+  --header: #000000;
+  --header-rule: #1c1c1f;
+  --block: #0d0d0f;
+  --surface: #17171a;
+  --surface-raised: #111113;
+  --fg: #f2f2f3;
+  --muted: #8d8d94;
+  --edge: #5a5a61;
+  --edge-soft: #1f1f23;
+  --accent: #7fa8ff;
+  --accent-soft: #263a66;
+  --signal: #7fa8ff;
+  --signal-wash: rgb(127 168 255 / 0.08);
+  --primary: #f2f2f3;
+  --primary-fg: #000000;
+  --primary-hover: #d4d4d8;
   --success: #6fd39a;
   --warning: #e8b85c;
   --error: #ff8f85;
   --info: #8cbcf0;
-  --grid-dot: #24344c;
-  --minimap-mask: rgb(11 20 34 / 0.7);
-  --backdrop: rgb(0 0 0 / 0.6);
-  --shadow-float: 0 18px 40px -20px rgb(0 0 0 / 0.7);
+  --grid-dot: #1f1f23;
+  --minimap-mask: rgb(5 5 6 / 0.7);
+  --backdrop: rgb(0 0 0 / 0.7);
+  --shadow-float: 0 18px 40px -20px rgb(0 0 0 / 0.9);
   color-scheme: dark;
 }
