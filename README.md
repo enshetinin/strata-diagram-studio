@@ -38,7 +38,12 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   vecinos y atenúa el resto. Aislar un grupo desde *Estructura* o el inspector. Restablecer cámara.
 - **2D**: crear (botón «+» o arrastrando desde *Biblioteca*, también sobre un grupo), arrastrar,
   conectar puerto a puerto (feedback verde/rojo y motivo del rechazo), reconectar arrastrando un
-  extremo, agrupar, desagrupar, duplicar, borrar, redimensionar grupos, minimapa y ajuste a rejilla.
+  extremo, mover el tramo central de una relación seleccionada (doble clic lo restablece; el
+  auto-layout también), agrupar, desagrupar, duplicar, borrar, redimensionar grupos, minimapa y
+  ajuste a rejilla. Lienzo tipo Figma: arrastrar sobre el vacío (también dentro de un grupo) dibuja
+  un marco de selección (Mayús lo suma a la selección); los grupos se seleccionan por su etiqueta;
+  pan con espacio + arrastrar, botón central/derecho o scroll del trackpad; zoom con pellizco o
+  Ctrl/⌘ + rueda.
 - **Copiar y pegar**: copia nodos y grupos (con su contenido y las relaciones internas) al
   portapapeles del sistema como JSON, así que funciona entre pestañas y documentos. En 2D se pega
   bajo el cursor y dentro del grupo que haya debajo; sin cursor, desplazado en cascada respecto al

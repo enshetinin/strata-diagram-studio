@@ -102,6 +102,11 @@ export interface DiagramEdge {
   /** Optional 1-based position in the explained walkthrough. */
   order?: number;
   explanation?: string;
+  /**
+   * Manual offset (canvas pixels) of the route's middle segment from its
+   * default midpoint. Relative, so the bend follows when nodes move.
+   */
+  bend?: { x: number; y: number };
 }
 
 /** Rectangle in canvas pixels, local to the parent group (top-left origin). */

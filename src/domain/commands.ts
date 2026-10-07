@@ -467,7 +467,7 @@ export function addEdge(doc: DiagramDocument, input: NewEdge): DiagramDocument {
   return { ...doc, edges: [...doc.edges, edge] };
 }
 
-export type EdgePatch = Partial<Pick<DiagramEdge, 'relation' | 'label' | 'direction' | 'order' | 'explanation'>>;
+export type EdgePatch = Partial<Pick<DiagramEdge, 'relation' | 'label' | 'direction' | 'order' | 'explanation' | 'bend'>>;
 
 export function updateEdge(doc: DiagramDocument, id: string, patch: EdgePatch): DiagramDocument {
   requireEdge(doc, id);
@@ -639,7 +639,10 @@ export function setEdgeStep(doc: DiagramDocument, edgeId: string, stepId: string
 
 // ─── Layout, presentation and metadata ──────────────────────────────────────
 
-/** Applies a computed layout to elements that still exist; unknown ids are ignored. */
+/**
+ * Applies a computed layout to elements that still exist; unknown ids are
+ * ignored. Manual edge bends are dropped: they were tuned for the old layout.
+ */
 export function applyLayout(doc: DiagramDocument, layout: DiagramLayout): DiagramDocument {
   const next = cloneLayout(doc.layout);
   for (const node of doc.nodes) {
@@ -650,7 +653,8 @@ export function applyLayout(doc: DiagramDocument, layout: DiagramLayout): Diagra
     const rect = layout.groups[group.id];
     if (rect) next.groups[group.id] = { ...rect };
   }
-  return { ...doc, layout: next };
+  const edges = doc.edges.some((edge) => edge.bend) ? doc.edges.map(({ bend: _bend, ...edge }) => edge) : doc.edges;
+  return { ...doc, edges, layout: next };
 }
 
 export interface PresentationPatch {

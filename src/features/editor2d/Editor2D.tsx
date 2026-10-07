@@ -7,6 +7,7 @@ import {
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
+  SelectionMode,
   applyNodeChanges,
   useReactFlow,
   type Connection,
@@ -100,7 +101,21 @@ function Canvas2D() {
     applySelectChanges(changes.flatMap((change) => (change.type === 'select' ? [{ ref: { type: 'edge' as const, id: change.id }, selected: change.selected }] : [])));
   }, []);
 
-  const onNodeDragStop = useCallback((_event: unknown, _node: FlowNode, dragged: FlowNode[]) => {
+  // Shift + marquee adds to the current selection instead of replacing it (Figma).
+  const marqueeBase = useRef<ElementRef[] | null>(null);
+  const onSelectionStart = useCallback((event: React.MouseEvent) => {
+    marqueeBase.current = event.shiftKey ? useUiStore.getState().selection : null;
+  }, []);
+  const onSelectionEnd = useCallback(() => {
+    const base = marqueeBase.current;
+    marqueeBase.current = null;
+    if (!base) return;
+    const ui = useUiStore.getState();
+    const merged = [...base, ...ui.selection.filter((ref) => !base.some((item) => item.type === ref.type && item.id === ref.id))];
+    if (merged.length !== ui.selection.length) ui.select(merged);
+  }, []);
+
+  const onNodeDragStop = useCallback((_event: unknown, _node: FlowNode | null, dragged: FlowNode[]) => {
     const current = useDocumentStore.getState().doc;
     const moves: Move[] = dragged
       .map((node) => ({ type: node.type === 'group' ? ('group' as const) : ('node' as const), id: node.id, x: node.position.x, y: node.position.y }))
@@ -198,6 +213,9 @@ function Canvas2D() {
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onNodeDragStop={onNodeDragStop}
+        onSelectionDragStop={(event, dragged) => onNodeDragStop(event, null, dragged)}
+        onSelectionStart={onSelectionStart}
+        onSelectionEnd={onSelectionEnd}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onConnectStart={onConnectStart}
@@ -210,8 +228,15 @@ function Canvas2D() {
         connectionMode={ConnectionMode.Loose}
         connectionRadius={28}
         deleteKeyCode={null}
-        selectionKeyCode="Shift"
-        multiSelectionKeyCode={['Meta', 'Control']}
+        // Figma-style canvas: drag on empty space draws a marquee; pan with
+        // space + drag, middle / right button or trackpad scroll; pinch or
+        // ⌘/Ctrl + wheel zooms.
+        selectionOnDrag
+        selectionMode={SelectionMode.Full}
+        panOnDrag={[1, 2]}
+        panOnScroll
+        selectionKeyCode={null}
+        multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
         snapToGrid={snap}
         snapGrid={[16, 16]}
         fitView

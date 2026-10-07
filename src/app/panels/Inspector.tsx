@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Copy, Crosshair, Plus, Trash2, Ungroup } from 'lucide-react';
+import { ArrowLeftRight, Copy, Crosshair, Plus, Trash2, Undo2, Ungroup } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import * as cmd from '../../domain/commands';
 import { effectiveNarrative } from '../../domain/narrative';
@@ -278,11 +278,16 @@ function EdgeInspector({ edge, doc }: { edge: DiagramEdge; doc: DiagramDocument 
         <button type="button" className="button" onClick={() => run('Invertir relación', (d) => cmd.reverseEdge(d, edge.id))}>
           <ArrowLeftRight size={15} aria-hidden="true" /> Invertir
         </button>
+        {edge.bend ? (
+          <button type="button" className="button" title="Restablecer trazado" onClick={() => run('Restablecer trazado', (d) => cmd.updateEdge(d, edge.id, { bend: undefined }))}>
+            <Undo2 size={15} aria-hidden="true" /> Trazado
+          </button>
+        ) : null}
         <button type="button" className="button button--danger" onClick={deleteSelection}>
           <Trash2 size={15} aria-hidden="true" /> Borrar
         </button>
       </div>
-      <p className="field__hint">Para reconectar, arrastra un extremo de la relación en el editor 2D.</p>
+      <p className="field__hint">En el editor 2D, arrastra un extremo para reconectar o el tramo central para mover el trazado (doble clic lo restablece).</p>
     </>
   );
 }

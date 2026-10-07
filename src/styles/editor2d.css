@@ -135,6 +135,17 @@
 }
 
 /* Groups */
+/* Like Figma frames: the body lets drags through to the canvas so a marquee
+   can start inside a group; the label handle and resizer stay interactive. */
+.react-flow__node.react-flow__node-group {
+  pointer-events: none;
+}
+
+.strata-group__handle,
+.react-flow__node-group .react-flow__resize-control {
+  pointer-events: all;
+}
+
 .react-flow__node-group {
   padding: 0;
   border: 0;
@@ -228,6 +239,32 @@
 
 .react-flow__edge.selected .react-flow__edge-path {
   filter: none;
+}
+
+/* Bending: the selected relation's path and midpoint grip slide its middle segment. */
+.strata-edge-grab {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 18;
+  pointer-events: stroke;
+}
+
+.strata-edge-grip {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: var(--sheet);
+  border: 1.5px solid var(--signal);
+  pointer-events: all;
+}
+
+/* Reconnect anchors: visible on the selected relation so its ends read as draggable. */
+.react-flow__edge.selected .react-flow__edgeupdater {
+  fill: var(--sheet);
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  r: 4.5;
+  cursor: move;
 }
 
 .editor2d__invalid {

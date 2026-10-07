@@ -83,6 +83,7 @@ export const edgeSchema = z.object({
   direction: z.enum(EDGE_DIRECTIONS),
   order: z.number().int().min(1).max(999).optional(),
   explanation: text.optional(),
+  bend: z.object({ x: finite.min(-1e5).max(1e5), y: finite.min(-1e5).max(1e5) }).optional(),
 });
 
 export const rectSchema = z.object({

@@ -3,7 +3,8 @@
  * snapshot): groups, typed node shapes, labels and connectors with the same
  * routing function React Flow uses.
  */
-import { getSmoothStepPath, Position } from '@xyflow/system';
+import { Position } from '@xyflow/system';
+import { strataEdgePath } from '../editor2d/edgePath';
 import { GROUP_KIND_LABEL, KIND_INFO } from '../../domain/catalog';
 import { documentBounds, portOffset, resolveAbsoluteLayout } from '../../domain/geometry';
 import type { DiagramDocument, PortSide } from '../../domain/types';
@@ -99,16 +100,17 @@ export function documentToSvg(doc: DiagramDocument, options: SvgOptions = {}): s
     if (!sourceNode || !targetNode || !sourceRect || !targetRect || !sourcePort || !targetPort) continue;
     const s = portOffset(sourceRect, sourcePort, sourceNode.ports);
     const t = portOffset(targetRect, targetPort, targetNode.ports);
-    const [path, labelX, labelY] = getSmoothStepPath({
-      sourceX: sourceRect.x + s.x + ox,
-      sourceY: sourceRect.y + s.y + oy,
-      sourcePosition: POSITION[sourcePort.side],
-      targetX: targetRect.x + t.x + ox,
-      targetY: targetRect.y + t.y + oy,
-      targetPosition: POSITION[targetPort.side],
-      borderRadius: 10,
-      offset: 20,
-    });
+    const [path, labelX, labelY] = strataEdgePath(
+      {
+        sourceX: sourceRect.x + s.x + ox,
+        sourceY: sourceRect.y + s.y + oy,
+        sourcePosition: POSITION[sourcePort.side],
+        targetX: targetRect.x + t.x + ox,
+        targetY: targetRect.y + t.y + oy,
+        targetPosition: POSITION[targetPort.side],
+      },
+      edge.bend,
+    );
     const stroke = RELATION_STROKE[edge.relation];
     const marker = `url(#arrow-${edge.relation})`;
     out.push(
