@@ -13,7 +13,7 @@
  */
 import {
   BoxGeometry,
-  BufferGeometry,
+  type BufferGeometry,
   CylinderGeometry,
   ExtrudeGeometry,
   IcosahedronGeometry,

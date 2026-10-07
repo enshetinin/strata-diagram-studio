@@ -5,7 +5,7 @@
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { InstancedMesh, Object3D, SphereGeometry, type CurvePath, type Vector3 } from 'three';
+import { type InstancedMesh, Object3D, SphereGeometry, type CurvePath, type Vector3 } from 'three';
 import { buildCurve } from './SceneConnectors';
 import { useScene } from './sceneContext';
 
@@ -40,10 +40,10 @@ export function FlowParticles() {
     mesh.instanceMatrix.needsUpdate = true;
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-place particles only when curves or motion preference change.
   useLayoutEffect(() => {
     place(0);
     invalidate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curves, reducedMotion]);
 
   useFrame((state) => {

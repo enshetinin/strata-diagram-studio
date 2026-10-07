@@ -14,7 +14,7 @@ Before significant implementation or review, read the relevant project files tha
 1. `CLAUDE.md`
 2. `docs/architecture.md`
 3. `docs/coordinates.md` when layout, geometry, ports, routing, camera, 2D, SVG, or 3D is involved
-4. `package.json`, `tsconfig.app.json`, and `eslint.config.js`
+4. `package.json`, `tsconfig.app.json`, and `biome.json`
 5. Relevant source files and their nearest tests
 6. `docs/qa.md` when performance, browser behavior, exports, WebGL, or E2E behavior is involved
 
@@ -147,7 +147,7 @@ When asked to scan, review, or correct code:
 
 ```bash
 pnpm typecheck
-pnpm lint
+pnpm check
 pnpm test
 pnpm build
 ```

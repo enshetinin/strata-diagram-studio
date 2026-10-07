@@ -51,10 +51,9 @@ export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; r
   const appearance = doc.presentation.appearance;
   const projection = doc.presentation.camera.projection === 'style' ? theme.camera.projection : doc.presentation.camera.projection;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only geometry-relevant parts of the document rebuild the model.
   const model = useMemo(
     () => buildSceneModel(doc, { layerHeight: appearance.layerHeight, heightScale: theme.node.heightScale, routeStyle: theme.connector.route }),
-    // Only geometry-relevant parts of the document rebuild the model.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [doc.nodes, doc.groups, doc.edges, doc.annotations, doc.layout, appearance.layerHeight, theme.node.heightScale, theme.connector.route],
   );
   const highlight = useMemo(() => computeHighlight(doc, selection, isolated, presenting ? step : null), [doc, selection, isolated, presenting, step]);

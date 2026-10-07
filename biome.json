@@ -1,0 +1,51 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": { "includes": ["**", "!!**/dist", "!!public"] },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": { "quoteStyle": "single", "semicolons": "always", "trailingCommas": "all" }
+  },
+  "linter": {
+    "enabled": true,
+    "domains": { "react": "recommended", "test": "none" },
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noArrayIndexKey": "off",
+        "useIterableCallbackReturn": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": { "level": "error", "options": { "ignoreRestSiblings": true } },
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": { "level": "warn", "options": { "reportUnnecessaryDependencies": false } }
+      },
+      "style": {
+        "noNonNullAssertion": "off",
+        "noDescendingSpecificity": "off"
+      },
+      "complexity": { "noImportantStyles": "off" },
+      "a11y": {
+        "noStaticElementInteractions": "off",
+        "useSemanticElements": "off",
+        "noAutofocus": "off"
+      }
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": { "source": { "organizeImports": "on" } }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "tests/**"],
+      "linter": { "domains": { "test": "recommended" } }
+    }
+  ]
+}

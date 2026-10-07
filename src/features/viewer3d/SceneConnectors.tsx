@@ -1,7 +1,7 @@
 import { Line } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { memo, useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, ConeGeometry, CurvePath, InstancedMesh, LineCurve3, Matrix4, Object3D, QuadraticBezierCurve3, TubeGeometry, Vector3 } from 'three';
+import { Color, ConeGeometry, CurvePath, type InstancedMesh, LineCurve3, Matrix4, Object3D, QuadraticBezierCurve3, TubeGeometry, Vector3 } from 'three';
 import { RELATION_INFO } from '../../domain/catalog';
 import { useUiStore } from '../../state/uiStore';
 import type { SceneEdge, Vec3 } from '../layout/sceneModel';

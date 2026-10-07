@@ -38,10 +38,9 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
   const insets = useUiStore((state) => state.overlayInsets);
 
   const direction = useMemo(() => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), [theme.camera.azimuthDeg, theme.camera.elevationDeg]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refit only on explicit triggers, not on every model edit.
   const fit = useMemo(
     () => computeDefaultView(model, direction, projection, theme.camera.fov, size, presenting, insets),
-    // Refit only on explicit triggers, not on every model edit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [projection, direction, size.width, size.height, presenting, resetNonce, theme.camera.fov, insets?.top, insets?.bottom],
   );
 
@@ -74,19 +73,20 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
   );
 
   // Initial framing and explicit resets.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: frameAll changes with every fit; only these triggers reframe.
   useEffect(() => {
     userMoved.current = false;
     frameAll(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce, projection, presenting, direction]);
 
   // Keep framing on resize (stage or overlay) unless the user has navigated.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reframe on resize only.
   useEffect(() => {
     if (!userMoved.current) frameAll(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size.width, size.height, insets?.top, insets?.bottom]);
 
   // Focus a node or group requested from the inspector, outline or double click.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run once per focus request, reading the latest camera state.
   useEffect(() => {
     if (!focusRequest) return;
     const { ref } = focusRequest;
@@ -126,7 +126,6 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
       duration: 500,
     };
     invalidate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusRequest]);
 
   useFrame(() => {

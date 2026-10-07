@@ -20,7 +20,9 @@ pnpm dev            # http://localhost:5173
 | `pnpm dev` | servidor de desarrollo Vite |
 | `pnpm build` | typecheck (`tsc -b`) + build de producción en `dist/` |
 | `pnpm preview` | sirve `dist/` |
-| `pnpm lint` | ESLint (typescript-eslint + reglas de hooks) |
+| `pnpm check` | Biome: formato, orden de imports y lint (lo que debe pasar antes de commitear) |
+| `pnpm lint` | solo el lint de Biome (reglas recomendadas + hooks de React) |
+| `pnpm format` | formatea el código con Biome |
 | `pnpm typecheck` | TypeScript strict sin emitir |
 | `pnpm test` | tests unitarios (Vitest) |
 | `pnpm test:e2e` | flujos de navegador (Playwright; la primera vez: `pnpm exec playwright install chromium`) |

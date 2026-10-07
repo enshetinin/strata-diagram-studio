@@ -8,7 +8,7 @@ Chromium de Playwright 1.63 (headless shell 153).
 | Comando | Resultado |
 | --- | --- |
 | `pnpm typecheck` | sin errores |
-| `pnpm lint` | sin errores ni avisos |
+| `pnpm check` | sin errores ni avisos (formato, imports y lint de Biome) |
 | `pnpm test` | 52 tests en 7 ficheros, todos pasan |
 | `pnpm build` | correcto; chunk inicial 137 kB gzip, 3D/2D/ELK/SVG en chunks diferidos |
 | `pnpm test:e2e` | 12 tests, todos pasan (WebGL por SwiftShader) |
