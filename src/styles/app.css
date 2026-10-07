@@ -186,6 +186,8 @@ strong {
 .stage {
   grid-area: stage;
   position: relative;
+  /* Canvas layers (toolbars, React Flow) never rise above the top bar's menus. */
+  isolation: isolate;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -211,6 +213,11 @@ strong {
   min-width: 0;
   height: 100%;
   padding-inline: var(--space-4) var(--space-4);
+}
+
+.topbar__identity .menu {
+  flex: none;
+  margin-left: calc(-1 * var(--space-2));
 }
 
 .topbar__brand {
@@ -566,6 +573,11 @@ strong {
   animation: drop-in var(--duration-default) var(--ease-out);
 }
 
+.menu__list--start {
+  right: auto;
+  left: 0;
+}
+
 .menu__item {
   display: flex;
   width: 100%;
@@ -807,6 +819,11 @@ strong {
 
 .notice > span {
   flex: 1;
+}
+
+.notice__action {
+  align-self: center;
+  white-space: nowrap;
 }
 
 .notice__close {
@@ -1629,6 +1646,45 @@ strong {
   color: var(--muted);
 }
 
+/* ── Empty canvas: guidance set on the grid, the canvas stays droppable ── */
+.canvas-empty {
+  position: absolute;
+  top: 50%;
+  left: clamp(var(--gutter), 10%, 8rem);
+  right: var(--gutter);
+  z-index: 4;
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-width: 30rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.canvas-empty h2 {
+  margin: 0;
+  font-family: var(--font-display-face);
+  font-weight: var(--weight-display);
+  font-size: clamp(1.75rem, 1rem + 2.4vw, 3rem);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+}
+
+.canvas-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.canvas-empty .eyebrow {
+  color: var(--fg);
+}
+
+.canvas-empty .button {
+  margin-top: var(--space-2);
+  pointer-events: auto;
+}
+
 /* ── Viewer states (loading, error, WebGL fallback) ───────────────────── */
 .viewer-state {
   position: relative;
@@ -1897,6 +1953,15 @@ strong {
 @media (max-width: 600px) {
   .segmented {
     gap: var(--space-5);
+  }
+
+  /* The document menu opens from mid-bar: keep it inside the screen. */
+  .menu__list--start {
+    min-width: 14rem;
+  }
+
+  .menu__list--start .menu__hint {
+    display: none;
   }
 
   /* Every action stays reachable; labels collapse to icons with accessible names. */

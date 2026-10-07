@@ -380,3 +380,22 @@
     justify-content: flex-end;
   }
 }
+
+/* Empty diagram: follows the scene's colours; the scene stays orbitable around it. */
+.viewer-overlay > .canvas-empty {
+  pointer-events: none;
+}
+
+.viewer-overlay .canvas-empty .eyebrow {
+  color: var(--o-fg);
+}
+
+.viewer-overlay .canvas-empty p {
+  color: var(--o-muted);
+}
+
+.viewer-overlay .canvas-empty .button--primary {
+  background: var(--o-primary);
+  border-color: var(--o-primary);
+  color: var(--o-primary-fg);
+}

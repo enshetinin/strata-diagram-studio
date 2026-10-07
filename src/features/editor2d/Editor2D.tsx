@@ -34,6 +34,7 @@ import { StrataNode } from './StrataNode';
 import { accent2d } from './visual';
 import { EditorToolbar } from './EditorToolbar';
 import { LIBRARY_MIME } from './dnd';
+import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 
 // Stable references outside render, as React Flow requires.
 const nodeTypes: NodeTypes = { strata: StrataNode, group: GroupNode };
@@ -262,6 +263,13 @@ function Canvas2D() {
         <p className="editor2d__invalid" role="status">
           Conexión no válida: {invalidReason}
         </p>
+      ) : null}
+      {doc.nodes.length === 0 && doc.groups.length === 0 ? (
+        <CanvasEmpty
+          title="Empieza por un componente"
+          text="Arrastra componentes desde Biblioteca al lienzo o pulsa «+» junto a cada uno. Después conéctalos arrastrando de un punto de conexión a otro."
+          action={{ label: 'Abrir Biblioteca', onClick: () => useUiStore.getState().setLeft(true, 'library') }}
+        />
       ) : null}
       <EditorToolbar />
     </div>

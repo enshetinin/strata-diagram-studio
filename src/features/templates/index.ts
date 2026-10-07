@@ -1,4 +1,5 @@
 import type { DiagramDocument, StyleId } from '../../domain/types';
+import { DiagramBuilder } from './builder';
 import { awsLoadTesting } from './catalog/awsLoadTesting';
 import { dataPlatform } from './catalog/dataPlatform';
 import { edgeIot } from './catalog/edgeIot';
@@ -78,6 +79,11 @@ export const TEMPLATES: readonly TemplateInfo[] = [
 
 export function findTemplate(id: string): TemplateInfo | undefined {
   return TEMPLATES.find((template) => template.id === id || template.category === id);
+}
+
+/** An empty diagram to start from scratch; a fresh id so it never matches a template. */
+export function blankDocument(): DiagramDocument {
+  return new DiagramBuilder({ id: `doc-${Date.now().toString(36)}`, name: 'Diagrama sin título', description: '', styleId: 'porcelain' }).build();
 }
 
 export function defaultDocument(): DiagramDocument {

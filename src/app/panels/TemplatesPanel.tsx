@@ -9,7 +9,7 @@ export function TemplatesPanel() {
   const currentId = useDocumentStore((state) => state.doc.id);
   return (
     <div className="panel-section">
-      <p className="panel-intro">Seis arquitecturas ilustrativas con topología y composición propias. Cargar una plantilla se puede deshacer.</p>
+      <p className="panel-intro">Seis arquitecturas ilustrativas para empezar. Abrir una <strong>reemplaza el diagrama actual</strong> (solo se guarda uno en este navegador); se puede deshacer.</p>
       <ul className="template-list">
         {TEMPLATES.map((template) => {
           const theme = THEMES[template.recommendedStyle];

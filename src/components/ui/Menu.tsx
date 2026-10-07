@@ -6,8 +6,12 @@ export interface MenuItem {
   onSelect: () => void;
 }
 
-/** Menu button with arrow-key navigation and Escape to close. */
-export function Menu({ label, icon, items }: { label: string; icon: ReactNode; items: MenuItem[] }) {
+/**
+ * Menu button with arrow-key navigation and Escape to close. `compact`
+ * renders an icon-only trigger (label as accessible name and tooltip) whose
+ * list opens towards the right.
+ */
+export function Menu({ label, icon, items, compact = false }: { label: string; icon: ReactNode; items: MenuItem[]; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -40,12 +44,22 @@ export function Menu({ label, icon, items }: { label: string; icon: ReactNode; i
 
   return (
     <div className="menu" ref={root} onKeyDown={onKeyDown}>
-      <button ref={button} type="button" className="button" aria-haspopup="menu" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
+      <button
+        ref={button}
+        type="button"
+        className={compact ? 'icon-button icon-button--small' : 'button'}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-label={compact ? label : undefined}
+        title={compact ? label : undefined}
+        onClick={() => setOpen(!open)}
+      >
         {icon}
-        <span>{label}</span>
+        {compact ? null : <span>{label}</span>}
       </button>
       {open ? (
-        <div className="menu__list" role="menu" id={id} aria-label={label}>
+        <div className={`menu__list${compact ? ' menu__list--start' : ''}`} role="menu" id={id} aria-label={label}>
           {items.map((item) => (
             <button
               key={item.label}

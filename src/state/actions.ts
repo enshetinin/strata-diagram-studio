@@ -246,12 +246,18 @@ export function pasteText(text: string): boolean {
   return true;
 }
 
+/**
+ * Swaps the whole document. Only one diagram is kept in this browser, so the
+ * notice always says the previous one was replaced and offers to undo.
+ */
 export function replaceDocument(next: DiagramDocument, label: string, message?: string): boolean {
-  const ok = run(label, () => next, message);
+  const previous = doc().name;
+  const ok = run(label, () => next);
   if (ok) {
     ui().clearSelection();
     ui().isolateGroup(null);
     ui().resetCamera();
+    ui().notify('success', `${message ?? `«${next.name}» abierto.`} Reemplaza a «${previous}».`, { label: 'Deshacer', run: () => useDocumentStore.getState().undo() });
   }
   return ok;
 }

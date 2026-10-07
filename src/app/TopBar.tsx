@@ -1,4 +1,4 @@
-import { Download, FileUp, Link2, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
+import { ChevronDown, Download, Link2, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
 import { useRef } from 'react';
 import { setDocumentInfo } from '../domain/commands';
 import { parseDocumentText } from '../domain/parse';
@@ -10,6 +10,7 @@ import { IconButton } from '../components/ui/IconButton';
 import { Menu } from '../components/ui/Menu';
 import { StrataMark } from '../components/ui/FluidLines';
 import { exportJson, exportSvgFile } from '../features/export/exportActions';
+import { blankDocument } from '../features/templates';
 import { saveNow, useSaveStatus } from '../features/persistence/autosave';
 import { usePngDialog } from './ExportPngDialog';
 import { useImportErrors } from './ImportErrorDialog';
@@ -60,6 +61,14 @@ function DocumentName() {
   );
 }
 
+function newBlankDiagram() {
+  if (!replaceDocument(blankDocument(), 'Nuevo diagrama', 'Diagrama en blanco creado.')) return;
+  // Building starts in 2D, next to the component library.
+  const ui = useUiStore.getState();
+  ui.setMode('2d');
+  ui.setLeft(true, 'library');
+}
+
 export function TopBar() {
   const mode = useUiStore((state) => state.mode);
   const setMode = useUiStore((state) => state.setMode);
@@ -96,6 +105,19 @@ export function TopBar() {
           /
         </span>
         <DocumentName />
+        {!readOnly ? (
+          <Menu
+            compact
+            label="Documento: nuevo, plantilla, importar"
+            icon={<ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />}
+            items={[
+              { label: 'Nuevo diagrama en blanco', hint: 'reemplaza el actual', onSelect: newBlankDiagram },
+              { label: 'Abrir plantilla…', hint: 'seis ejemplos', onSelect: () => useUiStore.getState().setLeft(true, 'templates') },
+              { label: 'Generar variación…', hint: 'por reglas', onSelect: () => useUiStore.getState().setLeft(true, 'generate') },
+              { label: 'Importar JSON…', hint: 'desde un archivo', onSelect: () => fileInput.current?.click() },
+            ]}
+          />
+        ) : null}
       </div>
 
       <div className="topbar__primary">
@@ -123,7 +145,6 @@ export function TopBar() {
           icon={theme === 'dark' ? Sun : Moon}
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         />
-        {!readOnly ? <IconButton label="Importar JSON" icon={FileUp} onClick={() => fileInput.current?.click()} /> : null}
         <input
           ref={fileInput}
           type="file"

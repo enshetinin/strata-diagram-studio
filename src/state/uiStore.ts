@@ -11,6 +11,8 @@ export interface Notice {
   id: number;
   tone: 'info' | 'success' | 'warning' | 'error';
   text: string;
+  /** One follow-up, e.g. undoing what the notice reports. */
+  action?: { label: string; run: () => void };
 }
 
 interface UiState {
@@ -47,7 +49,7 @@ interface UiState {
   isolateGroup(groupId: string | null): void;
   focus(ref: ElementRef): void;
   resetCamera(): void;
-  notify(tone: Notice['tone'], text: string): void;
+  notify(tone: Notice['tone'], text: string, action?: Notice['action']): void;
   dismiss(id: number): void;
   setWebgl(status: WebglStatus, message?: string | null): void;
   requestGroupDeletion(groupIds: string[] | null): void;
@@ -92,7 +94,7 @@ export const useUiStore = create<UiState>()((set) => ({
   isolateGroup: (isolatedGroupId) => set({ isolatedGroupId }),
   focus: (ref) => set((state) => ({ focusRequest: { ref, nonce: (state.focusRequest?.nonce ?? 0) + 1 } })),
   resetCamera: () => set((state) => ({ cameraResetNonce: state.cameraResetNonce + 1 })),
-  notify: (tone, text) => set((state) => ({ notices: [...state.notices.slice(-3), { id: ++noticeId, tone, text }] })),
+  notify: (tone, text, action) => set((state) => ({ notices: [...state.notices.slice(-3), { id: ++noticeId, tone, text, ...(action ? { action } : {}) }] })),
   dismiss: (id) => set((state) => ({ notices: state.notices.filter((notice) => notice.id !== id) })),
   setWebgl: (webgl, message = null) => set({ webgl, webglMessage: message }),
   requestGroupDeletion: (pendingGroupDeletion) => set({ pendingGroupDeletion }),

@@ -10,6 +10,7 @@ import { effectiveNarrative } from '../../domain/narrative';
 import type { NodeKind, RelationKind } from '../../domain/types';
 import { useDocumentStore } from '../../state/documentStore';
 import { selectPrimary, useUiStore } from '../../state/uiStore';
+import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 import { IconButton } from '../../components/ui/IconButton';
 import { KIND_GLYPH, RELATION_STROKE } from '../editor2d/visual';
 import { THEMES } from './themes';
@@ -187,7 +188,21 @@ export function ViewerOverlay() {
         </p>
       ) : null}
 
-      {!presenting ? (
+      {doc.nodes.length === 0 && !presenting ? (
+        <CanvasEmpty
+          title="Aún no hay nada que ver"
+          text="La vista 3D se construye sola a partir del diagrama. Añade componentes en el editor 2D."
+          action={{
+            label: readOnly ? 'Ver en 2D' : 'Empezar en 2D',
+            onClick: () => {
+              useUiStore.getState().setMode('2d');
+              if (!readOnly) useUiStore.getState().setLeft(true, 'library');
+            },
+          }}
+        />
+      ) : null}
+
+      {!presenting && doc.nodes.length > 0 ? (
         <footer className="scene-colophon">
           {doc.description ? <p className="scene-title__description">{doc.description}</p> : null}
           <Legend kinds={kinds} relations={relations} />
