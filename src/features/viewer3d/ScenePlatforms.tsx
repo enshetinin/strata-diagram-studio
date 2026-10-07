@@ -7,7 +7,7 @@ import { dimColor } from './materials';
 import { unitGeometry } from './nodeShapes';
 import { DIM_AMOUNT, FONT_BOLD, FONT_REGULAR, LABEL_MATERIAL, useScene } from './sceneContext';
 import { viewDirection } from './cameraFit';
-import { placeGroupTitles } from './labelPlacement';
+import { placeGroupTitles, titleSize } from './labelPlacement';
 import { accentColor } from './themes';
 
 function selectGroup(event: ThreeEvent<MouseEvent>, id: string) {
@@ -97,13 +97,11 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
   );
 });
 
-const titleSize = (labelSize: number, group: SceneGroup) => Math.min(0.5, labelSize * (group.depth === 0 ? 1.05 : 0.95));
-
 export function ScenePlatforms() {
   const { model, theme, labelSize } = useScene();
   const titles = useMemo(
-    () => placeGroupTitles(model.groups, model.nodes, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), labelSize, (group) => titleSize(labelSize, group)),
-    [model.groups, model.nodes, theme.camera.azimuthDeg, theme.camera.elevationDeg, labelSize],
+    () => placeGroupTitles(model.groups, model.nodes, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), labelSize, (group) => titleSize(labelSize, group), model.edges),
+    [model.groups, model.nodes, model.edges, theme.camera.azimuthDeg, theme.camera.elevationDeg, labelSize],
   );
   return (
     <group name="platforms">

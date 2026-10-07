@@ -32,6 +32,8 @@ interface UiState {
   webgl: WebglStatus;
   webglMessage: string | null;
   pendingGroupDeletion: string[] | null;
+  /** Pixels of the 3D stage covered by the title (top) and colophon (bottom); null until measured. */
+  overlayInsets: { top: number; bottom: number } | null;
 
   setMode(mode: ViewMode): void;
   select(refs: ElementRef[]): void;
@@ -49,6 +51,7 @@ interface UiState {
   dismiss(id: number): void;
   setWebgl(status: WebglStatus, message?: string | null): void;
   requestGroupDeletion(groupIds: string[] | null): void;
+  setOverlayInsets(insets: { top: number; bottom: number } | null): void;
 }
 
 let noticeId = 0;
@@ -71,6 +74,7 @@ export const useUiStore = create<UiState>()((set) => ({
   webgl: 'unknown',
   webglMessage: null,
   pendingGroupDeletion: null,
+  overlayInsets: null,
 
   setMode: (mode) => set({ mode }),
   select: (refs) => set({ selection: refs }),
@@ -92,6 +96,8 @@ export const useUiStore = create<UiState>()((set) => ({
   dismiss: (id) => set((state) => ({ notices: state.notices.filter((notice) => notice.id !== id) })),
   setWebgl: (webgl, message = null) => set({ webgl, webglMessage: message }),
   requestGroupDeletion: (pendingGroupDeletion) => set({ pendingGroupDeletion }),
+  setOverlayInsets: (overlayInsets) =>
+    set((state) => (state.overlayInsets?.top === overlayInsets?.top && state.overlayInsets?.bottom === overlayInsets?.bottom ? state : { overlayInsets })),
 }));
 
 export function isSelected(selection: ElementRef[], ref: ElementRef): boolean {

@@ -120,7 +120,8 @@ export interface DefaultView {
 
 /**
  * Default framing for the live canvas: fits the content inside the area not
- * covered by the title (top) and legend / captions (bottom).
+ * covered by the title (top) and legend / captions (bottom). `measured`
+ * carries the overlay's real footprint; without it, typical values are used.
  */
 export function computeDefaultView(
   model: SceneModel,
@@ -129,10 +130,19 @@ export function computeDefaultView(
   fov: number,
   size: { width: number; height: number },
   presenting: boolean,
+  measured: { top: number; bottom: number } | null = null,
 ): DefaultView {
   const framing = frameScene(model, direction);
   const narrow = size.width < 700;
   const insets = presenting ? { top: 24, bottom: 170, left: 24, right: 24 } : narrow ? { top: 118, bottom: 70, left: 12, right: 12 } : { top: 200, bottom: 128, left: 32, right: 32 };
+  if (measured && !presenting) {
+    // Never let the overlay squeeze the scene below ~40% of the stage height.
+    const room = Math.max(0, size.height * 0.6);
+    const total = measured.top + measured.bottom;
+    const k = total > room ? room / total : 1;
+    insets.top = measured.top * k;
+    insets.bottom = measured.bottom * k;
+  }
   const usable = { width: Math.max(120, size.width - insets.left - insets.right), height: Math.max(120, size.height - insets.top - insets.bottom) };
   const right = new Vector3().crossVectors(new Vector3(0, 1, 0), direction).normalize();
   const up = new Vector3().crossVectors(direction, right).normalize();
