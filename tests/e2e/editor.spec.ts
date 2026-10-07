@@ -133,7 +133,8 @@ test.describe('2D editing reflected in 3D', () => {
 
   test('local rule-based generator previews before inserting', async ({ page }) => {
     await freshStart(page, '?template=aws-load-testing');
-    await page.getByRole('tab', { name: 'Generar' }).click();
+    await page.getByRole('button', { name: /^Documento/ }).click();
+    await page.getByRole('menuitem', { name: /Generar variación/ }).click();
     await expect(page.getByText('Generador local basado en reglas.')).toBeVisible();
     await page.getByRole('button', { name: 'Generar vista previa' }).click();
     const dialog = page.getByRole('dialog', { name: 'Vista previa' });

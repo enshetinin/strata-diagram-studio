@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type { ElementRef } from '../domain/types';
 
 export type ViewMode = '3d' | '2d';
-export type LeftTab = 'templates' | 'library' | 'outline' | 'generate';
+export type LeftTab = 'outline' | 'library';
 export type RightTab = 'inspector' | 'narrative' | 'appearance';
 export type WebglStatus = 'unknown' | 'ok' | 'unsupported' | 'lost' | 'error';
 
@@ -64,7 +64,7 @@ export const useUiStore = create<UiState>()((set) => ({
   selection: [],
   leftOpen: !narrow(),
   rightOpen: !narrow(),
-  leftTab: 'templates',
+  leftTab: 'outline',
   rightTab: 'inspector',
   presenting: false,
   presentationStep: 0,

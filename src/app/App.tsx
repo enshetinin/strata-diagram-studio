@@ -6,6 +6,7 @@ import { ExportPngDialog } from './ExportPngDialog';
 import { GenerationPreviewDialog } from './GenerationPreviewDialog';
 import { GroupDeleteDialog } from './GroupDeleteDialog';
 import { ImportErrorDialog } from './ImportErrorDialog';
+import { NewDocumentDialog } from './NewDocumentDialog';
 import { Notices } from './Notices';
 import { ShareDialog } from './ShareDialog';
 import { SharedViewBanner } from './SharedViewBanner';
@@ -76,6 +77,7 @@ export function App() {
       <Notices />
       <GroupDeleteDialog />
       <ImportErrorDialog />
+      <NewDocumentDialog />
       <GenerationPreviewDialog />
       <ExportPngDialog />
       <ShareDialog />

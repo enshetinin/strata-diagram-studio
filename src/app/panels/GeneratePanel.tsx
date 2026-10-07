@@ -1,12 +1,12 @@
 /**
- * Two separate actions, clearly labelled:
- *  - "Nueva arquitectura" changes topology (local rules, or a remote provider).
- *  - "Nueva apariencia" changes style/layout and keeps the graph.
+ * New architecture: local rules (category, complexity, seed) or a text
+ * description sent to a configured provider. Restyling an existing graph
+ * lives in the Appearance panel.
  */
 import { Dices, Loader2 } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
-import { newAppearance, replaceDocument } from '../../state/actions';
-import { CheckboxField, SelectField } from '../../components/ui/fields';
+import { replaceDocument } from '../../state/actions';
+import { SelectField } from '../../components/ui/fields';
 import { LocalRuleGenerator } from '../../features/generation/localGenerator';
 import { cancelGeneration, runGeneration, useGeneration } from '../../features/generation/pipeline';
 import { configuredRemoteGenerator } from '../../features/generation/remoteGenerator';
@@ -19,13 +19,13 @@ import { normalizeSeed } from '../../features/templates/random';
 const local = new LocalRuleGenerator();
 
 /** A fresh seed comes from a user click, never from rendering. */
-function freshSeed(): number {
+export function freshSeed(): number {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   return (values[0] ?? 1) % 100_000;
 }
 
-function SeedInput({ value, onChange, label }: { value: number; onChange: (seed: number) => void; label: string }) {
+export function SeedInput({ value, onChange, label }: { value: number; onChange: (seed: number) => void; label: string }) {
   const id = useId();
   return (
     <div className="field field--inline">
@@ -38,12 +38,11 @@ function SeedInput({ value, onChange, label }: { value: number; onChange: (seed:
   );
 }
 
-export function GeneratePanel() {
+/** `onHandOff` runs when a template takes over; generated previews close the dialog themselves. */
+export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
   const [category, setCategory] = useState<TemplateCategory>('rag');
   const [complexity, setComplexity] = useState<Complexity>(2);
   const [seed, setSeed] = useState(7);
-  const [lookSeed, setLookSeed] = useState(3);
-  const [relayout, setRelayout] = useState(true);
   const [prompt, setPrompt] = useState('');
   const [submitted, setSubmitted] = useState<string | null>(null);
   const promptId = useId();
@@ -78,18 +77,6 @@ export function GeneratePanel() {
           <span className="button__arrow" aria-hidden="true">
             →
           </span>
-        </button>
-      </section>
-
-      <section aria-labelledby="gen-look">
-        <h3 id="gen-look" className="panel-heading">
-          Nueva apariencia
-        </h3>
-        <p className="panel-intro">Cambia estilo, altura de capas, espaciado y dirección del layout. Conserva nodos, grupos, relaciones e IDs.</p>
-        <SeedInput label="Seed" value={lookSeed} onChange={setLookSeed} />
-        <CheckboxField label="Recalcular layout con ELK" checked={relayout} onChange={setRelayout} />
-        <button type="button" className="button button--block" onClick={() => void newAppearance(lookSeed, relayout)}>
-          Aplicar nueva apariencia
         </button>
       </section>
 
@@ -132,7 +119,11 @@ export function GeneratePanel() {
                   {suggestions.map((template) => (
                     <li key={template.id}>
                       <span>{template.name}</span>
-                      <button type="button" className="link-button" onClick={() => replaceDocument(template.create(), `Cargar plantilla ${template.name}`)}>
+                      <button type="button" className="link-button" onClick={() => {
+                          onHandOff();
+                          replaceDocument(template.create(), `Cargar plantilla ${template.name}`);
+                        }}
+                      >
                         Abrir plantilla
                       </button>
                       <button

@@ -14,6 +14,7 @@ import { blankDocument } from '../features/templates';
 import { saveNow, useSaveStatus } from '../features/persistence/autosave';
 import { usePngDialog } from './ExportPngDialog';
 import { useImportErrors } from './ImportErrorDialog';
+import { openNewDocument } from './NewDocumentDialog';
 import { useShareDialog } from './ShareDialog';
 
 function SaveIndicator() {
@@ -96,7 +97,7 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar__identity">
-        <IconButton label={leftOpen ? 'Ocultar panel de plantillas' : 'Mostrar panel de plantillas'} icon={PanelLeft} pressed={leftOpen} onClick={() => useUiStore.getState().setLeft(!leftOpen)} />
+        <IconButton label={leftOpen ? 'Ocultar estructura y biblioteca' : 'Mostrar estructura y biblioteca'} icon={PanelLeft} pressed={leftOpen} onClick={() => useUiStore.getState().setLeft(!leftOpen)} />
         <p className="topbar__brand" aria-hidden="true">
           <StrataMark />
           <span className="topbar__brand-word">Strata</span>
@@ -112,8 +113,8 @@ export function TopBar() {
             icon={<ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />}
             items={[
               { label: 'Nuevo diagrama en blanco', hint: 'reemplaza el actual', onSelect: newBlankDiagram },
-              { label: 'Abrir plantilla…', hint: 'seis ejemplos', onSelect: () => useUiStore.getState().setLeft(true, 'templates') },
-              { label: 'Generar variación…', hint: 'por reglas', onSelect: () => useUiStore.getState().setLeft(true, 'generate') },
+              { label: 'Abrir plantilla…', hint: 'seis ejemplos', onSelect: () => openNewDocument('templates') },
+              { label: 'Generar variación…', hint: 'por reglas', onSelect: () => openNewDocument('generate') },
               { label: 'Importar JSON…', hint: 'desde un archivo', onSelect: () => fileInput.current?.click() },
             ]}
           />

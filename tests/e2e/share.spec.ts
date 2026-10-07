@@ -36,7 +36,7 @@ test.describe('share links', () => {
     await expect(page.getByRole('button', { name: /Deshacer/ })).toHaveCount(0);
 
     // Edits are refused and nothing is saved.
-    await page.getByRole('button', { name: 'Mostrar panel de plantillas' }).click();
+    await page.getByRole('button', { name: 'Mostrar estructura y biblioteca' }).click();
     await page.getByRole('tab', { name: 'Estructura' }).click();
     await page.getByRole('button', { name: /Base de datos|Índice|Almacenamiento/ }).first().click();
     await page.locator('body').press('Delete');

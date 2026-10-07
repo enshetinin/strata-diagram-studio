@@ -624,6 +624,48 @@ strong {
   width: min(64rem, calc(100vw - 2rem));
 }
 
+/* New diagram: templates read as a two-column index; generators side by side. */
+.dialog .tabs {
+  margin: var(--space-5) 0 0;
+}
+
+.new-doc__body {
+  margin-top: var(--space-5);
+}
+
+.new-doc__body > .panel-section {
+  padding: 0;
+}
+
+.new-doc__body .template-list {
+  margin-top: 0;
+}
+
+@media (min-width: 720px) {
+  .new-doc__body .template-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-7);
+  }
+
+  .new-doc__body > .panel-section:has(> section) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-7);
+    align-items: start;
+  }
+
+  .new-doc__body > .panel-section > section + section {
+    margin-top: 0;
+    padding-top: 0;
+    /* The divider sits in the middle of the column gap. */
+    padding-left: calc(var(--space-7) / 2);
+    border-top: 0;
+    border-left: var(--hairline) solid var(--rule);
+    margin-left: calc(var(--space-7) / -2);
+  }
+}
+
 .dialog::backdrop {
   background: var(--backdrop);
 }

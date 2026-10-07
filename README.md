@@ -59,8 +59,12 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   Abrir un paso lo resalta en 2D y 3D. Cada relación pertenece como mucho a un paso, y su marcador
   numerado (`order`) se renumera solo.
 - **Presentar**: oculta paneles, encuadra y recorre los pasos numerados (←/→, Esc).
-- **Generar**: «Nueva arquitectura» (reglas locales con seed y complejidad), «Nueva apariencia»
-  (estilo/layout sin tocar el grafo) y descripción en texto (requiere proveedor; ver abajo).
+- **Menú de documento** (chevron junto al nombre): nuevo diagrama en blanco, plantillas, generar
+  («Nueva arquitectura» con reglas locales, seed y complejidad, o descripción en texto, que requiere
+  proveedor; ver abajo) e importar JSON. Todo reemplaza el diagrama actual (solo se guarda uno) y el
+  aviso ofrece «Deshacer».
+- **Paneles**: a la izquierda *Estructura* y *Biblioteca*; a la derecha *Inspector*, *Recorrido* y
+  *Apariencia*, que incluye «Probar otra apariencia» (estilo/layout al azar sin tocar el grafo).
 
 Atajos (ignorados mientras se escribe): Ctrl/⌘+Z deshacer, Ctrl/⌘+Shift+Z o Ctrl+Y rehacer,
 Supr/Retroceso borrar, Ctrl/⌘+C / X / V copiar, cortar y pegar, Ctrl/⌘+D duplicar, Ctrl/⌘+G agrupar, Ctrl/⌘+Shift+G desagrupar,

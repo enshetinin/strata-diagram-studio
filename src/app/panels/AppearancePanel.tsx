@@ -1,15 +1,36 @@
 import { setPresentation, type PresentationPatch } from '../../domain/commands';
 import { LABEL_MODES, STYLE_IDS, type CameraProjection, type LabelMode } from '../../domain/types';
-import { setStyle } from '../../state/actions';
+import { useState } from 'react';
+import { newAppearance, setStyle } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences, type Quality } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import { CheckboxField, RangeField, SelectField } from '../../components/ui/fields';
 import { THEMES } from '../../features/viewer3d/themes';
+import { SeedInput } from './GeneratePanel';
 
 function update(label: string, patch: PresentationPatch) {
   const result = useDocumentStore.getState().execute(label, (doc) => setPresentation(doc, patch));
   if (!result.ok) useUiStore.getState().notify('error', result.error);
+}
+
+/** Random restyle: style, layer height, spacing and layout direction; the graph and its ids stay. */
+function AppearanceShuffle() {
+  const [seed, setSeed] = useState(3);
+  const [relayout, setRelayout] = useState(true);
+  return (
+    <section className="appearance-shuffle" aria-labelledby="appearance-shuffle">
+      <h3 id="appearance-shuffle" className="panel-heading">
+        Probar otra apariencia
+      </h3>
+      <p className="panel-intro">Combina estilo, altura de capas, espaciado y dirección al azar. Conserva componentes, grupos y relaciones.</p>
+      <SeedInput label="Seed" value={seed} onChange={setSeed} />
+      <CheckboxField label="Reordenar también el diagrama" checked={relayout} onChange={setRelayout} />
+      <button type="button" className="button button--block" onClick={() => void newAppearance(seed, relayout)}>
+        Aplicar apariencia
+      </button>
+    </section>
+  );
 }
 
 const LABEL_MODE_TEXT: Record<LabelMode, string> = { all: 'Todas', auto: 'Automático según densidad', selection: 'Solo selección y grupos' };
@@ -44,6 +65,8 @@ export function AppearancePanel() {
           })}
         </div>
       </fieldset>
+
+      <AppearanceShuffle />
 
       <RangeField
         label="Espaciado del auto-layout"
