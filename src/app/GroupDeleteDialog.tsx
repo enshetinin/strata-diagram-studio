@@ -37,7 +37,7 @@ export function GroupDeleteDialog() {
         </>
       }
     >
-      <p>Por defecto, los nodos y subgrupos se conservan en el contenedor superior con su posición actual. Borrar el contenido elimina también sus relaciones.</p>
+      <p>Por defecto, los componentes y subgrupos se conservan en el contenedor superior con su posición actual. Borrar el contenido elimina también sus relaciones.</p>
     </Dialog>
   );
 }

@@ -31,7 +31,7 @@ export function SeedInput({ value, onChange, label }: { value: number; onChange:
     <div className="field field--inline">
       <label htmlFor={id}>{label}</label>
       <input id={id} inputMode="numeric" value={value} onChange={(event) => onChange(normalizeSeed(event.target.value.replace(/\D/g, '') || '0'))} />
-      <button type="button" className="icon-button" aria-label="Nueva seed" title="Nueva seed" onClick={() => onChange(freshSeed())}>
+      <button type="button" className="icon-button" aria-label="Otra variante al azar" title="Otra variante al azar" onClick={() => onChange(freshSeed())}>
         <Dices size={16} aria-hidden="true" />
       </button>
     </div>
@@ -58,7 +58,7 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
           Nueva arquitectura
         </h3>
         <p className="panel-intro">
-          <strong>Generador local basado en reglas.</strong> Cambia la topología según categoría, complejidad y seed. No interpreta lenguaje natural; la misma seed produce el mismo diagrama.
+          <strong>Generador local basado en reglas.</strong> Crea una arquitectura del tipo y tamaño que elijas. Cada número de variante da siempre el mismo resultado, así que puedes volver a uno que te gustó.
         </p>
         <SelectField label="Categoría" value={category} onChange={setCategory} options={TEMPLATES.map((template) => ({ value: template.category, label: template.name }))} />
         <SelectField
@@ -71,7 +71,7 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
             { value: '3', label: '3 · amplia' },
           ]}
         />
-        <SeedInput label="Seed" value={seed} onChange={setSeed} />
+        <SeedInput label="Variante nº" value={seed} onChange={setSeed} />
         <button type="button" className="button button--primary button--block" disabled={running} onClick={() => void runGeneration(local, { mode: 'rules', category, seed, complexity })}>
           Generar vista previa
           <span className="button__arrow" aria-hidden="true">
@@ -108,8 +108,13 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
         ) : (
           <>
             <p className="panel-intro">
-              La generación libre a partir de texto requiere conectar un proveedor (variable <code>VITE_STRATA_GENERATOR_URL</code> apuntando a tu backend; ver <code>docs/generation-contract.md</code>). Sin él, solo buscamos <em>palabras clave</em> para sugerir ejemplos compatibles.
+              Generar a partir de texto no está disponible en esta instalación. Mientras tanto, buscamos <em>palabras clave</em> en tu descripción para sugerirte plantillas parecidas.
             </p>
+            {import.meta.env.DEV ? (
+              <p className="field__hint">
+                Desarrollo: define <code>VITE_STRATA_GENERATOR_URL</code> apuntando a tu backend (ver <code>docs/generation-contract.md</code>).
+              </p>
+            ) : null}
             <button type="button" className="button button--block" disabled={!prompt.trim()} onClick={() => setSubmitted(prompt)}>
               Buscar ejemplos compatibles
             </button>

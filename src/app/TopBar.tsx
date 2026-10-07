@@ -23,15 +23,15 @@ function SaveIndicator() {
     status.state === 'pending'
       ? 'Guardando…'
       : status.state === 'saved'
-        ? `Guardado ${status.savedAt ? new Date(status.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}`
+        ? `Guardado en este navegador${status.savedAt ? ` · ${new Date(status.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`
         : status.state === 'error'
           ? 'Error al guardar'
-          : 'Sin cambios';
+          : 'Sin cambios pendientes';
   return (
     <button
       type="button"
       className={`save-indicator save-indicator--${status.state}`}
-      title={status.message ?? 'Guardar ahora (Ctrl+S)'}
+      title={status.message ?? 'Se guarda solo en este navegador. Guardar ahora (Ctrl+S)'}
       onClick={() => saveNow() && useUiStore.getState().notify('success', 'Guardado en este navegador.')}
     >
       <span role="status">{text}</span>
@@ -135,7 +135,7 @@ export function TopBar() {
           <div className="topbar__group" role="toolbar" aria-label="Documento">
             <IconButton label={undoLabel ? `Deshacer: ${undoLabel} (Ctrl+Z)` : 'Deshacer'} icon={Undo2} onClick={() => useDocumentStore.getState().undo()} disabled={!canUndo} />
             <IconButton label={redoLabel ? `Rehacer: ${redoLabel} (Ctrl+Shift+Z)` : 'Rehacer'} icon={Redo2} onClick={() => useDocumentStore.getState().redo()} disabled={!canRedo} />
-            <IconButton label="Auto-layout (ELK)" icon={Workflow} showLabel className="hide-narrow-label" onClick={() => void autoLayout()} />
+            <IconButton label="Ordenar" title="Ordenar el diagrama automáticamente" icon={Workflow} showLabel className="hide-narrow-label" onClick={() => void autoLayout()} />
           </div>
         ) : null}
       </div>

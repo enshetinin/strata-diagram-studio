@@ -83,7 +83,7 @@ export function OutlinePanel() {
   return (
     <div className="panel-section">
       <p className="panel-intro">
-        {doc.nodes.length} nodos · {doc.edges.length} relaciones · {doc.groups.length} grupos. Mayús/Ctrl + clic para seleccionar varios.
+        {doc.nodes.length} componentes · {doc.edges.length} relaciones · {doc.groups.length} grupos. Mayús/Ctrl + clic para seleccionar varios.
       </p>
       <h3 className="panel-heading">Componentes</h3>
       <GroupTree doc={doc} parentId={null} />

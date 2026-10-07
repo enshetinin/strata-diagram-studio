@@ -272,7 +272,7 @@ let layoutRequest = 0;
  * Explicit auto-layout. Results that arrive after a newer request, or after
  * the document changed, are discarded instead of overwriting user edits.
  */
-export async function autoLayout(direction: LayoutDirection = 'RIGHT', label = 'Auto-layout'): Promise<boolean> {
+export async function autoLayout(direction: LayoutDirection = 'RIGHT', label = 'Ordenar diagrama'): Promise<boolean> {
   const request = ++layoutRequest;
   const startRevision = useDocumentStore.getState().revision;
   const snapshot = doc();
@@ -280,14 +280,14 @@ export async function autoLayout(direction: LayoutDirection = 'RIGHT', label = '
     const layout = await computeAutoLayout(snapshot, { direction, spacing: snapshot.presentation.appearance.spacing });
     if (request !== layoutRequest) return false;
     if (useDocumentStore.getState().revision !== startRevision) {
-      ui().notify('warning', 'Auto-layout descartado: el documento cambió mientras se calculaba.');
+      ui().notify('warning', 'No se reordenó: el diagrama cambió mientras se calculaba.');
       return false;
     }
     const ok = run(label, (d) => cmd.applyLayout(d, layout));
     if (ok) ui().resetCamera();
     return ok;
   } catch (error) {
-    ui().notify('error', `No se pudo calcular el layout: ${error instanceof Error ? error.message : String(error)}`);
+    ui().notify('error', `No se pudo ordenar el diagrama: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -310,5 +310,5 @@ export function appearanceVariant(current: DiagramDocument, seed: number): { sty
 export async function newAppearance(seed: number, relayout: boolean): Promise<void> {
   const variant = appearanceVariant(doc(), seed);
   const ok = run('Nueva apariencia', (d) => cmd.setPresentation(d, { styleId: variant.styleId, appearance: { spacing: variant.spacing, layerHeight: variant.layerHeight } }));
-  if (ok && relayout) await autoLayout(variant.direction, 'Nueva apariencia · layout');
+  if (ok && relayout) await autoLayout(variant.direction, 'Nueva apariencia · ordenar');
 }
