@@ -21,7 +21,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { moveElements, type Move } from '../../domain/commands';
 import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
 import { checkConnection } from '../../domain/invariants';
-import { NODE_KINDS, type EdgeEndpoint, type ElementRef, type NodeKind } from '../../domain/types';
+import { findPreset, presetSeed } from '../../domain/library';
+import type { EdgeEndpoint, ElementRef } from '../../domain/types';
 import { addNodeAt, connect, reconnect } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences } from '../../state/preferencesStore';
@@ -199,13 +200,13 @@ function Canvas2D() {
 
   const onDrop = useCallback(
     (event: DragEvent) => {
-      const kind = event.dataTransfer.getData(LIBRARY_MIME) as NodeKind;
-      if (!NODE_KINDS.includes(kind)) return;
+      const preset = findPreset(event.dataTransfer.getData(LIBRARY_MIME));
+      if (!preset) return;
       event.preventDefault();
       const point = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       // Deepest group under the cursor becomes the container.
       const target = deepestGroupAt(resolveAbsoluteLayout(useDocumentStore.getState().doc), point);
-      addNodeAt(kind, { x: point.x - 88, y: point.y - 40 }, target);
+      addNodeAt(presetSeed(preset), { x: point.x - 88, y: point.y - 40 }, target);
     },
     [screenToFlowPosition],
   );

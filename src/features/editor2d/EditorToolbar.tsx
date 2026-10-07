@@ -3,6 +3,7 @@ import { CircleHelp, Copy, Group, Grid3x3, Maximize, Plus, Trash2, Ungroup } fro
 import { useEffect, useRef, useState } from 'react';
 import { KIND_INFO } from '../../domain/catalog';
 import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
+import { kindSeed } from '../../domain/library';
 import { DEFAULT_NODE_SIZE, NODE_KINDS, type NodeKind } from '../../domain/types';
 import { addNodeAt, deleteSelection, duplicateSelection, groupSelection, ungroupSelection } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
@@ -91,7 +92,7 @@ export function EditorToolbar() {
         (rect) => position.x < rect.x + rect.width + gap && rect.x < position.x + DEFAULT_NODE_SIZE.width + gap && position.y < rect.y + rect.height + gap && rect.y < position.y + DEFAULT_NODE_SIZE.height + gap,
       );
     for (let rect = blocking(); rect; rect = blocking()) position.x = rect.x + rect.width + gap;
-    addNodeAt(kind, position, deepestGroupAt(layout, centre));
+    addNodeAt(kindSeed(kind), position, deepestGroupAt(layout, centre));
   };
 
   return (

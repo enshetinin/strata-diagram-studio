@@ -6,9 +6,9 @@
 import * as cmd from '../domain/commands';
 import { deepestGroupAt, documentBounds, resolveAbsoluteLayout, type Point } from '../domain/geometry';
 import { extractFragment, parseClipboardText, pasteFragment, type DiagramFragment, type PastePlacement } from '../domain/fragment';
-import type { DiagramDocument, EdgeEndpoint, ElementRef, NodeKind, StyleId } from '../domain/types';
+import type { DiagramDocument, EdgeEndpoint, ElementRef, StyleId } from '../domain/types';
 import { STYLE_IDS } from '../domain/types';
-import { KIND_INFO } from '../domain/catalog';
+import type { NodeSeed } from '../domain/library';
 import { effectiveNarrative } from '../domain/narrative';
 import { pasteAnchor } from '../features/editor2d/pasteAnchor';
 import { computeAutoLayout, type LayoutDirection } from '../features/layout/elkLayout';
@@ -40,28 +40,28 @@ useDocumentStore.subscribe((state, previous) => {
   if (isolatedGroupId && !state.doc.groups.some((group) => group.id === isolatedGroupId)) ui().isolateGroup(null);
 });
 
-export function addNodeAt(kind: NodeKind, position: { x: number; y: number }, groupId: string | null = null): string | null {
+export function addNodeAt(seed: NodeSeed, position: { x: number; y: number }, groupId: string | null = null): string | null {
   const id = cmd.nextId(doc(), 'n');
-  const ok = run(`Añadir ${KIND_INFO[kind].label.toLowerCase()}`, (d) => cmd.addNode(d, { id, kind, label: KIND_INFO[kind].label, position, groupId }));
+  const ok = run(`Añadir ${seed.label}`, (d) => cmd.addNode(d, { ...seed, id, position, groupId }));
   if (!ok) return null;
   ui().select([{ type: 'node', id }]);
   return id;
 }
 
 /** Adds a node to the right of the current content (used by keyboard / library buttons). */
-export function addNodeNearContent(kind: NodeKind): string | null {
+export function addNodeNearContent(seed: NodeSeed): string | null {
   const current = doc();
   const abs = resolveAbsoluteLayout(current);
   const primary = ui().selection.find((ref) => ref.type === 'node');
   const anchor = primary ? abs.nodes.get(primary.id) : undefined;
-  if (anchor) return addNodeAt(kind, { x: anchor.x, y: anchor.y + anchor.height + 64 });
+  if (anchor) return addNodeAt(seed, { x: anchor.x, y: anchor.y + anchor.height + 64 });
   let maxX = 0;
   let minY = Infinity;
   for (const rect of [...abs.nodes.values(), ...abs.groups.values()]) {
     maxX = Math.max(maxX, rect.x + rect.width);
     minY = Math.min(minY, rect.y);
   }
-  return addNodeAt(kind, { x: maxX + 96, y: Number.isFinite(minY) ? minY : 0 });
+  return addNodeAt(seed, { x: maxX + 96, y: Number.isFinite(minY) ? minY : 0 });
 }
 
 export function connect(source: EdgeEndpoint, target: EdgeEndpoint): boolean {

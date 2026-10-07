@@ -16,7 +16,7 @@ test.describe('2D editing reflected in 3D', () => {
 
     // Add a component from the library.
     await openLeftTab(page, 'Biblioteca');
-    await page.getByRole('button', { name: 'Añadir Base de datos' }).click();
+    await page.getByRole('button', { name: 'Añadir Base de datos', exact: true }).click();
     await page.getByRole('radio', { name: 'Editar 2D' }).click();
     await expect(page.locator('.react-flow__node-strata')).toHaveCount(17);
 
