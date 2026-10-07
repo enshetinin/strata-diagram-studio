@@ -101,6 +101,20 @@ export function AppearancePanel() {
         hint="Separación visual de grupos anidados; no cambia la pertenencia."
         onCommit={(layerHeight) => update('Cambiar altura de capas', { appearance: { layerHeight } })}
       />
+      <CheckboxField
+        label="Conectores en arco (3D)"
+        checked={appearance.connectorRoute === 'arc'}
+        hint="Las relaciones se elevan en arco entre componentes en lugar de ir en ángulo recto."
+        onChange={(arc) =>
+          update('Cambiar trazado de conectores', { appearance: { connectorRoute: arc ? 'arc' : 'orthogonal' } })
+        }
+      />
+      <CheckboxField
+        label="Capas translúcidas (3D)"
+        checked={appearance.translucentLayers}
+        hint="Dibuja los grupos como placas de vidrio en lugar de placas sólidas."
+        onChange={(translucentLayers) => update('Cambiar capas', { appearance: { translucentLayers } })}
+      />
       <SelectField
         label="Etiquetas"
         value={appearance.labelMode}

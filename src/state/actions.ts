@@ -12,6 +12,7 @@ import {
   pasteFragment,
 } from '../domain/fragment';
 import { deepestGroupAt, documentBounds, findFreeSpot, type Point, resolveAbsoluteLayout } from '../domain/geometry';
+import { findConnectablePorts } from '../domain/invariants';
 import type { NodeSeed } from '../domain/library';
 import { effectiveNarrative } from '../domain/narrative';
 import {
@@ -19,6 +20,7 @@ import {
   type DiagramDocument,
   type EdgeEndpoint,
   type ElementRef,
+  type RelationKind,
   STYLE_IDS,
   type StyleId,
 } from '../domain/types';
@@ -122,6 +124,19 @@ export function updateAnnotation(id: string, patch: cmd.AnnotationPatch): boolea
 export function connect(source: EdgeEndpoint, target: EdgeEndpoint): boolean {
   const id = cmd.nextId(doc(), 'e');
   const ok = run('Conectar', (d) => cmd.addEdge(d, { id, source, target }));
+  if (ok) ui().select([{ type: 'edge', id }]);
+  return ok;
+}
+
+/** Connects two components without dragging: ports are chosen by the domain (WCAG 2.5.7). */
+export function connectNodes(sourceNodeId: string, targetNodeId: string, relation: RelationKind): boolean {
+  const ports = findConnectablePorts(doc(), sourceNodeId, targetNodeId);
+  if (!ports) {
+    ui().notify('error', 'No hay puertos compatibles libres entre esos componentes.');
+    return false;
+  }
+  const id = cmd.nextId(doc(), 'e');
+  const ok = run('Conectar', (d) => cmd.addEdge(d, { id, ...ports, relation }));
   if (ok) ui().select([{ type: 'edge', id }]);
   return ok;
 }

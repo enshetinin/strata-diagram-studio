@@ -3,6 +3,7 @@
  * second editable copy of the graph.
  */
 import type { Edge, Node } from '@xyflow/react';
+import { RELATION_INFO } from '../../domain/catalog';
 import type {
   DiagramAnnotation,
   DiagramDocument,
@@ -133,6 +134,7 @@ export function toFlowNodes(
 }
 
 export function toFlowEdges(doc: DiagramDocument, selection: ElementRef[]): FlowEdge[] {
+  const label = new Map(doc.nodes.map((node) => [node.id, node.label]));
   return doc.edges.map((edge) => ({
     id: edge.id,
     type: 'strata',
@@ -143,6 +145,7 @@ export function toFlowEdges(doc: DiagramDocument, selection: ElementRef[]): Flow
     data: { edge },
     selected: isSelected(selection, 'edge', edge.id),
     reconnectable: true,
-    ariaLabel: `Relación ${edge.label ?? edge.relation}`,
+    // Announced as a sentence: who talks to whom and how, not internal ids.
+    ariaLabel: `${RELATION_INFO[edge.relation].label}: ${label.get(edge.source.nodeId) ?? edge.source.nodeId} → ${label.get(edge.target.nodeId) ?? edge.target.nodeId}${edge.label ? ` (${edge.label})` : ''}`,
   }));
 }

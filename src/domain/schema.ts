@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  CONNECTOR_ROUTES,
   type DiagramDocument,
   EDGE_DIRECTIONS,
   GROUP_KINDS,
@@ -131,6 +132,9 @@ export const documentSchema = z.object({
       layerHeight: finite.min(0).max(2),
       labelMode: z.enum(LABEL_MODES),
       flowParticles: z.boolean(),
+      // Added with the four-preset redesign: older v1 documents default to the previous look.
+      connectorRoute: z.enum(CONNECTOR_ROUTES).default('orthogonal'),
+      translucentLayers: z.boolean().default(false),
     }),
   }),
   narrative: z.object({

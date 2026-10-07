@@ -28,6 +28,7 @@ import { addNodeAt, connect, reconnect } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
+import { THEMES } from '../viewer3d/themes';
 import { type FlowEdge, type FlowNode, refForFlowNode, toFlowEdges, toFlowNodes } from './adapter';
 import { LIBRARY_MIME } from './dnd';
 import { EditorToolbar } from './EditorToolbar';
@@ -37,7 +38,7 @@ import { registerPasteAnchor } from './pasteAnchor';
 import { EdgeMarkers, StrataEdge } from './StrataEdge';
 import { StrataNode } from './StrataNode';
 import { initialViewport } from './viewport';
-import { accent2d } from './visual';
+import { domainAccentVar, sheetStyle } from './visual';
 
 // Stable references outside render, as React Flow requires.
 const nodeTypes: NodeTypes = { strata: StrataNode, group: GroupNode, note: NoteNode };
@@ -123,6 +124,8 @@ function Canvas2D() {
   const snap = usePreferences((state) => state.snapToGrid);
   const { fitView, screenToFlowPosition, setViewport } = useReactFlow();
   const [invalidReason, setInvalidReason] = useState<string | null>(null);
+  const styleId = doc.presentation.styleId;
+  const sheet = useMemo(() => sheetStyle(THEMES[styleId].palette, THEMES[styleId].accents), [styleId]);
 
   const derivedNodes = useMemo(() => toFlowNodes(doc, selection, isolated), [doc, selection, isolated]);
   const edges = useMemo(() => toFlowEdges(doc, selection), [doc, selection]);
@@ -284,6 +287,7 @@ function Canvas2D() {
     <div
       ref={wrapper}
       className="editor2d"
+      style={sheet}
       onDragOver={(event) => event.dataTransfer.types.includes(LIBRARY_MIME) && event.preventDefault()}
       onDrop={onDrop}
       onPointerMove={(event) => {
@@ -345,7 +349,7 @@ function Canvas2D() {
             const flow = node as FlowNode;
             if (flow.type === 'group') return 'transparent';
             if (flow.type === 'note') return 'var(--sheet-edge)';
-            return accent2d(flow.data.accent);
+            return domainAccentVar(flow.data.accent);
           }}
           nodeStrokeColor={(node) => (node.type === 'group' ? 'var(--edge)' : 'transparent')}
           maskColor="var(--minimap-mask)"

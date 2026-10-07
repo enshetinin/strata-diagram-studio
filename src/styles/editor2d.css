@@ -1,22 +1,13 @@
-/* The 2D editor is a light grey sheet in both colour schemes, matching the SVG export. */
+/*
+ * The 2D sheet follows the active style preset, not the chrome: its colours
+ * (--sheet-*, --signal, --domain-N) are set inline from the diagram palette
+ * (features/theme/diagramTokens.ts), the same source as the SVG export.
+ */
 .editor2d {
-  --sheet: #f4f5f8;
-  --sheet-ink: #0d1b2e;
-  --sheet-muted: #5c6675;
-  --sheet-edge: #8a93a3;
-  --sheet-raised: #ffffff;
-  --sheet-rule: #d9dde3;
-  --signal: #2563eb;
-  --focus: #2563eb;
-  --sheet-success: #17663a;
-  --sheet-error: #b42318;
-  --grid-dot: #d3d8e0;
-  --minimap-mask: rgb(244 245 248 / 0.72);
   position: absolute;
   inset: 0;
   background: var(--sheet);
   color: var(--sheet-ink);
-  color-scheme: light;
 }
 
 .strata-markers {
@@ -27,9 +18,11 @@
 
 .editor2d .react-flow {
   --xy-edge-stroke-default: var(--sheet-ink);
+  /* React Flow's stylesheet loads after ours: its grey group fill stacked with nesting. */
+  --xy-node-group-background-color: transparent;
   --xy-handle-background-color-default: var(--sheet);
   --xy-handle-border-color-default: var(--sheet-ink);
-  --xy-selection-background-color-default: rgb(37 99 235 / 0.06);
+  --xy-selection-background-color-default: color-mix(in srgb, var(--signal) 6%, transparent);
   --xy-selection-border-default: 1px dashed var(--signal);
   --xy-controls-button-background-color-default: var(--sheet-raised);
   --xy-controls-button-border-color-default: var(--sheet-rule);
@@ -155,6 +148,7 @@
 }
 
 .strata-node__kind {
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -180,7 +174,7 @@
   white-space: nowrap;
 }
 
-/* Handles: visible ports, bigger hit area while connecting */
+/* Handles: small visible ports, 24×24 px target (WCAG 2.5.8) */
 .strata-handle.react-flow__handle {
   width: 9px;
   height: 9px;
@@ -188,6 +182,12 @@
   border: 1.5px solid var(--sheet-ink);
   background: var(--sheet);
   opacity: 0.55;
+}
+
+.strata-handle.react-flow__handle::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
 }
 
 .strata-handle--in.react-flow__handle {
@@ -276,9 +276,11 @@
   cursor: grab;
   width: fit-content;
   max-width: 100%;
+  min-width: 0;
 }
 
 .strata-group__kind {
+  font-family: var(--font-mono);
   font-size: 0.625rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -286,9 +288,14 @@
 }
 
 .strata-group__label {
-  font-weight: var(--weight-strong);
-  font-size: 0.8125rem;
-  letter-spacing: 0.02em;
+  font-weight: var(--weight-heading);
+  font-size: 0.75rem;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  /* Caps run wide: one line with an ellipsis, never a second line hidden behind components. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .react-flow__node.is-dimmed {
@@ -305,6 +312,13 @@
   border-radius: 0 !important;
   background: var(--signal) !important;
   border: 0 !important;
+}
+
+/* 9 px mark, 27 px target (WCAG 2.5.8). */
+.strata-group__resize-handle::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
 }
 
 /* Edges */

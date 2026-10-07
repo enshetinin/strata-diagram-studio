@@ -8,7 +8,7 @@ import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import type { FlowEdge } from './adapter';
 import { bendAxis, strataEdgePath } from './edgePath';
-import { RELATION_STROKE } from './visual';
+import { RELATION_STROKE, type RelationTone } from './visual';
 
 type Bend = NonNullable<DiagramEdge['bend']>;
 
@@ -73,7 +73,7 @@ export const StrataEdge = memo(function StrataEdge(props: EdgeProps<FlowEdge>) {
   const grab = bendable ? { onPointerDown: startBend, onDoubleClick: resetBend } : {};
   const cursor = axis === 'x' ? 'ew-resize' : 'ns-resize';
   const stroke = RELATION_STROKE[edge.relation];
-  const markerId = selected ? 'strata-arrow-selected' : `strata-arrow-${edge.relation}`;
+  const markerId = selected ? 'strata-arrow-selected' : `strata-arrow-${stroke.tone}`;
   const text = [edge.order !== undefined ? String(edge.order) : null, edge.label].filter(Boolean).join(' · ');
   return (
     <>
@@ -84,7 +84,7 @@ export const StrataEdge = memo(function StrataEdge(props: EdgeProps<FlowEdge>) {
         {...(edge.direction === 'bidirectional' ? { markerStart: `url(#${markerId})` } : {})}
         interactionWidth={16}
         style={{
-          stroke: selected ? 'var(--signal)' : stroke.color,
+          stroke: selected ? 'var(--signal)' : TONE_COLOR[stroke.tone],
           strokeWidth: selected ? 2.25 : 1.5,
           ...(stroke.dash ? { strokeDasharray: stroke.dash } : {}),
         }}
@@ -122,36 +122,25 @@ export const StrataEdge = memo(function StrataEdge(props: EdgeProps<FlowEdge>) {
   );
 });
 
-/** Arrow markers referenced by edges, one per relation colour. */
+const TONE_COLOR: Record<RelationTone, string> = { ink: 'var(--sheet-ink)', muted: 'var(--sheet-muted)' };
+
+function ArrowMarker({ id, fill }: { id: string; fill: string }) {
+  return (
+    <marker id={id} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 10 5 0 10Z" style={{ fill }} />
+    </marker>
+  );
+}
+
+/** Arrow markers referenced by edges: one per relation tone plus the selected one. */
 export function EdgeMarkers() {
   return (
     <svg className="strata-markers" aria-hidden="true">
       <defs>
-        {Object.entries(RELATION_STROKE).map(([relation, stroke]) => (
-          <marker
-            key={relation}
-            id={`strata-arrow-${relation}`}
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path d="M0 0 10 5 0 10Z" fill={stroke.color} />
-          </marker>
+        {Object.entries(TONE_COLOR).map(([tone, fill]) => (
+          <ArrowMarker key={tone} id={`strata-arrow-${tone}`} fill={fill} />
         ))}
-        <marker
-          id="strata-arrow-selected"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="7"
-          markerHeight="7"
-          orient="auto-start-reverse"
-        >
-          <path d="M0 0 10 5 0 10Z" style={{ fill: 'var(--signal)' }} />
-        </marker>
+        <ArrowMarker id="strata-arrow-selected" fill="var(--signal)" />
       </defs>
     </svg>
   );

@@ -1,16 +1,21 @@
 /**
  * Declarative style presets. A theme only describes materials, geometry
  * treatment, light, camera and connectors; it never touches the graph.
+ * Every colour comes from the diagram palette, so the four presets differ in
+ * material and light, not in colour language.
  */
-import type { RelationKind, StyleId } from '../../domain/types';
+import type { Presentation, RelationKind, StyleId } from '../../domain/types';
+import { DIAGRAM_PALETTES, type DiagramPalette } from '../theme/diagramTokens';
 
-export type PlatformTreatment = 'slab' | 'glass' | 'outline' | 'plate' | 'island' | 'deck';
+export type PlatformTreatment = 'slab' | 'glass' | 'outline' | 'plate' | 'deck';
 export type NodeFinish = 'matte' | 'satin' | 'solid' | 'wire' | 'ink';
 
 export interface ThemeTokens {
   id: StyleId;
   name: string;
   tagline: string;
+  /** Colour source shared with the 2D editor, the SVG export and the PNG overlay. */
+  palette: DiagramPalette;
   dark: boolean;
   background: string;
   /** Ground treatment beneath the scene. */
@@ -65,354 +70,270 @@ export interface ThemeTokens {
   };
   label: { color: string; outline: string; muted: string; weight: 500 | 700; size: number };
   /** Limited per-preset palette for domains (top-level groups). */
-  accents: string[];
+  accents: readonly string[];
   selection: string;
   particles: string;
   /** UI hint for the legend / overlays drawn over the canvas. */
   overlay: 'light' | 'dark';
 }
 
+const LIGHT = DIAGRAM_PALETTES.light;
+const DARK = DIAGRAM_PALETTES.dark;
+
+/** Relations whose type is secondary to the flow: drawn in `muted`, the rest in `ink`. */
+function relationColors(palette: DiagramPalette): ThemeTokens['connector']['colors'] {
+  return { default: palette.ink, telemetry: palette.muted, dependency: palette.muted, backup: palette.muted };
+}
+
 const porcelain: ThemeTokens = {
   id: 'porcelain',
-  name: 'Porcelain Isometric',
-  tagline: 'Gris claro, bloques blancos, línea fina y acentos azules',
+  name: 'Porcelain',
+  tagline: 'Placas blancas, sombra suave y tubos finos sobre gris neutro',
+  palette: LIGHT,
   dark: false,
-  background: '#F4F5F8',
-  ground: { kind: 'shadow', color: '#0D1B2E', opacity: 0.1 },
+  background: LIGHT.canvas,
+  ground: { kind: 'shadow', color: LIGHT.ink, opacity: 0.1 },
   camera: { projection: 'orthographic', azimuthDeg: 34, elevationDeg: 30, fov: 30 },
   light: {
     exposure: 1.3,
-    ambient: { color: '#ffffff', intensity: 0.5 },
-    hemi: { sky: '#ffffff', ground: '#cfd6e0', intensity: 0.7 },
-    key: { color: '#ffffff', intensity: 1.7, position: [-4, 12, 7] },
-    fill: { color: '#e6edf7', intensity: 0.45, position: [8, 5, -2] },
+    ambient: { color: LIGHT.light.key, intensity: 0.5 },
+    hemi: { sky: LIGHT.light.sky, ground: LIGHT.light.ground, intensity: 0.7 },
+    key: { color: LIGHT.light.key, intensity: 1.7, position: [-4, 12, 7] },
+    fill: { color: LIGHT.light.fill, intensity: 0.45, position: [8, 5, -2] },
     shadows: true,
   },
   platform: {
     treatment: 'plate',
-    colors: ['#FFFFFF', '#F0F2F6', '#E6E9EF'],
+    colors: [LIGHT.surface, LIGHT.surface2, LIGHT.surface3],
     opacity: 1,
-    edge: '#C3CAD5',
+    edge: LIGHT.ruleStrong,
     edgeOpacity: 1,
-    title: '#0D1B2E',
+    title: LIGHT.ink,
     dimensions: false,
   },
   node: {
     finish: 'matte',
-    body: '#FFFFFF',
-    cap: '#BFD9F7',
+    body: LIGHT.raised,
+    cap: LIGHT.muted,
     edges: true,
-    edgeColor: '#0D1B2E',
+    edgeColor: LIGHT.ink,
     edgeOpacity: 0.55,
     roughness: 0.8,
     metalness: 0,
     heightScale: 1,
-    plateText: '#0D1B2E',
-    detail: '#0D1B2E',
+    plateText: LIGHT.ink,
+    detail: LIGHT.ink,
     glassOpacity: 0.7,
   },
   connector: {
     route: 'orthogonal',
     render: 'tube',
     radius: 0.018,
-    colors: { default: '#0D1B2E', telemetry: '#8A93A3', dependency: '#8A93A3', backup: '#8A93A3' },
+    colors: relationColors(LIGHT),
     arrow: 'cone',
     arrowColor: null,
     opacity: 1,
   },
-  label: { color: '#0D1B2E', outline: '#FFFFFF', muted: '#5C6675', weight: 500, size: 0.15 },
-  accents: ['#2563EB', '#38A3C9', '#8DB4FF', '#1F4F8A', '#7FCBDD'],
-  selection: '#2563EB',
-  particles: '#2563EB',
+  label: { color: LIGHT.ink, outline: LIGHT.canvas, muted: LIGHT.muted, weight: 500, size: 0.15 },
+  accents: LIGHT.accents,
+  selection: LIGHT.signal,
+  particles: LIGHT.signal,
   overlay: 'light',
 };
 
-const midnight: ThemeTokens = {
-  id: 'midnight',
-  name: 'Midnight Signal',
-  tagline: 'Negro grafito, volumen oscuro, luz lateral y señales cian',
-  dark: true,
-  background: '#050608',
-  ground: { kind: 'dots', color: '#1A1D23', opacity: 1 },
-  camera: { projection: 'orthographic', azimuthDeg: 34, elevationDeg: 30, fov: 30 },
-  light: {
-    exposure: 1.0,
-    ambient: { color: '#b5bcc8', intensity: 0.4 },
-    hemi: { sky: '#8db4ff', ground: '#050608', intensity: 0.25 },
-    key: { color: '#ffffff', intensity: 2.3, position: [-6, 9, 8] },
-    fill: { color: '#5fd4e6', intensity: 0.4, position: [9, 3, -2] },
-    shadows: true,
-  },
-  platform: {
-    treatment: 'deck',
-    colors: ['#0E1014', '#14171C', '#1B1F26'],
-    opacity: 1,
-    edge: '#2C323C',
-    edgeOpacity: 1,
-    title: '#F2F2F3',
-    dimensions: false,
-  },
-  node: {
-    finish: 'satin',
-    body: '#2A2F38',
-    cap: '#3A414D',
-    edges: true,
-    edgeColor: '#7C8696',
-    edgeOpacity: 0.7,
-    roughness: 0.5,
-    metalness: 0.15,
-    heightScale: 1.05,
-    plateText: '#F2F2F3',
-    detail: '#D6DCE5',
-    glassOpacity: 0.55,
-  },
-  connector: {
-    route: 'orthogonal',
-    render: 'tube',
-    radius: 0.016,
-    colors: {
-      default: '#5FD4E6',
-      event: '#8DB4FF',
-      async: '#8DB4FF',
-      telemetry: '#5A606B',
-      dependency: '#5A606B',
-      backup: '#5A606B',
-    },
-    arrow: 'chevron',
-    arrowColor: null,
-    opacity: 0.95,
-  },
-  label: { color: '#F2F2F3', outline: '#050608', muted: '#9A9FA8', weight: 500, size: 0.15 },
-  accents: ['#5FD4E6', '#8DB4FF', '#BFD9F7', '#3FA7D6', '#7FCBDD'],
-  selection: '#BFD9F7',
-  particles: '#5FD4E6',
-  overlay: 'dark',
-};
-
-const glass: ThemeTokens = {
-  id: 'glass',
-  name: 'Glass Layers',
-  tagline: 'Plataformas translúcidas, bloques sólidos y capas separadas',
-  dark: true,
-  background: '#0F1A2B',
-  ground: { kind: 'none', color: '#000000', opacity: 0 },
-  camera: { projection: 'orthographic', azimuthDeg: 36, elevationDeg: 28, fov: 30 },
-  light: {
-    exposure: 1.0,
-    ambient: { color: '#dbe7f7', intensity: 0.45 },
-    hemi: { sky: '#d6e7fb', ground: '#0F1A2B', intensity: 0.5 },
-    key: { color: '#ffffff', intensity: 1.5, position: [-4, 10, 7] },
-    shadows: false,
-  },
-  platform: {
-    treatment: 'glass',
-    colors: ['#8DB4FF', '#5FD4E6', '#BFD9F7'],
-    opacity: 0.13,
-    edge: '#BFD9F7',
-    edgeOpacity: 0.8,
-    title: '#EEF2F8',
-    dimensions: false,
-  },
-  node: {
-    finish: 'solid',
-    body: '#F4F7FB',
-    cap: '#8DB4FF',
-    edges: false,
-    edgeColor: '#ffffff',
-    edgeOpacity: 1,
-    roughness: 0.35,
-    metalness: 0.05,
-    heightScale: 0.95,
-    plateText: '#0F1A2B',
-    detail: '#0F1A2B',
-    glassOpacity: 0.5,
-  },
-  connector: {
-    route: 'orthogonal',
-    render: 'tube',
-    radius: 0.018,
-    colors: { default: '#EEF2F8', response: '#5FD4E6', telemetry: '#7F93B3', dependency: '#7F93B3', backup: '#7F93B3' },
-    arrow: 'cone',
-    arrowColor: '#FFFFFF',
-    opacity: 0.95,
-  },
-  label: { color: '#EEF2F8', outline: '#0F1A2B', muted: '#9AA6B8', weight: 500, size: 0.15 },
-  accents: ['#8DB4FF', '#5FD4E6', '#BFD9F7', '#3FA7D6', '#7FCBDD'],
-  selection: '#7FE3F5',
-  particles: '#FFFFFF',
-  overlay: 'dark',
-};
-
-const blueprint: ThemeTokens = {
-  id: 'blueprint',
-  name: 'Blueprint Spatial',
-  tagline: 'Azul técnico, líneas finas, cotas y límites reconocibles',
-  dark: true,
-  background: '#0D2A4A',
-  ground: { kind: 'grid', color: '#163B61', opacity: 1 },
-  camera: { projection: 'orthographic', azimuthDeg: 36, elevationDeg: 32, fov: 30 },
-  light: {
-    exposure: 1.0,
-    ambient: { color: '#ffffff', intensity: 1.0 },
-    key: { color: '#ffffff', intensity: 0.6, position: [4, 10, 6] },
-    shadows: false,
-  },
-  platform: {
-    treatment: 'outline',
-    colors: ['#123A62', '#164470', '#1A4E7E'],
-    opacity: 0.55,
-    edge: '#CFE3F5',
-    edgeOpacity: 0.9,
-    title: '#E6F0FA',
-    dimensions: true,
-  },
-  node: {
-    finish: 'wire',
-    body: '#174571',
-    cap: '#1F5585',
-    edges: true,
-    edgeColor: '#EAF3FC',
-    edgeOpacity: 1,
-    roughness: 1,
-    metalness: 0,
-    heightScale: 0.9,
-    plateText: '#EAF3FC',
-    detail: '#EAF3FC',
-    glassOpacity: 0.35,
-  },
-  connector: {
-    route: 'orthogonal',
-    render: 'line',
-    radius: 0.012,
-    colors: {
-      default: '#EAF3FC',
-      event: '#9CC8EE',
-      async: '#9CC8EE',
-      telemetry: '#7FA9CF',
-      dependency: '#7FA9CF',
-      backup: '#7FA9CF',
-    },
-    arrow: 'chevron',
-    arrowColor: '#EAF3FC',
-    opacity: 1,
-  },
-  label: { color: '#F2F7FC', outline: '#0D2A4A', muted: '#A9C6E2', weight: 500, size: 0.14 },
-  accents: ['#EAF3FC', '#9CC8EE', '#7FE3F5', '#EAF3FC', '#9CC8EE'],
-  selection: '#7FE3F5',
-  particles: '#7FE3F5',
-  overlay: 'dark',
-};
-
-const monochrome: ThemeTokens = {
-  id: 'monochrome',
-  name: 'Monochrome Editorial',
-  tagline: 'Blanco y tinta, jerarquía tipográfica y formas por función',
+const editorial: ThemeTokens = {
+  id: 'editorial',
+  name: 'Editorial',
+  tagline: 'Solo tinta, contornos de 1 px y sin sombra; pensado para exportar e imprimir',
+  palette: LIGHT,
   dark: false,
-  background: '#FFFFFF',
-  ground: { kind: 'shadow', color: '#0D1B2E', opacity: 0.07 },
+  background: LIGHT.surface,
+  ground: { kind: 'none', color: LIGHT.ink, opacity: 0 },
   camera: { projection: 'orthographic', azimuthDeg: 30, elevationDeg: 32, fov: 30 },
   light: {
     exposure: 1.7,
-    ambient: { color: '#ffffff', intensity: 0.55 },
-    hemi: { sky: '#ffffff', ground: '#dfe3ea', intensity: 0.8 },
-    key: { color: '#ffffff', intensity: 1.8, position: [-3, 12, 8] },
-    fill: { color: '#ffffff', intensity: 0.3, position: [8, 4, -2] },
-    shadows: true,
+    ambient: { color: LIGHT.light.key, intensity: 0.55 },
+    hemi: { sky: LIGHT.light.sky, ground: LIGHT.light.ground, intensity: 0.8 },
+    key: { color: LIGHT.light.key, intensity: 1.8, position: [-3, 12, 8] },
+    fill: { color: LIGHT.light.key, intensity: 0.3, position: [8, 4, -2] },
+    shadows: false,
   },
   platform: {
     treatment: 'plate',
-    colors: ['#FFFFFF', '#F7F8FA', '#EEF0F4'],
+    colors: [LIGHT.surface, LIGHT.surface2, LIGHT.surface3],
     opacity: 1,
-    edge: '#0D1B2E',
+    edge: LIGHT.ink,
     edgeOpacity: 1,
-    title: '#0D1B2E',
+    title: LIGHT.ink,
     dimensions: false,
   },
   node: {
     finish: 'ink',
-    body: '#FFFFFF',
-    cap: '#0D1B2E',
+    body: LIGHT.surface,
+    cap: LIGHT.ink,
     edges: true,
-    edgeColor: '#0D1B2E',
+    edgeColor: LIGHT.ink,
     edgeOpacity: 1,
     roughness: 0.9,
     metalness: 0,
     heightScale: 1,
-    plateText: '#FFFFFF',
-    detail: '#0D1B2E',
+    plateText: LIGHT.surface,
+    detail: LIGHT.ink,
     glassOpacity: 0.3,
   },
   connector: {
     route: 'orthogonal',
     render: 'tube',
     radius: 0.013,
-    colors: { default: '#0D1B2E', telemetry: '#5C6675', dependency: '#5C6675', backup: '#5C6675' },
+    colors: relationColors(LIGHT),
     arrow: 'cone',
     arrowColor: null,
     opacity: 1,
   },
-  label: { color: '#0D1B2E', outline: '#FFFFFF', muted: '#5C6675', weight: 700, size: 0.15 },
-  accents: ['#0D1B2E', '#0D1B2E', '#0D1B2E', '#0D1B2E', '#0D1B2E'],
-  selection: '#2563EB',
-  particles: '#2563EB',
+  label: { color: LIGHT.ink, outline: LIGHT.surface, muted: LIGHT.muted, weight: 700, size: 0.15 },
+  // Domains are told apart by their titles, not by colour.
+  accents: [LIGHT.ink],
+  selection: LIGHT.signal,
+  particles: LIGHT.signal,
   overlay: 'light',
 };
 
-const orbit: ThemeTokens = {
-  id: 'orbit',
-  name: 'Orbit Atlas',
-  tagline: 'Perspectiva moderada, islas blancas y conexiones elevadas en arco',
-  dark: false,
-  background: '#E9ECF1',
-  ground: { kind: 'none', color: '#000000', opacity: 0 },
-  camera: { projection: 'perspective', azimuthDeg: 28, elevationDeg: 30, fov: 32 },
+const midnight: ThemeTokens = {
+  id: 'midnight',
+  name: 'Midnight',
+  tagline: 'Negro puro, volumen satinado, luz lateral y señal cian',
+  palette: DARK,
+  dark: true,
+  background: DARK.canvas,
+  ground: { kind: 'dots', color: DARK.rule, opacity: 1 },
+  camera: { projection: 'orthographic', azimuthDeg: 34, elevationDeg: 30, fov: 30 },
   light: {
-    exposure: 1.25,
-    ambient: { color: '#ffffff', intensity: 0.5 },
-    hemi: { sky: '#ffffff', ground: '#9aa6b8', intensity: 0.7 },
-    key: { color: '#ffffff', intensity: 1.7, position: [-5, 14, 8] },
+    exposure: 1.0,
+    ambient: { color: DARK.light.sky, intensity: 0.4 },
+    hemi: { sky: DARK.light.sky, ground: DARK.light.ground, intensity: 0.25 },
+    key: { color: DARK.light.key, intensity: 2.3, position: [-6, 9, 8] },
+    fill: { color: DARK.light.fill, intensity: 0.4, position: [9, 3, -2] },
     shadows: true,
   },
   platform: {
-    treatment: 'island',
-    colors: ['#FFFFFF', '#F4F5F8', '#E9ECF1'],
+    treatment: 'deck',
+    colors: [DARK.surface, DARK.surface2, DARK.surface3],
     opacity: 1,
-    edge: '#C3CAD5',
+    edge: DARK.ruleStrong,
     edgeOpacity: 1,
-    title: '#0D1B2E',
+    title: DARK.ink,
     dimensions: false,
   },
   node: {
-    finish: 'matte',
-    body: '#FFFFFF',
-    cap: '#BFD9F7',
-    edges: false,
-    edgeColor: '#5C6675',
-    edgeOpacity: 1,
-    roughness: 0.8,
-    metalness: 0,
-    heightScale: 1.1,
-    plateText: '#0D1B2E',
-    detail: '#0D1B2E',
-    glassOpacity: 0.72,
+    finish: 'satin',
+    body: DARK.raised,
+    cap: DARK.muted,
+    edges: true,
+    edgeColor: DARK.muted,
+    edgeOpacity: 0.7,
+    roughness: 0.5,
+    metalness: 0.15,
+    heightScale: 1.05,
+    plateText: DARK.ink,
+    detail: DARK.ink,
+    glassOpacity: 0.55,
   },
   connector: {
-    route: 'arc',
+    route: 'orthogonal',
     render: 'tube',
-    radius: 0.022,
-    colors: { default: '#1F4F8A', telemetry: '#8A93A3', control: '#2563EB', dependency: '#8A93A3', backup: '#8A93A3' },
-    arrow: 'cone',
+    radius: 0.016,
+    colors: relationColors(DARK),
+    arrow: 'chevron',
     arrowColor: null,
-    opacity: 1,
+    opacity: 0.95,
   },
-  label: { color: '#0D1B2E', outline: '#FFFFFF', muted: '#5C6675', weight: 500, size: 0.16 },
-  accents: ['#2563EB', '#38A3C9', '#1F4F8A', '#8DB4FF', '#7FCBDD'],
-  selection: '#2563EB',
-  particles: '#2563EB',
-  overlay: 'light',
+  label: { color: DARK.ink, outline: DARK.canvas, muted: DARK.muted, weight: 500, size: 0.15 },
+  accents: DARK.accents,
+  selection: DARK.signal2,
+  particles: DARK.signal2,
+  overlay: 'dark',
 };
 
-export const THEMES: Record<StyleId, ThemeTokens> = { porcelain, midnight, glass, blueprint, monochrome, orbit };
+const blueprint: ThemeTokens = {
+  id: 'blueprint',
+  name: 'Blueprint',
+  tagline: 'Wireframe, cotas y rejilla sobre negro; el azul vive en las líneas',
+  palette: DARK,
+  dark: true,
+  background: DARK.canvas,
+  ground: { kind: 'grid', color: DARK.rule, opacity: 1 },
+  camera: { projection: 'orthographic', azimuthDeg: 36, elevationDeg: 32, fov: 30 },
+  light: {
+    exposure: 1.0,
+    ambient: { color: DARK.light.key, intensity: 1.0 },
+    key: { color: DARK.light.key, intensity: 0.6, position: [4, 10, 6] },
+    shadows: false,
+  },
+  platform: {
+    treatment: 'outline',
+    colors: [DARK.surface, DARK.surface2, DARK.surface3],
+    opacity: 0.55,
+    edge: DARK.signal,
+    edgeOpacity: 1,
+    title: DARK.ink,
+    dimensions: true,
+  },
+  node: {
+    finish: 'wire',
+    body: DARK.surface2,
+    cap: DARK.surface3,
+    edges: true,
+    edgeColor: DARK.signal,
+    edgeOpacity: 1,
+    roughness: 1,
+    metalness: 0,
+    heightScale: 0.9,
+    plateText: DARK.ink,
+    detail: DARK.signal,
+    glassOpacity: 0.35,
+  },
+  connector: {
+    route: 'orthogonal',
+    render: 'line',
+    radius: 0.012,
+    colors: relationColors(DARK),
+    arrow: 'chevron',
+    arrowColor: DARK.ink,
+    opacity: 1,
+  },
+  label: { color: DARK.ink, outline: DARK.canvas, muted: DARK.muted, weight: 500, size: 0.14 },
+  accents: DARK.accents,
+  selection: DARK.signal2,
+  particles: DARK.signal2,
+  overlay: 'dark',
+};
+
+export const THEMES: Record<StyleId, ThemeTokens> = { porcelain, editorial, midnight, blueprint };
+
+/**
+ * The preset with the document's appearance options applied: arc connectors
+ * and translucent glass layers are options on any preset, not presets.
+ */
+export function resolveTheme(presentation: Presentation): ThemeTokens {
+  const preset = THEMES[presentation.styleId];
+  const { connectorRoute, translucentLayers } = presentation.appearance;
+  if (connectorRoute === preset.connector.route && !translucentLayers) return preset;
+  const { palette } = preset;
+  return {
+    ...preset,
+    connector: { ...preset.connector, route: connectorRoute },
+    platform: translucentLayers
+      ? {
+          ...preset.platform,
+          treatment: 'glass',
+          colors: palette.accents.slice(0, 3),
+          opacity: preset.dark ? 0.13 : 0.16,
+          edge: palette.ruleStrong,
+          edgeOpacity: 1,
+        }
+      : preset.platform,
+  };
+}
 
 export function connectorColor(theme: ThemeTokens, relation: RelationKind): string {
   return theme.connector.colors[relation] ?? theme.connector.colors.default;

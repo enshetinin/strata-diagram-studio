@@ -25,6 +25,16 @@ invalidado, comandos rechazados sin efecto), variaciones deterministas (6 catego
 complejidades × 25 seeds sin solapes), ELK, validación de salida remota, persistencia (corrupción,
 versión, cuota), énfasis 3D y fixture de rendimiento.
 
+### Accesibilidad (WCAG 2.2 AA)
+
+`tests/e2e/a11y.spec.ts` pasa axe-core (etiquetas `wcag2a` a `wcag22aa`) sobre AWS Load Testing en
+los cuatro estilos, con la app en claro y en oscuro, en 3D y en 2D; también sobre el inspector,
+Apariencia, Estructura y el layout de móvil (390 px). Comprueba además las alternativas sin
+arrastre (2.5.7: botones de cámara y «Conectar con…»), la pausa de las partículas (2.2.2) y la
+lista textual enlazada al lienzo 3D con `aria-describedby` (1.1.1). Los contrastes de la paleta de
+diagramas los verifica `diagramTokens.test.ts`. axe no sustituye una revisión manual con lector de
+pantalla.
+
 ### E2E (Playwright)
 
 1. Primer arranque: título, leyenda, «Editar en 2D» y escena con 16 nodos / 17 relaciones.
@@ -46,7 +56,7 @@ versión, cuota), énfasis 3D y fixture de rendimiento.
 Capturas en `docs/qa/` (1440×900, GPU real vía ANGLE/Metal):
 
 - `template-*.png`: las seis plantillas en su estilo recomendado.
-- `style-*.png`: AWS Load Testing en los seis estilos.
+- `style-*.png` y `style-*-2d.png`: AWS Load Testing en los cuatro estilos, en 3D y en 2D.
 - `app-3d-panels.png`, `app-2d-editor.png`, `app-dark-scheme.png`, `narrow-3d.png` (390×844).
 
 Corregido durante la revisión: encuadre demasiado pequeño (ahora se proyectan las esquinas reales

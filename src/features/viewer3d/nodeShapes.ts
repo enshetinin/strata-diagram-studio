@@ -23,8 +23,7 @@ export type GeometryKey =
   | 'sphere'
   | 'icosa'
   | 'octa'
-  | 'pyramid'
-  | 'frustum';
+  | 'pyramid';
 
 const cache = new Map<string, BufferGeometry>();
 
@@ -62,10 +61,6 @@ export function unitGeometry(key: GeometryKey): BufferGeometry {
       break;
     case 'pyramid':
       geometry = new ConeGeometry(0.5, 1, 4);
-      break;
-    case 'frustum':
-      // Axis-aligned tapered block (unit square top, smaller bottom): island undersides.
-      geometry = new CylinderGeometry(Math.SQRT1_2, Math.SQRT1_2 * 0.55, 1, 4, 1).rotateY(Math.PI / 4);
       break;
   }
   cache.set(key, geometry);

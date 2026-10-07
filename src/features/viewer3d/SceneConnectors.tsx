@@ -137,6 +137,7 @@ function Arrowheads() {
     return cone;
   }, [theme.connector.arrow]);
   useLayoutEffect(() => () => geometry.dispose(), [geometry]);
+  // Neutral base: each arrow's palette colour comes from its instance colour.
   const material = materials.flat('#ffffff');
 
   const arrows = useMemo(() => {

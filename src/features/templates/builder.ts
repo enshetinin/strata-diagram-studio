@@ -11,6 +11,7 @@ import { GROUP_PADDING, unionRects } from '../../domain/geometry';
 import { deriveNarrative } from '../../domain/narrative';
 import {
   type AppearanceSettings,
+  type CameraProjection,
   DEFAULT_APPEARANCE,
   DEFAULT_NODE_SIZE,
   type DiagramDocument,
@@ -68,6 +69,7 @@ export class DiagramBuilder {
       description: string;
       styleId: StyleId;
       appearance?: Partial<AppearanceSettings>;
+      projection?: CameraProjection;
     },
   ) {}
 
@@ -194,7 +196,7 @@ export class DiagramBuilder {
       layout,
       presentation: {
         styleId: this.meta.styleId,
-        camera: { projection: 'style' },
+        camera: { projection: this.meta.projection ?? 'style' },
         appearance: { ...DEFAULT_APPEARANCE, ...this.meta.appearance },
       },
       narrative: { steps: deriveNarrative({ edges: this.edges }) },

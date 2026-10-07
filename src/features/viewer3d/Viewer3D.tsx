@@ -11,7 +11,7 @@ import { useReducedMotion } from '../../components/ui/useReducedMotion';
 import { type Quality, usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import { Scene } from './Scene';
-import { ViewerOverlay } from './ViewerOverlay';
+import { SCENE_DESCRIPTION_ID, ViewerOverlay } from './ViewerOverlay';
 import { WebglFallback } from './WebglFallback';
 
 const DPR: Record<Quality, [number, number]> = { low: [1, 1], medium: [1, 1.5], high: [1, 2] };
@@ -80,6 +80,7 @@ export default function Viewer3D() {
             gl.toneMappingExposure = 1.0;
             gl.domElement.setAttribute('aria-label', 'Escena 3D del diagrama');
             gl.domElement.setAttribute('role', 'img');
+            gl.domElement.setAttribute('aria-describedby', SCENE_DESCRIPTION_ID);
             gl.domElement.addEventListener('webglcontextlost', (event) => {
               event.preventDefault();
               setWebgl('lost', 'Se perdió el contexto WebGL.');

@@ -34,7 +34,7 @@ describe('new group and relation kinds', () => {
     expect(frames.find((frame) => frame.id === 'g-public')?.attrs).toContain('stroke-dasharray');
     expect(frames.find((frame) => frame.id === 'g-prod')?.attrs).not.toContain('stroke-dasharray');
     expect(svg).toContain('ENTORNO');
-    expect(svg).toContain('url(#arrow-auth)');
+    expect(svg).toContain('url(#arrow-ink)');
   });
 
   it('exports notes with their leader line above the components', () => {

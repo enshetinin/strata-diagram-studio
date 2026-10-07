@@ -5,7 +5,7 @@ import { resizeElement } from '../../domain/commands';
 import { useDocumentStore } from '../../state/documentStore';
 import { useUiStore } from '../../state/uiStore';
 import type { GroupFlowNode } from './adapter';
-import { accent2d } from './visual';
+import { domainAccentVar } from './visual';
 
 export const GroupNode = memo(function GroupNode({ id, data, selected }: NodeProps<GroupFlowNode>) {
   const { group, accent, depth } = data;
@@ -14,7 +14,7 @@ export const GroupNode = memo(function GroupNode({ id, data, selected }: NodePro
       className={`strata-group${selected ? ' is-selected' : ''}`}
       data-depth={depth}
       data-kind={group.kind}
-      style={{ '--accent': accent2d(accent) } as React.CSSProperties}
+      style={{ '--accent': domainAccentVar(accent) } as React.CSSProperties}
     >
       <NodeResizer
         isVisible={selected}
@@ -31,7 +31,9 @@ export const GroupNode = memo(function GroupNode({ id, data, selected }: NodePro
       />
       <div className="strata-group__handle">
         <span className="strata-group__kind">{GROUP_KIND_LABEL[group.kind]}</span>
-        <span className="strata-group__label">{group.label}</span>
+        <span className="strata-group__label" title={group.label}>
+          {group.label}
+        </span>
       </div>
     </div>
   );

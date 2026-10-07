@@ -5,7 +5,7 @@
  * and the complexity (1–3) scales the number of components. Same input → same
  * document. It does not understand free text.
  */
-import type { NodeKind, StyleId } from '../../domain/types';
+import type { AppearanceSettings, NodeKind, StyleId } from '../../domain/types';
 import { DiagramBuilder } from './builder';
 import type { TemplateCategory } from './index';
 import { createRng, type Rng } from './random';
@@ -384,14 +384,20 @@ function iot(rng: Rng, complexity: Complexity, b: DiagramBuilder) {
 
 const RULES: Record<
   TemplateCategory,
-  { name: string; style: StyleId; build: (rng: Rng, complexity: Complexity, b: DiagramBuilder) => void }
+  {
+    name: string;
+    style: StyleId;
+    /** Appearance options that go with the recommended style. */
+    appearance?: Partial<AppearanceSettings>;
+    build: (rng: Rng, complexity: Complexity, b: DiagramBuilder) => void;
+  }
 > = {
   'load-testing': { name: 'Pruebas de carga', style: 'porcelain', build: loadTesting },
-  rag: { name: 'RAG', style: 'glass', build: rag },
+  rag: { name: 'RAG', style: 'midnight', appearance: { translucentLayers: true }, build: rag },
   'multi-agent': { name: 'Multiagente', style: 'midnight', build: multiAgent },
-  events: { name: 'Eventos', style: 'monochrome', build: events },
+  events: { name: 'Eventos', style: 'editorial', build: events },
   data: { name: 'Plataforma de datos', style: 'blueprint', build: data },
-  iot: { name: 'Edge / IoT', style: 'orbit', build: iot },
+  iot: { name: 'Edge / IoT', style: 'porcelain', appearance: { connectorRoute: 'arc' }, build: iot },
 };
 
 export function generateVariation(request: VariationRequest) {
@@ -402,6 +408,7 @@ export function generateVariation(request: VariationRequest) {
     name: `${rule.name} · variación ${request.seed}`,
     description: `Generado localmente por reglas (categoría ${rule.name}, seed ${request.seed}, complejidad ${request.complexity}). Ilustrativo; no es una arquitectura desplegada.`,
     styleId: request.styleId ?? rule.style,
+    ...(request.styleId ? {} : { appearance: rule.appearance }),
   });
   rule.build(rng, request.complexity, builder);
   return builder.build();

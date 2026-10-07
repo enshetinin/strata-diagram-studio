@@ -4,7 +4,7 @@ import { KIND_INFO } from '../../domain/catalog';
 import { portFraction } from '../../domain/geometry';
 import type { Port } from '../../domain/types';
 import type { StrataFlowNode } from './adapter';
-import { accent2d, KIND_GLYPH } from './visual';
+import { domainAccentVar, KIND_GLYPH } from './visual';
 
 const POSITION: Record<Port['side'], Position> = {
   top: Position.Top,
@@ -26,7 +26,7 @@ export const StrataNode = memo(function StrataNode({ data, selected }: NodeProps
   return (
     <div
       className={`strata-node strata-node--${node.kind}${selected ? ' is-selected' : ''}`}
-      style={{ '--accent': accent2d(accent) } as React.CSSProperties}
+      style={{ '--accent': domainAccentVar(accent) } as React.CSSProperties}
     >
       <svg className="strata-node__glyph" viewBox="0 0 20 20" aria-hidden="true">
         <path d={KIND_GLYPH[node.kind]} />
@@ -44,8 +44,9 @@ export const StrataNode = memo(function StrataNode({ data, selected }: NodeProps
           position={POSITION[port.side]}
           style={handleStyle(port, node.ports)}
           className={`strata-handle strata-handle--${port.direction}`}
+          // Pointer-only drag targets: keyboard and screen-reader users connect from the inspector
+          // («Conectar con…»), so the handle is not announced (an aria-label needs a role).
           title={`${port.label ?? port.id} · ${DIRECTION_LABEL[port.direction]} · ${port.dataType}`}
-          aria-label={`Puerto ${port.label ?? port.id} (${DIRECTION_LABEL[port.direction]})`}
         />
       ))}
     </div>

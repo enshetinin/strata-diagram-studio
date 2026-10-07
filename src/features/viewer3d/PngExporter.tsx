@@ -7,14 +7,9 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { Color, type Material, Vector2, WebGLRenderer } from 'three';
-import { preloadFont } from 'troika-three-text';
 import { type PngExportOptions, registerPngExporter } from '../export/pngRegistry';
 import { exportCamera, viewDirection } from './cameraFit';
-import { FONT_BOLD, FONT_REGULAR, useScene } from './sceneContext';
-
-function loadFont(url: string): Promise<void> {
-  return new Promise((resolve) => preloadFont({ font: url }, () => resolve()));
-}
+import { preloadLabelFonts, useScene } from './sceneContext';
 
 interface ResolutionMaterial extends Material {
   resolution: Vector2;
@@ -32,7 +27,7 @@ export function PngExporter({ projection }: { projection: 'orthographic' | 'pers
 
   useEffect(() => {
     const exporter = async ({ width, height, transparent, scale }: PngExportOptions): Promise<HTMLCanvasElement> => {
-      await Promise.all([loadFont(FONT_REGULAR), loadFont(FONT_BOLD), document.fonts?.ready]);
+      await Promise.all([preloadLabelFonts(), document.fonts?.ready]);
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;

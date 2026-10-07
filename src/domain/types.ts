@@ -179,8 +179,27 @@ export interface DiagramLayout {
   annotations: Record<string, Rect>;
 }
 
-export const STYLE_IDS = ['porcelain', 'midnight', 'glass', 'blueprint', 'monochrome', 'orbit'] as const;
+export const STYLE_IDS = ['porcelain', 'editorial', 'midnight', 'blueprint'] as const;
 export type StyleId = (typeof STYLE_IDS)[number];
+
+/**
+ * Presets retired when the six styles became four. Documents, share links and
+ * `?style=` URLs that still name them open with the equivalent preset plus
+ * the appearance options that carried their character.
+ */
+export const LEGACY_STYLES = {
+  glass: { styleId: 'midnight', appearance: { translucentLayers: true } },
+  monochrome: { styleId: 'editorial', appearance: {} },
+  // Orbit Atlas used perspective by default: kept when the camera followed the style.
+  orbit: { styleId: 'porcelain', appearance: { connectorRoute: 'arc' }, styleProjection: 'perspective' },
+} as const satisfies Record<
+  string,
+  { styleId: StyleId; appearance: Partial<AppearanceSettings>; styleProjection?: CameraProjection }
+>;
+export type LegacyStyleId = keyof typeof LEGACY_STYLES;
+
+export const CONNECTOR_ROUTES = ['orthogonal', 'arc'] as const;
+export type ConnectorRoute = (typeof CONNECTOR_ROUTES)[number];
 
 export const LABEL_MODES = ['all', 'auto', 'selection'] as const;
 export type LabelMode = (typeof LABEL_MODES)[number];
@@ -188,7 +207,7 @@ export type LabelMode = (typeof LABEL_MODES)[number];
 export type CameraProjection = 'style' | 'orthographic' | 'perspective';
 
 export interface CameraSettings {
-  /** `style` defers to the style preset (Orbit Atlas uses perspective). */
+  /** `style` defers to the style preset (all four presets are isometric today). */
   projection: CameraProjection;
 }
 
@@ -200,6 +219,10 @@ export interface AppearanceSettings {
   labelMode: LabelMode;
   /** Illustrative flow particles on the selected / narrated relation. */
   flowParticles: boolean;
+  /** 3D connector path: right angles, or raised arcs between components. */
+  connectorRoute: ConnectorRoute;
+  /** 3D group plates drawn as translucent glass layers instead of solid plates. */
+  translucentLayers: boolean;
 }
 
 export interface Presentation {
@@ -248,4 +271,6 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   layerHeight: 0.5,
   labelMode: 'auto',
   flowParticles: true,
+  connectorRoute: 'orthogonal',
+  translucentLayers: false,
 };

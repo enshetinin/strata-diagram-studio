@@ -133,6 +133,29 @@
   margin-right: var(--space-2);
 }
 
+/* Camera without dragging (WCAG 2.5.7): a quiet row under the actions. */
+.viewer-camera {
+  position: absolute;
+  top: calc(var(--space-5) + var(--control-h) + var(--space-1));
+  right: var(--gutter);
+  display: flex;
+  gap: var(--space-1);
+}
+
+.viewer-camera .icon-button {
+  width: var(--control-h-small);
+  min-height: var(--control-h-small);
+  background: transparent;
+  color: var(--o-fg);
+  border: var(--hairline) solid var(--o-edge);
+}
+
+.viewer-camera .icon-button:hover {
+  background: var(--o-fg);
+  border-color: var(--o-fg);
+  color: var(--o-primary-fg);
+}
+
 /* Colophon: supporting copy and legend share one ruled band. */
 .scene-colophon {
   position: absolute;
@@ -223,6 +246,23 @@
   font-size: var(--font-meta);
   backdrop-filter: blur(8px);
   max-width: 22rem;
+}
+
+.viewer-note {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.viewer-note p {
+  margin: 0;
+}
+
+.viewer-note .link-button {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  color: var(--o-fg);
 }
 
 .viewer-chip {
@@ -357,6 +397,13 @@
     bottom: 4.25rem;
   }
 
+  .viewer-camera {
+    top: auto;
+    right: auto;
+    left: var(--space-4);
+    bottom: var(--space-4);
+  }
+
   .presentation {
     left: var(--space-3);
     bottom: var(--space-3);
@@ -369,6 +416,18 @@
 @media (max-width: 600px) {
   .viewer-actions__edit {
     margin-right: var(--space-1);
+  }
+
+  /* Phone: the camera row stacks above the actions instead of sharing the bottom edge. */
+  .viewer-camera {
+    left: auto;
+    right: var(--space-4);
+    bottom: calc(var(--space-4) + var(--control-h) + var(--space-2));
+  }
+
+  .viewer-note,
+  .viewer-chip {
+    bottom: calc(var(--space-4) + var(--control-h) + var(--control-h-small) + var(--space-4));
   }
 
   .presentation {

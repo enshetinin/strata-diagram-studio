@@ -2,7 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 
 const OUT = 'docs/qa';
 const TEMPLATES = ['aws-load-testing', 'rag', 'multi-agent', 'event-commerce', 'data-platform', 'edge-iot'];
-const STYLES = ['porcelain', 'midnight', 'glass', 'blueprint', 'monochrome', 'orbit'];
+const STYLES = ['porcelain', 'editorial', 'midnight', 'blueprint'];
 
 async function settle(page: Page) {
   await expect(page.locator('.viewer3d')).toHaveAttribute('data-rendered-nodes', /[1-9]/, { timeout: 30_000 });
@@ -18,11 +18,15 @@ test('six templates in their recommended style', async ({ page }) => {
   }
 });
 
-test('one template in the six styles', async ({ page }) => {
+test('one template in the four styles, 3D and 2D', async ({ page }) => {
   for (const style of STYLES) {
     await page.goto(`/?template=aws-load-testing&style=${style}&panels=closed`);
     await settle(page);
     await page.screenshot({ path: `${OUT}/style-${style}.png` });
+    // The 2D sheet follows the preset's scheme and accents.
+    await page.goto(`/?template=aws-load-testing&style=${style}&mode=2d&panels=closed`);
+    await page.waitForTimeout(1_500);
+    await page.screenshot({ path: `${OUT}/style-${style}-2d.png` });
   }
 });
 

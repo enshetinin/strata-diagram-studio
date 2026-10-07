@@ -3,7 +3,22 @@
  * camera actions and the presentation walkthrough. PNG exports redraw the
  * title and legend themselves (features/export/pngComposition).
  */
-import { ChevronLeft, ChevronRight, Crosshair, PencilRuler, RotateCcw, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  Crosshair,
+  Pause,
+  PencilRuler,
+  Play,
+  RotateCcw,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 import { IconButton } from '../../components/ui/IconButton';
@@ -11,9 +26,61 @@ import { KIND_INFO, RELATION_INFO } from '../../domain/catalog';
 import { effectiveNarrative } from '../../domain/narrative';
 import type { NodeKind, RelationKind } from '../../domain/types';
 import { useDocumentStore } from '../../state/documentStore';
-import { selectPrimary, useUiStore } from '../../state/uiStore';
+import { type CameraNudge, selectPrimary, useUiStore } from '../../state/uiStore';
 import { KIND_GLYPH, RELATION_STROKE } from '../editor2d/visual';
+import { describeScene } from './sceneDescription';
 import { THEMES } from './themes';
+
+/** Stable id the canvas points to with aria-describedby. */
+export const SCENE_DESCRIPTION_ID = 'scene-description';
+
+const CAMERA_BUTTONS: { action: CameraNudge; label: string; icon: typeof ArrowLeft }[] = [
+  { action: 'rotateLeft', label: 'Girar a la izquierda', icon: ArrowLeft },
+  { action: 'rotateRight', label: 'Girar a la derecha', icon: ArrowRight },
+  { action: 'tiltUp', label: 'Ver más desde arriba', icon: ArrowUp },
+  { action: 'tiltDown', label: 'Ver más de frente', icon: ArrowDown },
+  { action: 'zoomIn', label: 'Acercar', icon: ZoomIn },
+  { action: 'zoomOut', label: 'Alejar', icon: ZoomOut },
+];
+
+/** Camera moves without dragging (WCAG 2.5.7). */
+function CameraControls() {
+  return (
+    <div className="viewer-camera" role="group" aria-label="Cámara">
+      {CAMERA_BUTTONS.map(({ action, label, icon }) => (
+        <IconButton key={action} label={label} icon={icon} onClick={() => useUiStore.getState().nudgeCamera(action)} />
+      ))}
+    </div>
+  );
+}
+
+/** The scene as lists for screen readers (WCAG 1.1.1); sighted users have Estructura. */
+function SceneText() {
+  const doc = useDocumentStore((state) => state.doc);
+  const description = useMemo(() => describeScene(doc), [doc]);
+  return (
+    <section id={SCENE_DESCRIPTION_ID} className="visually-hidden" aria-label="Contenido del diagrama">
+      <h2>Contenido del diagrama</h2>
+      <h3>Grupos y componentes</h3>
+      <ul>
+        {description.groups.map((group) => (
+          <li key={group.id}>
+            {group.depth > 0 ? `Dentro del nivel ${group.depth}: ` : ''}
+            {group.label}
+            {group.components.length ? `: ${group.components.join(', ')}` : ''}
+          </li>
+        ))}
+        {description.ungrouped.length ? <li>Sin grupo: {description.ungrouped.join(', ')}</li> : null}
+      </ul>
+      <h3>Relaciones</h3>
+      <ul>
+        {description.relations.map((relation) => (
+          <li key={relation.id}>{relation.text}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 function Legend({ kinds, relations }: { kinds: NodeKind[]; relations: RelationKind[] }) {
   return (
@@ -157,6 +224,7 @@ export function ViewerOverlay() {
   const relations = useMemo(() => [...new Set(doc.edges.map((edge) => edge.relation))], [doc.edges]);
   const particlesVisible =
     doc.presentation.appearance.flowParticles && (presenting || selection.some((ref) => ref.type === 'edge'));
+  const particlesPaused = useUiStore((state) => state.particlesPaused);
   const isolatedLabel = isolated ? doc.groups.find((group) => group.id === isolated)?.label : null;
   const root = useRef<HTMLDivElement>(null);
   useOverlayInsets(root, !presenting, doc.id);
@@ -198,6 +266,7 @@ export function ViewerOverlay() {
           />
         </div>
       ) : null}
+      {!presenting && doc.nodes.length > 0 ? <CameraControls /> : null}
 
       {isolatedLabel && !presenting ? (
         <p className="viewer-chip">
@@ -229,8 +298,20 @@ export function ViewerOverlay() {
         </footer>
       ) : null}
       {particlesVisible ? (
-        <p className="viewer-note">Los puntos en movimiento son ilustrativos: no representan tráfico real.</p>
+        <div className="viewer-note">
+          <p>Los puntos en movimiento son ilustrativos: no representan tráfico real.</p>
+          <button
+            type="button"
+            className="link-button"
+            aria-pressed={particlesPaused}
+            onClick={() => useUiStore.getState().setParticlesPaused(!particlesPaused)}
+          >
+            {particlesPaused ? <Play size={14} aria-hidden="true" /> : <Pause size={14} aria-hidden="true" />}
+            {particlesPaused ? 'Reanudar animación' : 'Pausar animación'}
+          </button>
+        </div>
       ) : null}
+      <SceneText />
       {presenting ? <Presentation /> : null}
     </div>
   );

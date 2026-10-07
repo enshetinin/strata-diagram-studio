@@ -9,5 +9,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    // Diagram tokens are checked against the app tokens, so this file must load for real.
+    css: { include: [/tokens\.css/] },
   },
 });

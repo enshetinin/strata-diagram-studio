@@ -11,7 +11,7 @@ import type { SceneEdge, SceneNode } from '../layout/sceneModel';
 import { viewDirection } from './cameraFit';
 import { declutterNodeLabels, markerCollides, placeGroupTitles, titleSize } from './labelPlacement';
 import { dimColor } from './materials';
-import { DIM_AMOUNT, FONT_BOLD, FONT_REGULAR, LABEL_MATERIAL, useScene } from './sceneContext';
+import { DIM_AMOUNT, FONT_BOLD, FONT_MONO, FONT_REGULAR, LABEL_FONTS, LABEL_MATERIAL, useScene } from './sceneContext';
 
 const LABEL_RENDER_ORDER = 20;
 
@@ -43,8 +43,9 @@ const NodeLabel = memo(function NodeLabel({ node, showKind }: { node: SceneNode;
       </Text>
       {showKind ? (
         <Text
-          font={FONT_REGULAR}
-          fontSize={size * 0.62}
+          font={FONT_MONO}
+          fontSize={size * 0.6}
+          letterSpacing={0.06}
           color={muted}
           outlineWidth={size * 0.1}
           outlineColor={theme.label.outline}
@@ -71,8 +72,8 @@ const EdgeLabel = memo(function EdgeLabel({ edge, compact }: { edge: SceneEdge; 
   return (
     <Billboard position={[edge.labelAt.x, edge.labelAt.y + 0.05, edge.labelAt.z]}>
       <Text
-        font={compact ? FONT_BOLD : FONT_REGULAR}
-        fontSize={size * (compact ? 0.8 : 0.74)}
+        font={compact ? FONT_MONO : FONT_REGULAR}
+        fontSize={size * (compact ? 0.78 : 0.74)}
         color={dimColor(
           emphasis === 'selected' ? theme.selection : compact ? theme.label.color : theme.label.muted,
           theme.background,
@@ -88,6 +89,24 @@ const EdgeLabel = memo(function EdgeLabel({ edge, compact }: { edge: SceneEdge; 
         {text}
       </Text>
     </Billboard>
+  );
+});
+
+/**
+ * drei's <Text> suspends the first time it meets a font (its cache is keyed by
+ * font, separate from troika's). Mounting one invisible text per label font
+ * makes that happen once, during the initial load, instead of blanking the
+ * scene when a style or a narrower canvas first needs bold or mono labels.
+ */
+const FontWarmup = memo(function FontWarmup() {
+  return (
+    <>
+      {LABEL_FONTS.map((font) => (
+        <Text key={font} font={font} visible={false} fontSize={0.01}>
+          .
+        </Text>
+      ))}
+    </>
   );
 });
 
@@ -174,6 +193,7 @@ export function SceneLabels({ mode }: { mode: LabelMode }) {
   );
   return (
     <group name="labels">
+      <FontWarmup />
       {visible.nodes.map((node) =>
         highlight.node(node.id) === 'isolatedOut' ? null : (
           <NodeLabel key={node.id} node={node} showKind={visible.showKind} />

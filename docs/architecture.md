@@ -73,5 +73,13 @@ app/         shell, paneles, diálogos, atajos y arranque
 Fluid Tech Editorial (ver `CLAUDE.md`): fondo blanco, neutros fríos, Figtree a gran escala
 para titulares y UI, JetBrains Mono para detalles de código, retícula fuerte, separadores finos y
 acentos azul/cian contenidos (`--accent` para foco, `--signal` para selección y marcadores). Tokens
-en `src/styles/tokens.css`. El editor 2D es una hoja blanca en ambos esquemas de color, coherente
-con el SVG exportado.
+en `src/styles/tokens.css`.
+
+Los diagramas usan la misma paleta: `src/features/theme/diagramTokens.ts` replica esos tokens
+(WebGL y SVG no leen variables CSS; un test comprueba que coinciden y que cumplen WCAG 2.2 AA) y
+alimenta el 3D, el editor 2D, el SVG y el PNG. Hay cuatro presets — Porcelain y Editorial (claros),
+Midnight y Blueprint (oscuros) — que difieren en material y luz, no en paleta. El editor 2D y el SVG
+siguen el esquema y los acentos del preset activo. Las relaciones se distinguen por patrón de trazo
+(tinta o gris), y el azul/cian queda para selección, recorrido y partículas. Conectores en arco y
+capas translúcidas son opciones de apariencia, no presets; los documentos con los presets retirados
+(`glass`, `monochrome`, `orbit`) se migran al abrirse.

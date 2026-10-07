@@ -130,8 +130,8 @@ test.describe('2D editing reflected in 3D', () => {
     await freshStart(page, '?template=multi-agent');
     await expectSceneCounts(page, { nodes: 14, edges: 18 });
     await page.getByRole('tab', { name: 'Apariencia' }).click();
-    await page.getByRole('radio', { name: /Blueprint Spatial/ }).click();
-    await expect(page.getByText('Blueprint Spatial', { exact: true }).first()).toBeVisible();
+    await page.getByRole('radio', { name: /^Blueprint/ }).click();
+    await expect(page.getByText('Blueprint', { exact: true }).first()).toBeVisible();
     await expectSceneCounts(page, { nodes: 14, edges: 18 });
   });
 

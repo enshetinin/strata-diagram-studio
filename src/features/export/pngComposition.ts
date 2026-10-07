@@ -10,7 +10,7 @@
 import { KIND_INFO, RELATION_INFO } from '../../domain/catalog';
 import type { DiagramDocument, NodeKind, RelationKind } from '../../domain/types';
 import { KIND_GLYPH, RELATION_STROKE } from '../editor2d/visual';
-import { THEMES } from '../viewer3d/themes';
+import { resolveTheme } from '../viewer3d/themes';
 import { PNG_FORMATS, type PngComposeOptions } from './pngOptions';
 import type { PngExportOptions } from './pngRegistry';
 
@@ -293,7 +293,7 @@ export async function composePng(
 ): Promise<HTMLCanvasElement> {
   const { width, height } = size;
   const u = Math.min(width, height) / 1080;
-  const theme = THEMES[doc.presentation.styleId];
+  const theme = resolveTheme(doc.presentation);
   const palette = PALETTE[theme.overlay];
   const hasLegend = options.legend && doc.nodes.length > 0;
   const hasPanel = options.title || hasLegend;

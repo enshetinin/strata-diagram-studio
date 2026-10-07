@@ -10,7 +10,9 @@ mkdirSync(target, { recursive: true });
 
 const fonts = [
   ['@fontsource/figtree', 'figtree-latin-500-normal.woff'],
+  ['@fontsource/figtree', 'figtree-latin-600-normal.woff'],
   ['@fontsource/figtree', 'figtree-latin-700-normal.woff'],
+  ['@fontsource/jetbrains-mono', 'jetbrains-mono-latin-500-normal.woff'],
 ];
 
 for (const [pkg, file] of fonts) {

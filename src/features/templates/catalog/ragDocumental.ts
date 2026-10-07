@@ -7,7 +7,8 @@ export function ragDocumental() {
     name: 'RAG documental',
     description:
       'Ingesta → parsing → embeddings → índice vectorial; consulta → retrieval → re-ranking → modelo → respuesta con citas. Ejemplo ilustrativo.',
-    styleId: 'glass',
+    styleId: 'midnight',
+    appearance: { translucentLayers: true },
   })
     .group('g-ingest', 'Ingesta', { kind: 'lane', description: 'Proceso por lotes al llegar documentos' })
     .group('g-query', 'Consulta', { kind: 'lane', description: 'Ruta síncrona por pregunta' })

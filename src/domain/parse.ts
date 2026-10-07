@@ -1,6 +1,6 @@
 import { type ValidationIssue, validateInvariants } from './invariants';
 import { documentSchema, LIMITS } from './schema';
-import { type DiagramDocument, SCHEMA_VERSION } from './types';
+import { type DiagramDocument, LEGACY_STYLES, type LegacyStyleId, SCHEMA_VERSION } from './types';
 
 export type ParseErrorCode =
   | 'too-large'
@@ -18,18 +18,49 @@ function fail(code: ParseErrorCode, message: string, issues: ValidationIssue[] =
   return { ok: false, code, message, issues };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function isLegacyStyleId(value: unknown): value is LegacyStyleId {
+  return typeof value === 'string' && Object.hasOwn(LEGACY_STYLES, value);
+}
+
+/**
+ * Rewrites a retired style preset (Glass, Monochrome, Orbit) to its
+ * successor and the appearance options that keep its look. Anything that is
+ * not a legacy preset passes through untouched for the schema to judge.
+ */
+function upgradeLegacyStyle(doc: Record<string, unknown>): Record<string, unknown> {
+  const presentation = doc.presentation;
+  if (!isRecord(presentation) || !isLegacyStyleId(presentation.styleId)) return doc;
+  const legacy: (typeof LEGACY_STYLES)[LegacyStyleId] = LEGACY_STYLES[presentation.styleId];
+  const camera = isRecord(presentation.camera) ? presentation.camera : {};
+  const appearance = isRecord(presentation.appearance) ? presentation.appearance : {};
+  const styleProjection = 'styleProjection' in legacy ? legacy.styleProjection : undefined;
+  return {
+    ...doc,
+    presentation: {
+      ...presentation,
+      styleId: legacy.styleId,
+      camera: styleProjection && camera.projection === 'style' ? { ...camera, projection: styleProjection } : camera,
+      appearance: { ...appearance, ...legacy.appearance },
+    },
+  };
+}
+
 /**
  * Brings older documents to the current schema. Only version 1 exists today,
- * so the function only rejects what it cannot interpret. Unknown (newer)
- * versions are never read as the current one.
+ * so the function only rejects what it cannot interpret and upgrades retired
+ * style presets. Unknown (newer) versions are never read as the current one.
  */
 export function migrateDocument(
   raw: unknown,
 ): { ok: true; value: unknown } | { ok: false; code: ParseErrorCode; message: string } {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+  if (!isRecord(raw)) {
     return { ok: false, code: 'schema', message: 'El contenido no es un documento Strata (se esperaba un objeto).' };
   }
-  const version = (raw as { schemaVersion?: unknown }).schemaVersion;
+  const version = raw.schemaVersion;
   if (version === undefined) {
     return { ok: false, code: 'missing-version', message: 'El documento no declara schemaVersion.' };
   }
@@ -40,7 +71,7 @@ export function migrateDocument(
       message: `schemaVersion ${JSON.stringify(version)} no es compatible: esta versión de la aplicación lee la ${SCHEMA_VERSION}.`,
     };
   }
-  return { ok: true, value: raw };
+  return { ok: true, value: upgradeLegacyStyle(raw) };
 }
 
 /** Full pipeline for untrusted input: migrate → schema → referential invariants. */

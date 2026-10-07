@@ -42,6 +42,33 @@ export function checkConnection(doc: DiagramDocument, source: EdgeEndpoint, targ
   return { ok: true };
 }
 
+/**
+ * Picks ports for a connection made without dragging (keyboard, inspector):
+ * the first valid source/target pair that is not already connected, in port
+ * order. Null when the two components cannot be connected.
+ */
+export function findConnectablePorts(
+  doc: DiagramDocument,
+  sourceNodeId: string,
+  targetNodeId: string,
+): { source: EdgeEndpoint; target: EdgeEndpoint } | null {
+  const sourceNode = doc.nodes.find((node) => node.id === sourceNodeId);
+  const targetNode = doc.nodes.find((node) => node.id === targetNodeId);
+  if (!sourceNode || !targetNode || sourceNode.id === targetNode.id) return null;
+  const taken = new Set(
+    doc.edges.map((edge) => `${edge.source.nodeId}/${edge.source.portId}>${edge.target.nodeId}/${edge.target.portId}`),
+  );
+  for (const sourcePort of sourceNode.ports) {
+    for (const targetPort of targetNode.ports) {
+      const source = { nodeId: sourceNode.id, portId: sourcePort.id };
+      const target = { nodeId: targetNode.id, portId: targetPort.id };
+      if (taken.has(`${source.nodeId}/${source.portId}>${target.nodeId}/${target.portId}`)) continue;
+      if (checkConnection(doc, source, target).ok) return { source, target };
+    }
+  }
+  return null;
+}
+
 /** Returns the chain of ancestors of a group, nearest first. Stops on cycles. */
 export function groupAncestors(groups: ReadonlyMap<string, DiagramGroup>, groupId: string | null): string[] {
   const chain: string[] = [];

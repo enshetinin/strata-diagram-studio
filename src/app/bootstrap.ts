@@ -4,7 +4,8 @@
  * saved data is backed up, never parsed half-way.
  */
 import { setPresentation } from '../domain/commands';
-import { type DiagramDocument, STYLE_IDS, type StyleId } from '../domain/types';
+import { isLegacyStyleId } from '../domain/parse';
+import { type DiagramDocument, LEGACY_STYLES, type LegacyStyleId, STYLE_IDS, type StyleId } from '../domain/types';
 import { startAutosave } from '../features/persistence/autosave';
 import { loadSaved } from '../features/persistence/storage';
 import { openSharedLink } from '../features/share/session';
@@ -56,6 +57,15 @@ export async function bootstrap(): Promise<() => void> {
 
   const style = params.get('style');
   if (style && STYLE_IDS.includes(style as StyleId)) doc = setPresentation(doc, { styleId: style as StyleId });
+  else if (isLegacyStyleId(style)) {
+    // Old `?style=` links (glass, monochrome, orbit) open with the successor preset and its options.
+    const legacy: (typeof LEGACY_STYLES)[LegacyStyleId] = LEGACY_STYLES[style];
+    doc = setPresentation(doc, {
+      styleId: legacy.styleId,
+      appearance: legacy.appearance,
+      ...('styleProjection' in legacy ? { camera: { projection: legacy.styleProjection } } : {}),
+    });
+  }
   useDocumentStore.getState().load(doc);
 
   if (params.get('mode') === '2d') ui.setMode('2d');

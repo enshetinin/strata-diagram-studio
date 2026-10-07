@@ -7,7 +7,9 @@ export function edgeIot() {
     name: 'Edge / IoT',
     description:
       'Dos plantas y una flota móvil envían telemetría a través de gateways de borde a una región cloud con broker, reglas, almacenamiento y monitorización; las actualizaciones OTA vuelven a los gateways. Ejemplo ilustrativo.',
-    styleId: 'orbit',
+    styleId: 'porcelain',
+    appearance: { connectorRoute: 'arc' },
+    projection: 'perspective',
   })
     .group('g-north', 'Planta Norte', { kind: 'zone' })
     .group('g-south', 'Planta Sur', { kind: 'zone' })

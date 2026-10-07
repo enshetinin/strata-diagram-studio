@@ -1,8 +1,10 @@
 /**
  * 2D visual vocabulary shared by the React Flow editor and the SVG exporter,
- * so the exported file looks like the editor.
+ * so the exported file looks like the editor. Colours come from the diagram
+ * palette of the active preset (`features/theme/diagramTokens.ts`).
  */
 import type { NodeKind, RelationKind } from '../../domain/types';
+import { type DiagramPalette, domainAccent } from '../theme/diagramTokens';
 
 /** Generic geometric glyphs on a 20×20 grid (stroke only). Not vendor logos. */
 export const KIND_GLYPH: Record<NodeKind, string> = {
@@ -50,26 +52,60 @@ export const KIND_GLYPH: Record<NodeKind, string> = {
   generic: 'M10 4a6 6 0 1 0 0 12a6 6 0 1 0 0-12',
 };
 
-/** Domain accents for 2D group headers (same family as the Porcelain preset). */
-export const ACCENTS_2D = ['#C2532A', '#2F6B63', '#9A7A1F', '#4B5E8A', '#7A4C73'];
+export type RelationTone = 'ink' | 'muted';
 
-export function accent2d(index: number): string {
-  return index < 0 ? '#8A93A3' : (ACCENTS_2D[index % ACCENTS_2D.length] ?? '#8A93A3');
+/**
+ * Relations are told apart by stroke pattern, not by colour (WCAG 1.4.1):
+ * the main flow is drawn in ink, secondary relations in muted grey, and the
+ * signal colour is reserved for the selected relation.
+ */
+export const RELATION_STROKE: Record<RelationKind, { tone: RelationTone; dash?: string }> = {
+  request: { tone: 'ink' },
+  response: { tone: 'ink', dash: '2 4' },
+  data: { tone: 'ink', dash: '12 2' },
+  event: { tone: 'ink', dash: '7 4' },
+  async: { tone: 'ink', dash: '7 4' },
+  dependency: { tone: 'muted', dash: '3 3' },
+  telemetry: { tone: 'muted', dash: '1 3' },
+  control: { tone: 'ink', dash: '12 4 2 4' },
+  auth: { tone: 'ink', dash: '8 3 2 3' },
+  stream: { tone: 'ink' },
+  replication: { tone: 'ink', dash: '10 4' },
+  sync: { tone: 'ink', dash: '4 2' },
+  backup: { tone: 'muted', dash: '8 3 2 3' },
+  deploy: { tone: 'ink', dash: '5 3' },
+};
+
+/** Domain slots exposed as CSS variables; accent indices wrap around them. */
+const DOMAIN_SLOTS = 5;
+
+/** CSS colour of a domain accent inside the 2D sheet (resolved by `sheetVariables`). */
+export function domainAccentVar(accent: number): string {
+  return accent < 0 ? 'var(--domain-none)' : `var(--domain-${accent % DOMAIN_SLOTS})`;
 }
 
-export const RELATION_STROKE: Record<RelationKind, { color: string; dash?: string }> = {
-  request: { color: '#0D1B2E' },
-  response: { color: '#0D1B2E', dash: '2 4' },
-  data: { color: '#2F4A5E' },
-  event: { color: '#0D1B2E', dash: '7 4' },
-  async: { color: '#0D1B2E', dash: '7 4' },
-  dependency: { color: '#6B7280', dash: '3 3' },
-  telemetry: { color: '#6B7280', dash: '1 3' },
-  control: { color: '#9A3412' },
-  auth: { color: '#4B5E8A', dash: '8 3 2 3' },
-  stream: { color: '#2F6B63' },
-  replication: { color: '#2F4A5E', dash: '10 4' },
-  sync: { color: '#2F4A5E', dash: '4 2' },
-  backup: { color: '#6B7280', dash: '8 3 2 3' },
-  deploy: { color: '#9A7A1F', dash: '5 3' },
-};
+/**
+ * Inline style for the 2D sheet: the editor follows the active preset's
+ * scheme (a dark preset gives a dark sheet) and its domain accents.
+ */
+export function sheetStyle(palette: DiagramPalette, accents: readonly string[]): Record<string, string> {
+  const style: Record<string, string> = {
+    colorScheme: palette.scheme,
+    '--sheet': palette.canvas,
+    '--sheet-ink': palette.ink,
+    '--sheet-muted': palette.muted,
+    '--sheet-edge': palette.ruleStrong,
+    '--sheet-raised': palette.surface,
+    '--sheet-rule': palette.rule,
+    '--sheet-success': palette.success,
+    '--sheet-error': palette.error,
+    '--signal': palette.signal,
+    '--focus': palette.signal,
+    '--grid-dot': palette.surface3,
+    '--minimap-mask': `color-mix(in srgb, ${palette.canvas} 72%, transparent)`,
+    '--domain-none': palette.muted,
+  };
+  const domains = { ...palette, accents };
+  for (let slot = 0; slot < DOMAIN_SLOTS; slot += 1) style[`--domain-${slot}`] = domainAccent(domains, slot);
+  return style;
+}

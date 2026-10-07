@@ -87,6 +87,29 @@ describe('schema and invariants', () => {
     expect(!missing.ok && missing.code).toBe('missing-version');
   });
 
+  it('opens documents saved with a retired style preset', () => {
+    const legacy = (styleId: string, projection = 'style') => {
+      const doc = JSON.parse(serializeDocument(aws()));
+      doc.presentation.styleId = styleId;
+      doc.presentation.camera.projection = projection;
+      delete doc.presentation.appearance.connectorRoute;
+      delete doc.presentation.appearance.translucentLayers;
+      const result = parseDocument(doc);
+      if (!result.ok) throw new Error(result.message);
+      return result.document.presentation;
+    };
+    expect(legacy('glass')).toMatchObject({ styleId: 'midnight', appearance: { translucentLayers: true } });
+    expect(legacy('monochrome')).toMatchObject({ styleId: 'editorial', appearance: { connectorRoute: 'orthogonal' } });
+    expect(legacy('orbit')).toMatchObject({
+      styleId: 'porcelain',
+      camera: { projection: 'perspective' },
+      appearance: { connectorRoute: 'arc', translucentLayers: false },
+    });
+    // An explicit camera choice survives the upgrade.
+    expect(legacy('orbit', 'orthographic').camera.projection).toBe('orthographic');
+    expect(parseDocument({ ...aws(), presentation: { ...aws().presentation, styleId: 'neon' } }).ok).toBe(false);
+  });
+
   it('enforces size limits before parsing', () => {
     const result = parseDocumentText(' '.repeat(2_000_001));
     expect(!result.ok && result.code).toBe('too-large');

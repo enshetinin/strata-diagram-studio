@@ -36,7 +36,7 @@ export const TEMPLATES: readonly TemplateInfo[] = [
     name: 'RAG documental',
     summary: 'Ingesta → parsing → embeddings → índice; consulta → retrieval → modelo',
     composition: 'Dos carriles: ingestión y consulta',
-    recommendedStyle: 'glass',
+    recommendedStyle: 'midnight',
     create: ragDocumental,
   },
   {
@@ -54,7 +54,7 @@ export const TEMPLATES: readonly TemplateInfo[] = [
     name: 'Comercio por eventos',
     summary: 'Gateway, pedidos, pagos, inventario, bus, consumidores y DLQ',
     composition: 'Flujo principal con ramas y retornos',
-    recommendedStyle: 'monochrome',
+    recommendedStyle: 'editorial',
     create: eventCommerce,
   },
   {
@@ -72,7 +72,7 @@ export const TEMPLATES: readonly TemplateInfo[] = [
     name: 'Edge / IoT',
     summary: 'Dispositivos, gateways, región cloud, almacenamiento y monitorización',
     composition: 'Clusters separados y convergencia regional',
-    recommendedStyle: 'orbit',
+    recommendedStyle: 'porcelain',
     create: edgeIot,
   },
 ];

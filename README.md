@@ -4,7 +4,7 @@ Editor de diagramas de sistemas con un único documento semántico y dos vistas:
 (React Flow) y una escena 3D real (Three.js / React Three Fiber) con estilos isométricos.
 Funciona sin claves ni backend.
 
-![Strata Diagram Studio: vista 3D, estilos, editor 2D y modo presentación](docs/demo.gif)
+![Strata Diagram Studio: vista 3D, los cuatro estilos, controles de cámara, editor 2D y modo presentación](docs/demo.gif)
 
 ## Puesta en marcha
 
@@ -79,19 +79,19 @@ con opciones para presentar, volver al propio diagrama o editar una copia (pide 
 una copia de seguridad del anterior en `strata:replaced:<fecha>`). `&p=1` abre en modo presentación.
 
 Parámetros de URL útiles: `?template=rag|aws-load-testing|multi-agent|event-commerce|data-platform|edge-iot`,
-`&style=porcelain|midnight|glass|blueprint|monochrome|orbit`, `&mode=2d`, `&panels=closed`,
+`&style=porcelain|editorial|midnight|blueprint` (los antiguos `glass`, `monochrome` y `orbit` abren su equivalente), `&mode=2d`, `&panels=closed`,
 `?variation=iot:42:3`, `?stress=1` (fixture 100/150 para medir).
 
 ## Plantillas y estilos
 
 | Plantilla | Topología | Estilo recomendado |
 | --- | --- | --- |
-| AWS Load Testing | Tres plataformas de dominio, región › VPC › clúster, recorrido numerado | Porcelain Isometric |
-| RAG documental | Dos carriles (ingesta / consulta) unidos por embeddings e índice | Glass Layers |
-| Sistema multiagente | Coordinador central, satélites, herramientas y memoria; ciclo de revisión | Midnight Signal |
-| Comercio por eventos | Flujo principal, ramas de consumidores, retornos al bus, DLQ | Monochrome Editorial |
-| Plataforma de datos | Etapas izquierda→derecha, lakehouse con banda medallion anidada | Blueprint Spatial |
-| Edge / IoT | Clusters de campo separados que convergen en una región; OTA de vuelta | Orbit Atlas |
+| AWS Load Testing | Tres plataformas de dominio, región › VPC › clúster, recorrido numerado | Porcelain |
+| RAG documental | Dos carriles (ingesta / consulta) unidos por embeddings e índice | Midnight + capas translúcidas |
+| Sistema multiagente | Coordinador central, satélites, herramientas y memoria; ciclo de revisión | Midnight |
+| Comercio por eventos | Flujo principal, ramas de consumidores, retornos al bus, DLQ | Editorial |
+| Plataforma de datos | Etapas izquierda→derecha, lakehouse con banda medallion anidada | Blueprint |
+| Edge / IoT | Clusters de campo separados que convergen en una región; OTA de vuelta | Porcelain + conectores en arco, perspectiva |
 
 Son ejemplos ilustrativos, no infraestructura desplegada. Los estilos cambian materiales,
 geometría de plataformas, luz, cámara (Orbit usa perspectiva) y conectores (tubos, líneas finas,
@@ -106,7 +106,7 @@ DiagramDocument {
   groups: { id, label, description?, kind, parentGroupId }[]
   edges:  { id, source: {nodeId, portId}, target: {nodeId, portId}, relation, label?, direction, order?, explanation? }[]
   layout: { nodes: Record<id, Rect>, groups: Record<id, Rect> }   // px, locales al contenedor
-  presentation: { styleId, camera: { projection }, appearance: { spacing, layerHeight, labelMode, flowParticles } }
+  presentation: { styleId, camera: { projection }, appearance: { spacing, layerHeight, labelMode, flowParticles, connectorRoute, translucentLayers } }
   narrative: { steps: { id, title, caption?, edgeIds }[] }
 }
 ```

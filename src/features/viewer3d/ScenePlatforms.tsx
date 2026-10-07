@@ -7,7 +7,7 @@ import { viewDirection } from './cameraFit';
 import { placeGroupTitles, titleSize } from './labelPlacement';
 import { dimColor } from './materials';
 import { unitGeometry } from './nodeShapes';
-import { DIM_AMOUNT, FONT_BOLD, FONT_REGULAR, LABEL_MATERIAL, useScene } from './sceneContext';
+import { DIM_AMOUNT, FONT_MONO, FONT_SEMIBOLD, LABEL_MATERIAL, useScene } from './sceneContext';
 import { accentColor } from './themes';
 
 function selectGroup(event: ThreeEvent<MouseEvent>, id: string) {
@@ -51,7 +51,7 @@ function Dimension({ group, color }: { group: SceneGroup; color: string }) {
         lineWidth={1}
       />
       <Text
-        font={FONT_REGULAR}
+        font={FONT_MONO}
         fontSize={0.09}
         color={color}
         position={[group.x, y, z + 0.12]}
@@ -70,8 +70,7 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
   const emphasis = highlight.group(group.id);
   const dim = DIM_AMOUNT[emphasis];
   const treatment = theme.platform.treatment;
-  const surface =
-    theme.platform.colors[group.depth % theme.platform.colors.length] ?? theme.platform.colors[0] ?? '#cccccc';
+  const surface = theme.platform.colors[group.depth % theme.platform.colors.length] ?? theme.palette.surface;
   const accent = accentColor(theme, group.accent);
   const color = dimColor(surface, theme.background, dim);
   const edge = dimColor(emphasis === 'selected' ? theme.selection : theme.platform.edge, theme.background, dim);
@@ -80,12 +79,12 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
   const finish = 'platform' as const;
   const titleColor = dimColor(theme.platform.title, theme.background, dim);
   const minZ = group.z - group.sizeZ / 2;
-  const showEdges = treatment !== 'slab' && treatment !== 'island';
+  const showEdges = treatment !== 'slab';
 
   return (
     <group name={`group-${group.id}`} userData={{ strataGroupId: group.id }}>
       <mesh
-        geometry={unitGeometry(treatment === 'slab' || treatment === 'island' ? 'rounded' : 'box')}
+        geometry={unitGeometry(treatment === 'slab' ? 'rounded' : 'box')}
         material={treatment === 'outline' ? materials.flat(color, opacity) : materials.surface(color, opacity, finish)}
         position={[group.x, group.bottom + thickness / 2, group.z]}
         scale={[group.sizeX, thickness, group.sizeZ]}
@@ -96,16 +95,7 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
           <Edges threshold={15} color={edge} transparent opacity={theme.platform.edgeOpacity} />
         ) : null}
       </mesh>
-      {treatment === 'island' && group.depth === 0 ? (
-        // Tapered underside makes top-level groups read as floating islands.
-        <mesh
-          geometry={unitGeometry('frustum')}
-          material={materials.surface(dimColor(theme.platform.edge, theme.background, dim), 1, finish)}
-          position={[group.x, group.bottom - 0.22, group.z]}
-          scale={[group.sizeX * 0.98, 0.44, group.sizeZ * 0.98]}
-        />
-      ) : null}
-      {treatment === 'slab' || treatment === 'deck' || treatment === 'island' || treatment === 'plate' ? (
+      {treatment === 'slab' || treatment === 'deck' || treatment === 'plate' ? (
         // Domain accent stripe along the title edge.
         <mesh
           geometry={unitGeometry('box')}
@@ -116,9 +106,9 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
       ) : null}
       <Billboard position={titleAt}>
         <Text
-          font={FONT_BOLD}
+          font={FONT_SEMIBOLD}
           fontSize={titleSize(labelSize, group)}
-          letterSpacing={0.04}
+          letterSpacing={0.08}
           color={titleColor}
           anchorX="left"
           anchorY="middle"

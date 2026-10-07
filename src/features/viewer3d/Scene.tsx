@@ -17,7 +17,7 @@ import { SceneNodes } from './SceneNodes';
 import { SceneNotes } from './SceneNotes';
 import { ScenePlatforms } from './ScenePlatforms';
 import { SceneContext, type SceneContextValue, useScene } from './sceneContext';
-import { THEMES } from './themes';
+import { resolveTheme } from './themes';
 
 /** Publishes what the scene graph actually contains, for tests and assistive summaries. */
 function SceneProbe({ onStats }: { onStats: (stats: { nodes: number; edges: number; groups: number }) => void }) {
@@ -55,7 +55,8 @@ export function Scene({
   const invalidate = useThree((state) => state.invalidate);
   const size = useThree((state) => state.size);
 
-  const theme = THEMES[doc.presentation.styleId];
+  // Memoised: appearance options build a new theme object, and materials are keyed on it.
+  const theme = useMemo(() => resolveTheme(doc.presentation), [doc.presentation]);
   const appearance = doc.presentation.appearance;
   const projection =
     doc.presentation.camera.projection === 'style' ? theme.camera.projection : doc.presentation.camera.projection;

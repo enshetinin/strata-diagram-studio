@@ -19,8 +19,10 @@ import {
   PORT_SIDES,
   type Port,
   RELATION_KINDS,
+  type RelationKind,
 } from '../../domain/types';
 import {
+  connectNodes,
   deleteSelection,
   duplicateSelection,
   groupSelection,
@@ -221,6 +223,48 @@ function MetadataField({ node }: { node: DiagramNode }) {
   );
 }
 
+const NO_TARGET = '__none__';
+
+/** Connection without dragging between ports (WCAG 2.5.7): the domain picks compatible ports. */
+function ConnectToField({ node, doc }: { node: DiagramNode; doc: DiagramDocument }) {
+  const [target, setTarget] = useState(NO_TARGET);
+  const [relation, setRelation] = useState<RelationKind>('request');
+  const others = doc.nodes.filter((other) => other.id !== node.id);
+  if (others.length === 0) return null;
+  return (
+    <fieldset className="inspector__connect">
+      <legend>Conectar con…</legend>
+      <SelectField
+        label="Destino"
+        value={target}
+        options={[
+          { value: NO_TARGET, label: 'Elige un componente' },
+          ...others
+            .map((other) => ({ value: other.id, label: other.label }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
+        ]}
+        onChange={setTarget}
+      />
+      <SelectField
+        label="Tipo de relación"
+        value={relation}
+        options={RELATION_KINDS.map((kind) => ({ value: kind, label: RELATION_INFO[kind].label }))}
+        onChange={setRelation}
+      />
+      <button
+        type="button"
+        className="button button--block"
+        disabled={target === NO_TARGET}
+        onClick={() => {
+          if (connectNodes(node.id, target, relation)) setTarget(NO_TARGET);
+        }}
+      >
+        Conectar
+      </button>
+    </fieldset>
+  );
+}
+
 function NodeInspector({ node, doc }: { node: DiagramNode; doc: DiagramDocument }) {
   return (
     <>
@@ -262,6 +306,7 @@ function NodeInspector({ node, doc }: { node: DiagramNode; doc: DiagramDocument 
           run('Cambiar grupo', (d) => cmd.setNodeGroup(d, node.id, value === '__none__' ? null : value))
         }
       />
+      <ConnectToField node={node} doc={doc} />
       <details className="advanced">
         <summary>Avanzado: puntos de conexión y metadatos</summary>
         <PortsEditor node={node} />
@@ -398,6 +443,25 @@ function EdgeInspector({ edge, doc }: { edge: DiagramEdge; doc: DiagramDocument 
   );
 }
 
+/** Size without dragging the resize handles (WCAG 2.5.7). Values in canvas pixels. */
+function GroupSizeFields({ group, doc }: { group: DiagramGroup; doc: DiagramDocument }) {
+  const rect = doc.layout.groups[group.id];
+  if (!rect) return null;
+  const commit = (dimension: 'width' | 'height', text: string) => {
+    const value = Number.parseInt(text, 10);
+    if (!Number.isFinite(value)) return;
+    run('Redimensionar grupo', (d) =>
+      cmd.resizeElement(d, { type: 'group', id: group.id }, { ...rect, [dimension]: value }),
+    );
+  };
+  return (
+    <div className="field-row">
+      <TextField label="Ancho (px)" value={String(rect.width)} onCommit={(text) => commit('width', text)} />
+      <TextField label="Alto (px)" value={String(rect.height)} onCommit={(text) => commit('height', text)} />
+    </div>
+  );
+}
+
 function GroupInspector({ group, doc }: { group: DiagramGroup; doc: DiagramDocument }) {
   const exclude = new Set([group.id, ...cmd.descendantGroups(doc, group.id)]);
   const isolated = useUiStore((state) => state.isolatedGroupId);
@@ -435,6 +499,7 @@ function GroupInspector({ group, doc }: { group: DiagramGroup; doc: DiagramDocum
           run('Cambiar grupo padre', (d) => cmd.setGroupParent(d, group.id, value === '__none__' ? null : value))
         }
       />
+      <GroupSizeFields group={group} doc={doc} />
       <ElementActions type="group" id={group.id} />
       <div className="button-row">
         <button

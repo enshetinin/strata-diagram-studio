@@ -6,6 +6,8 @@ export type ViewMode = '3d' | '2d';
 export type LeftTab = 'outline' | 'library';
 export type RightTab = 'inspector' | 'narrative' | 'appearance';
 export type WebglStatus = 'unknown' | 'ok' | 'unsupported' | 'lost' | 'error';
+/** One step of camera movement from a button or key, instead of dragging (WCAG 2.5.7). */
+export type CameraNudge = 'rotateLeft' | 'rotateRight' | 'tiltUp' | 'tiltDown' | 'zoomIn' | 'zoomOut';
 
 export interface Notice {
   id: number;
@@ -30,6 +32,9 @@ interface UiState {
   /** Bumped to ask the active view to frame an element. */
   focusRequest: { ref: ElementRef; nonce: number } | null;
   cameraResetNonce: number;
+  cameraNudge: { action: CameraNudge; nonce: number } | null;
+  /** Illustrative flow particles frozen by the viewer (WCAG 2.2.2). */
+  particlesPaused: boolean;
   notices: Notice[];
   webgl: WebglStatus;
   webglMessage: string | null;
@@ -49,6 +54,8 @@ interface UiState {
   isolateGroup(groupId: string | null): void;
   focus(ref: ElementRef): void;
   resetCamera(): void;
+  nudgeCamera(action: CameraNudge): void;
+  setParticlesPaused(paused: boolean): void;
   notify(tone: Notice['tone'], text: string, action?: Notice['action']): void;
   dismiss(id: number): void;
   setWebgl(status: WebglStatus, message?: string | null): void;
@@ -74,6 +81,8 @@ export const useUiStore = create<UiState>()((set) => ({
   isolatedGroupId: null,
   focusRequest: null,
   cameraResetNonce: 0,
+  cameraNudge: null,
+  particlesPaused: false,
   notices: [],
   webgl: 'unknown',
   webglMessage: null,
@@ -111,6 +120,8 @@ export const useUiStore = create<UiState>()((set) => ({
   isolateGroup: (isolatedGroupId) => set({ isolatedGroupId }),
   focus: (ref) => set((state) => ({ focusRequest: { ref, nonce: (state.focusRequest?.nonce ?? 0) + 1 } })),
   resetCamera: () => set((state) => ({ cameraResetNonce: state.cameraResetNonce + 1 })),
+  nudgeCamera: (action) => set((state) => ({ cameraNudge: { action, nonce: (state.cameraNudge?.nonce ?? 0) + 1 } })),
+  setParticlesPaused: (particlesPaused) => set({ particlesPaused }),
   notify: (tone, text, action) =>
     set((state) => ({
       notices: [...state.notices.slice(-3), { id: ++noticeId, tone, text, ...(action ? { action } : {}) }],

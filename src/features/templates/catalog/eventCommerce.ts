@@ -7,7 +7,7 @@ export function eventCommerce() {
     name: 'Comercio por eventos',
     description:
       'Gateway, servicio de pedidos y bus de eventos con consumidores de pagos, inventario y notificaciones; los fallos acaban en una DLQ con reproceso. Ejemplo ilustrativo.',
-    styleId: 'monochrome',
+    styleId: 'editorial',
   })
     .group('g-edge', 'Borde', { kind: 'zone' })
     .group('g-orders', 'Dominio de pedidos')
