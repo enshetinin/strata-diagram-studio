@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { moveElements, type Move } from '../domain/commands';
+import { type Move, moveElements } from '../domain/commands';
+import { saveNow } from '../features/persistence/autosave';
 import { deleteSelection, duplicateSelection, groupSelection, ungroupSelection } from '../state/actions';
 import { useDocumentStore } from '../state/documentStore';
 import { useUiStore } from '../state/uiStore';
-import { saveNow } from '../features/persistence/autosave';
 
 /** Never intercept keys while the user types or interacts with a dialog. */
 export function isTyping(target: EventTarget | null): boolean {
@@ -24,7 +24,12 @@ function nudge(dx: number, dy: number) {
   const doc = useDocumentStore.getState().doc;
   const moves: Move[] = selection.flatMap((ref): Move[] => {
     if (ref.type === 'edge') return [];
-    const rect = ref.type === 'node' ? doc.layout.nodes[ref.id] : ref.type === 'group' ? doc.layout.groups[ref.id] : doc.layout.annotations[ref.id];
+    const rect =
+      ref.type === 'node'
+        ? doc.layout.nodes[ref.id]
+        : ref.type === 'group'
+          ? doc.layout.groups[ref.id]
+          : doc.layout.annotations[ref.id];
     return rect ? [{ type: ref.type, id: ref.id, x: rect.x + dx, y: rect.y + dy }] : [];
   });
   if (moves.length === 0) return;
@@ -68,7 +73,16 @@ export function useShortcuts() {
       } else if (!mod && key === 'f') {
         const primary = ui.selection[ui.selection.length - 1];
         if (primary && primary.type !== 'edge') ui.focus(primary);
-      } else if (!mod && ui.mode === '2d' && event.key.startsWith('Arrow') && ui.selection.length > 0 && !(event.target instanceof HTMLElement && event.target.closest('[role="tablist"],[role="menu"],[role="radiogroup"]'))) {
+      } else if (
+        !mod &&
+        ui.mode === '2d' &&
+        event.key.startsWith('Arrow') &&
+        ui.selection.length > 0 &&
+        !(
+          event.target instanceof HTMLElement &&
+          event.target.closest('[role="tablist"],[role="menu"],[role="radiogroup"]')
+        )
+      ) {
         event.preventDefault();
         const step = event.shiftKey ? 32 : 8;
         const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;

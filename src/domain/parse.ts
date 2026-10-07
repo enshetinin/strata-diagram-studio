@@ -1,8 +1,14 @@
+import { type ValidationIssue, validateInvariants } from './invariants';
 import { documentSchema, LIMITS } from './schema';
-import { validateInvariants, type ValidationIssue } from './invariants';
-import { SCHEMA_VERSION, type DiagramDocument } from './types';
+import { type DiagramDocument, SCHEMA_VERSION } from './types';
 
-export type ParseErrorCode = 'too-large' | 'invalid-json' | 'unknown-version' | 'missing-version' | 'schema' | 'invariants';
+export type ParseErrorCode =
+  | 'too-large'
+  | 'invalid-json'
+  | 'unknown-version'
+  | 'missing-version'
+  | 'schema'
+  | 'invariants';
 
 export type ParseResult =
   | { ok: true; document: DiagramDocument }
@@ -17,7 +23,9 @@ function fail(code: ParseErrorCode, message: string, issues: ValidationIssue[] =
  * so the function only rejects what it cannot interpret. Unknown (newer)
  * versions are never read as the current one.
  */
-export function migrateDocument(raw: unknown): { ok: true; value: unknown } | { ok: false; code: ParseErrorCode; message: string } {
+export function migrateDocument(
+  raw: unknown,
+): { ok: true; value: unknown } | { ok: false; code: ParseErrorCode; message: string } {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
     return { ok: false, code: 'schema', message: 'El contenido no es un documento Strata (se esperaba un objeto).' };
   }

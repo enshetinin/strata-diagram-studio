@@ -45,12 +45,23 @@ function Preview() {
 
   return (
     <figure className={`png-export__preview${options.transparent ? ' is-transparent' : ''}`} data-state={state}>
-      <canvas ref={ref} style={{ aspectRatio: `${format.width} / ${format.height}` }} aria-label="Vista previa de la imagen" role="img" />
+      <canvas
+        ref={ref}
+        style={{ aspectRatio: `${format.width} / ${format.height}` }}
+        aria-label="Vista previa de la imagen"
+        role="img"
+      />
       <figcaption>
         <span>
           {format.width} × {format.height} px
         </span>
-        <span aria-live="polite">{state === 'loading' ? 'Generando vista previa…' : state === 'error' ? 'No se pudo generar la vista previa.' : 'Vista previa'}</span>
+        <span aria-live="polite">
+          {state === 'loading'
+            ? 'Generando vista previa…'
+            : state === 'error'
+              ? 'No se pudo generar la vista previa.'
+              : 'Vista previa'}
+        </span>
       </figcaption>
     </figure>
   );
@@ -94,7 +105,13 @@ export function ExportPngDialog() {
             <legend className="panel-heading">Formato</legend>
             {PNG_FORMAT_IDS.map((id) => (
               <label key={id} className="png-export__format">
-                <input type="radio" name="png-format" value={id} checked={options.format === id} onChange={() => setPng({ format: id })} />
+                <input
+                  type="radio"
+                  name="png-format"
+                  value={id}
+                  checked={options.format === id}
+                  onChange={() => setPng({ format: id })}
+                />
                 <span>{PNG_FORMATS[id].label}</span>
                 <code>
                   {PNG_FORMATS[id].width}×{PNG_FORMATS[id].height}
@@ -104,9 +121,17 @@ export function ExportPngDialog() {
           </fieldset>
           <fieldset className="png-export__include">
             <legend className="panel-heading">Incluir</legend>
-            <CheckboxField label="Título y descripción" checked={options.title} onChange={(title) => setPng({ title })} />
+            <CheckboxField
+              label="Título y descripción"
+              checked={options.title}
+              onChange={(title) => setPng({ title })}
+            />
             <CheckboxField label="Leyenda" checked={options.legend} onChange={(legend) => setPng({ legend })} />
-            <CheckboxField label="Fondo transparente" checked={options.transparent} onChange={(transparent) => setPng({ transparent })} />
+            <CheckboxField
+              label="Fondo transparente"
+              checked={options.transparent}
+              onChange={(transparent) => setPng({ transparent })}
+            />
           </fieldset>
         </div>
       </div>

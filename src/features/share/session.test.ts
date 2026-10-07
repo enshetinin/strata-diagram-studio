@@ -11,8 +11,15 @@ describe('shared-view session', () => {
 
   beforeEach(() => {
     const data = new Map<string, string>();
-    vi.stubGlobal('localStorage', { getItem: (key: string) => data.get(key) ?? null, setItem: (key: string, value: string) => void data.set(key, value) });
-    vi.stubGlobal('window', { location: { hash: '', pathname: '/', search: '' }, addEventListener: () => {}, removeEventListener: () => {} });
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => void data.set(key, value),
+    });
+    vi.stubGlobal('window', {
+      location: { hash: '', pathname: '/', search: '' },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    });
     useDocumentStore.getState().setReadOnly(null);
     useDocumentStore.getState().load(TEMPLATES[0]!.create());
     stopAutosave = startAutosave();
@@ -42,7 +49,10 @@ describe('shared-view session', () => {
     const [first, second] = [TEMPLATES[1]!.create(), TEMPLATES[2]!.create()];
     const [firstPayload, secondPayload] = await Promise.all([encodeDocument(first), encodeDocument(second)]);
 
-    const results = await Promise.all([openSharedLink({ payload: firstPayload, present: false }), openSharedLink({ payload: secondPayload, present: false })]);
+    const results = await Promise.all([
+      openSharedLink({ payload: firstPayload, present: false }),
+      openSharedLink({ payload: secondPayload, present: false }),
+    ]);
 
     expect(results).toEqual([false, true]);
     expect(useDocumentStore.getState().doc.name).toBe(second.name);

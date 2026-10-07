@@ -7,17 +7,32 @@ import { z } from 'zod';
 import { defaultPorts } from '../../domain/commands';
 import { validateInvariants } from '../../domain/invariants';
 import { deriveNarrative } from '../../domain/narrative';
-import { GROUP_KINDS, NODE_KINDS, RELATION_KINDS, SCHEMA_VERSION, DEFAULT_APPEARANCE, DEFAULT_NODE_SIZE, type DiagramDocument, type StyleId } from '../../domain/types';
+import {
+  DEFAULT_APPEARANCE,
+  DEFAULT_NODE_SIZE,
+  type DiagramDocument,
+  GROUP_KINDS,
+  NODE_KINDS,
+  RELATION_KINDS,
+  SCHEMA_VERSION,
+  type StyleId,
+} from '../../domain/types';
 import { GENERATION_LIMITS, GenerationError } from './types';
 
-const id = z.string().min(1).max(80).regex(/^[A-Za-z0-9_.:-]+$/);
+const id = z
+  .string()
+  .min(1)
+  .max(80)
+  .regex(/^[A-Za-z0-9_.:-]+$/);
 const label = z.string().trim().min(1).max(120);
 
 export const generatedGraphSchema = z.object({
   name: label,
   description: z.string().max(2_000).default(''),
   groups: z
-    .array(z.object({ id, label, kind: z.enum(GROUP_KINDS).default('domain'), parentGroupId: id.nullable().default(null) }))
+    .array(
+      z.object({ id, label, kind: z.enum(GROUP_KINDS).default('domain'), parentGroupId: id.nullable().default(null) }),
+    )
     .max(GENERATION_LIMITS.maxGroups)
     .default([]),
   nodes: z
@@ -61,7 +76,9 @@ export function graphToDocument(raw: unknown, styleId: StyleId): DiagramDocument
     throw new GenerationError(
       'invalid-output',
       'La respuesta del proveedor no cumple el esquema.',
-      parsed.error.issues.slice(0, 30).map((issue) => ({ path: issue.path.map(String).join('.'), message: issue.message })),
+      parsed.error.issues
+        .slice(0, 30)
+        .map((issue) => ({ path: issue.path.map(String).join('.'), message: issue.message })),
     );
   }
   const graph = parsed.data;
@@ -97,6 +114,11 @@ export function graphToDocument(raw: unknown, styleId: StyleId): DiagramDocument
     narrative: { steps: deriveNarrative({ edges }) },
   };
   const issues = validateInvariants(document);
-  if (issues.length > 0) throw new GenerationError('invalid-output', 'La respuesta tiene referencias inválidas (IDs duplicados, extremos inexistentes o grupos cíclicos).', issues);
+  if (issues.length > 0)
+    throw new GenerationError(
+      'invalid-output',
+      'La respuesta tiene referencias inválidas (IDs duplicados, extremos inexistentes o grupos cíclicos).',
+      issues,
+    );
   return document;
 }

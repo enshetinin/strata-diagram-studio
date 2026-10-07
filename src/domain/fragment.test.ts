@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest';
+import { TEMPLATES } from '../features/templates';
 import { extractFragment, parseClipboardText, pasteFragment } from './fragment';
 import { resolveAbsoluteLayout } from './geometry';
 import { validateInvariants } from './invariants';
 import { serializeDocument } from './parse';
 import type { DiagramDocument, ElementRef } from './types';
-import { TEMPLATES } from '../features/templates';
 
 const aws = () => TEMPLATES[0]!.create();
 const rag = () => TEMPLATES.find((template) => template.id === 'rag')!.create();
 
 /** A nested group (has a parent) with at least one node inside. */
 function nestedGroup(doc: DiagramDocument) {
-  return doc.groups.find((group) => group.parentGroupId !== null && doc.nodes.some((node) => node.groupId === group.id))!;
+  return doc.groups.find(
+    (group) => group.parentGroupId !== null && doc.nodes.some((node) => node.groupId === group.id),
+  )!;
 }
 
 describe('clipboard fragments', () => {
@@ -21,7 +23,9 @@ describe('clipboard fragments', () => {
     const fragment = extractFragment(doc, [{ type: 'group', id: top.id }])!;
     expect(fragment.groups.map((group) => group.id)).toContain(top.id);
     const nodeIds = new Set(fragment.nodes.map((node) => node.id));
-    expect(fragment.edges.every((edge) => nodeIds.has(edge.source.nodeId) && nodeIds.has(edge.target.nodeId))).toBe(true);
+    expect(fragment.edges.every((edge) => nodeIds.has(edge.source.nodeId) && nodeIds.has(edge.target.nodeId))).toBe(
+      true,
+    );
     expect(fragment.groups.find((group) => group.id === top.id)!.parentGroupId).toBeNull();
   });
 
@@ -59,7 +63,9 @@ describe('clipboard fragments', () => {
 
   it('pastes with fresh ids, keeps invariants and clears walkthrough order', () => {
     const doc = aws();
-    const refs: ElementRef[] = doc.groups.filter((group) => group.parentGroupId === null).map((group) => ({ type: 'group', id: group.id }));
+    const refs: ElementRef[] = doc.groups
+      .filter((group) => group.parentGroupId === null)
+      .map((group) => ({ type: 'group', id: group.id }));
     const fragment = extractFragment(doc, refs)!;
     const { doc: next, roots } = pasteFragment(doc, fragment, { containerId: null, offset: { x: 32, y: 32 } });
     expect(validateInvariants(next)).toEqual([]);
@@ -101,7 +107,10 @@ describe('clipboard fragments', () => {
   it('pastes into another document', () => {
     const source = aws();
     const target = rag();
-    const fragment = extractFragment(source, source.groups.map((group) => ({ type: 'group' as const, id: group.id })))!;
+    const fragment = extractFragment(
+      source,
+      source.groups.map((group) => ({ type: 'group' as const, id: group.id })),
+    )!;
     const { doc: next } = pasteFragment(target, fragment, { containerId: null, at: { x: 2000, y: 0 } });
     expect(validateInvariants(next)).toEqual([]);
     expect(next.groups).toHaveLength(target.groups.length + source.groups.length);

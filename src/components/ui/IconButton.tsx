@@ -11,7 +11,14 @@ interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
 }
 
 /** Icon button whose accessible name is always the visible or tooltip label. */
-export function IconButton({ label, icon: Icon, pressed, showLabel = false, className = '', ...rest }: IconButtonProps) {
+export function IconButton({
+  label,
+  icon: Icon,
+  pressed,
+  showLabel = false,
+  className = '',
+  ...rest
+}: IconButtonProps) {
   return (
     <button
       type="button"

@@ -8,7 +8,7 @@ import { parseDocument } from '../../domain/parse';
 import { replaceDocument } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { computeAutoLayout } from '../layout/elkLayout';
-import { GenerationError, type DiagramGenerator, type GenerationRequest, type GenerationResult } from './types';
+import { type DiagramGenerator, GenerationError, type GenerationRequest, type GenerationResult } from './types';
 
 interface Pending {
   result: GenerationResult;
@@ -23,7 +23,12 @@ interface GenerationState {
   controller: AbortController | null;
 }
 
-export const useGeneration = create<GenerationState>()(() => ({ running: false, error: null, pending: null, controller: null }));
+export const useGeneration = create<GenerationState>()(() => ({
+  running: false,
+  error: null,
+  pending: null,
+  controller: null,
+}));
 
 export async function runGeneration(generator: DiagramGenerator, request: GenerationRequest): Promise<void> {
   useGeneration.getState().controller?.abort();
@@ -41,7 +46,10 @@ export async function runGeneration(generator: DiagramGenerator, request: Genera
     if (!checked.ok) throw new GenerationError('invalid-output', checked.message, checked.issues);
     useGeneration.setState({ pending: { result: { ...result, document: checked.document }, startRevision } });
   } catch (error) {
-    const typed = error instanceof GenerationError ? error : new GenerationError('invalid-output', error instanceof Error ? error.message : String(error));
+    const typed =
+      error instanceof GenerationError
+        ? error
+        : new GenerationError('invalid-output', error instanceof Error ? error.message : String(error));
     useGeneration.setState({ error: typed.code === 'cancelled' ? null : typed });
   } finally {
     useGeneration.setState({ running: false, controller: null });
@@ -60,7 +68,8 @@ export function documentChangedSince(pending: Pending): boolean {
 export function confirmPending(): void {
   const pending = useGeneration.getState().pending;
   if (!pending) return;
-  const label = pending.result.provider.kind === 'local' ? 'Nueva arquitectura (reglas locales)' : 'Insertar diagrama generado';
+  const label =
+    pending.result.provider.kind === 'local' ? 'Nueva arquitectura (reglas locales)' : 'Insertar diagrama generado';
   replaceDocument(pending.result.document, label, 'Diagrama generado.');
   useGeneration.setState({ pending: null });
 }

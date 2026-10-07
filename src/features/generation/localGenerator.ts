@@ -1,6 +1,6 @@
 import { parseDocument } from '../../domain/parse';
 import { generateVariation } from '../templates/variations';
-import { GenerationError, type DiagramGenerator, type GenerationRequest, type GenerationResult } from './types';
+import { type DiagramGenerator, GenerationError, type GenerationRequest, type GenerationResult } from './types';
 
 /**
  * Deterministic rule-based generator. It changes topology by seed, category
@@ -16,7 +16,10 @@ export class LocalRuleGenerator implements DiagramGenerator {
   async generate(request: GenerationRequest, signal: AbortSignal): Promise<GenerationResult> {
     if (signal.aborted) throw new GenerationError('cancelled', 'Generación cancelada.');
     if (request.mode !== 'rules') {
-      throw new GenerationError('unsupported', 'El generador local no interpreta texto libre; elige una categoría y una seed.');
+      throw new GenerationError(
+        'unsupported',
+        'El generador local no interpreta texto libre; elige una categoría y una seed.',
+      );
     }
     const document = generateVariation(request);
     const checked = parseDocument(document);
@@ -24,7 +27,9 @@ export class LocalRuleGenerator implements DiagramGenerator {
     return {
       document: checked.document,
       provider: this.info,
-      notes: [`Reglas de «${request.category}», seed ${request.seed}, complejidad ${request.complexity}. Mismo input → mismo diagrama.`],
+      notes: [
+        `Reglas de «${request.category}», seed ${request.seed}, complejidad ${request.complexity}. Mismo input → mismo diagrama.`,
+      ],
     };
   }
 }

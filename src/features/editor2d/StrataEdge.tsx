@@ -1,5 +1,5 @@
-import { BaseEdge, EdgeLabelRenderer, useReactFlow, type EdgeProps } from '@xyflow/react';
-import { memo, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { BaseEdge, EdgeLabelRenderer, type EdgeProps, useReactFlow } from '@xyflow/react';
+import { memo, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useState } from 'react';
 import { RELATION_INFO } from '../../domain/catalog';
 import { updateEdge } from '../../domain/commands';
 import type { DiagramEdge } from '../../domain/types';
@@ -15,7 +15,9 @@ type Bend = NonNullable<DiagramEdge['bend']>;
 const GRID = 16;
 
 function commitBend(id: string, bend: Bend | undefined) {
-  const result = useDocumentStore.getState().execute(bend ? 'Mover relación' : 'Restablecer trazado', (doc) => updateEdge(doc, id, { bend }));
+  const result = useDocumentStore
+    .getState()
+    .execute(bend ? 'Mover relación' : 'Restablecer trazado', (doc) => updateEdge(doc, id, { bend }));
   if (!result.ok) useUiStore.getState().notify('error', result.error);
 }
 
@@ -93,8 +95,15 @@ export const StrataEdge = memo(function StrataEdge(props: EdgeProps<FlowEdge>) {
           {text ? (
             <div
               className={`strata-edge-label${selected ? ' is-selected' : ''}${bendable ? ' nodrag nopan' : ''}`}
-              style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`, ...(bendable ? { cursor } : {}) }}
-              title={bendable ? 'Arrastra para mover el trazado · doble clic para restablecer' : RELATION_INFO[edge.relation].label}
+              style={{
+                transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+                ...(bendable ? { cursor } : {}),
+              }}
+              title={
+                bendable
+                  ? 'Arrastra para mover el trazado · doble clic para restablecer'
+                  : RELATION_INFO[edge.relation].label
+              }
               {...grab}
             >
               {text}
@@ -119,11 +128,28 @@ export function EdgeMarkers() {
     <svg className="strata-markers" aria-hidden="true">
       <defs>
         {Object.entries(RELATION_STROKE).map(([relation, stroke]) => (
-          <marker key={relation} id={`strata-arrow-${relation}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <marker
+            key={relation}
+            id={`strata-arrow-${relation}`}
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
             <path d="M0 0 10 5 0 10Z" fill={stroke.color} />
           </marker>
         ))}
-        <marker id="strata-arrow-selected" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <marker
+          id="strata-arrow-selected"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto-start-reverse"
+        >
           <path d="M0 0 10 5 0 10Z" style={{ fill: 'var(--signal)' }} />
         </marker>
       </defs>

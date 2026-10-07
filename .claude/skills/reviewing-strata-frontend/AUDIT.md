@@ -34,7 +34,7 @@ Run a baseline appropriate to the requested scope. For a full audit:
 
 ```bash
 pnpm typecheck
-pnpm lint
+pnpm check
 pnpm test
 ```
 
@@ -213,7 +213,7 @@ After edits, run:
 
 ```bash
 pnpm typecheck
-pnpm lint
+pnpm check
 pnpm test
 pnpm build
 ```

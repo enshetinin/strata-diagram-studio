@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
 export interface MenuItem {
   label: string;
@@ -75,7 +75,12 @@ export function Menu({
         {compact ? null : <span>{label}</span>}
       </button>
       {open ? (
-        <div className={`menu__list${align === 'start' ? ' menu__list--start' : ''}`} role="menu" id={id} aria-label={label}>
+        <div
+          className={`menu__list${align === 'start' ? ' menu__list--start' : ''}`}
+          role="menu"
+          id={id}
+          aria-label={label}
+        >
           {items.map((item) => (
             <button
               key={item.label}

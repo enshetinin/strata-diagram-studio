@@ -9,7 +9,15 @@ import type { DiagramDocument, ElementRef } from '../../domain/types';
 import { useDocumentStore } from '../../state/documentStore';
 import { isSelected, useUiStore } from '../../state/uiStore';
 
-function Entry({ refValue, children, secondary }: { refValue: ElementRef; children: ReactNode; secondary?: ReactNode }) {
+function Entry({
+  refValue,
+  children,
+  secondary,
+}: {
+  refValue: ElementRef;
+  children: ReactNode;
+  secondary?: ReactNode;
+}) {
   const selection = useUiStore((state) => state.selection);
   const selected = isSelected(selection, refValue);
   return (
@@ -28,7 +36,13 @@ function Entry({ refValue, children, secondary }: { refValue: ElementRef; childr
       </button>
       {secondary}
       {refValue.type !== 'edge' ? (
-        <button type="button" className="icon-button icon-button--small" aria-label="Enfocar en la vista" title="Enfocar en la vista" onClick={() => useUiStore.getState().focus(refValue)}>
+        <button
+          type="button"
+          className="icon-button icon-button--small"
+          aria-label="Enfocar en la vista"
+          title="Enfocar en la vista"
+          onClick={() => useUiStore.getState().focus(refValue)}
+        >
           <Crosshair size={14} aria-hidden="true" />
         </button>
       ) : null}
@@ -83,7 +97,8 @@ export function OutlinePanel() {
   return (
     <div className="panel-section">
       <p className="panel-intro">
-        {doc.nodes.length} componentes · {doc.edges.length} relaciones · {doc.groups.length} grupos. Mayús/Ctrl + clic para seleccionar varios.
+        {doc.nodes.length} componentes · {doc.edges.length} relaciones · {doc.groups.length} grupos. Mayús/Ctrl + clic
+        para seleccionar varios.
       </p>
       <h3 className="panel-heading">Componentes</h3>
       <GroupTree doc={doc} parentId={null} />
@@ -92,7 +107,11 @@ export function OutlinePanel() {
         {edges.map((edge) => (
           <li key={edge.id}>
             <Entry refValue={{ type: 'edge', id: edge.id }}>
-              <span className="outline-entry__kind">{edge.order !== undefined ? `${edge.order} · ` : ''}{RELATION_INFO[edge.relation].label}</span> {label(edge.source.nodeId)} {edge.direction === 'bidirectional' ? '↔' : '→'} {label(edge.target.nodeId)}
+              <span className="outline-entry__kind">
+                {edge.order !== undefined ? `${edge.order} · ` : ''}
+                {RELATION_INFO[edge.relation].label}
+              </span>{' '}
+              {label(edge.source.nodeId)} {edge.direction === 'bidirectional' ? '↔' : '→'} {label(edge.target.nodeId)}
               {edge.label ? <span className="outline-entry__meta"> «{edge.label}»</span> : null}
             </Entry>
           </li>
@@ -105,7 +124,10 @@ export function OutlinePanel() {
             {doc.annotations.map((annotation) => (
               <li key={annotation.id}>
                 <Entry refValue={{ type: 'annotation', id: annotation.id }}>
-                  <span className="outline-entry__kind">Nota{annotation.targetNodeId ? ` → ${label(annotation.targetNodeId)}` : ''}</span> {annotation.text}
+                  <span className="outline-entry__kind">
+                    Nota{annotation.targetNodeId ? ` → ${label(annotation.targetNodeId)}` : ''}
+                  </span>{' '}
+                  {annotation.text}
                 </Entry>
               </li>
             ))}

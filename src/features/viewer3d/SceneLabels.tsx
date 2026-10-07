@@ -73,7 +73,11 @@ const EdgeLabel = memo(function EdgeLabel({ edge, compact }: { edge: SceneEdge; 
       <Text
         font={compact ? FONT_BOLD : FONT_REGULAR}
         fontSize={size * (compact ? 0.8 : 0.74)}
-        color={dimColor(emphasis === 'selected' ? theme.selection : compact ? theme.label.color : theme.label.muted, theme.background, dim)}
+        color={dimColor(
+          emphasis === 'selected' ? theme.selection : compact ? theme.label.color : theme.label.muted,
+          theme.background,
+          dim,
+        )}
         outlineWidth={size * (compact ? 0.22 : 0.12)}
         outlineColor={theme.label.outline}
         anchorX="center"
@@ -94,7 +98,15 @@ type Declutter = (ranked: SceneNode[], keep: Set<string>) => Set<string>;
  * mode, `declutter` drops node labels that would overlap a more connected
  * one; selected and related nodes always keep theirs.
  */
-export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneEdge[], priority: Set<string>, activeEdges: string[], crowded = false, declutter?: Declutter) {
+export function visibleLabels(
+  mode: LabelMode,
+  nodes: SceneNode[],
+  edges: SceneEdge[],
+  priority: Set<string>,
+  activeEdges: string[],
+  crowded = false,
+  declutter?: Declutter,
+) {
   const degree = new Map<string, number>();
   for (const edge of edges) {
     degree.set(edge.sourceId, (degree.get(edge.sourceId) ?? 0) + 1);
@@ -103,7 +115,9 @@ export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneE
   const dense = nodes.length > 36 || crowded;
   // In dense scenes keep only the most connected components (deterministic order).
   const budget = Math.max(6, Math.min(20, Math.round(nodes.length * 0.2)));
-  const ranked = [...nodes].sort((a, b) => (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) || a.id.localeCompare(b.id));
+  const ranked = [...nodes].sort(
+    (a, b) => (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) || a.id.localeCompare(b.id),
+  );
   const hubs = new Set(ranked.slice(0, budget).map((node) => node.id));
   const nodeVisible = (node: SceneNode) => {
     if (priority.has(node.id)) return true;
@@ -121,25 +135,55 @@ export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneE
   });
   const shown = ranked.filter(nodeVisible);
   const kept = mode === 'auto' && declutter ? declutter(shown, priority) : null;
-  return { nodes: kept ? nodes.filter((node) => kept.has(node.id)) : nodes.filter(nodeVisible), edges: edgeLabels, showKind: mode === 'all' };
+  return {
+    nodes: kept ? nodes.filter((node) => kept.has(node.id)) : nodes.filter(nodeVisible),
+    edges: edgeLabels,
+    showKind: mode === 'all',
+  };
 }
 
 export function SceneLabels({ mode }: { mode: LabelMode }) {
   const { model, highlight, crowded, theme, labelSize } = useScene();
-  const direction = useMemo(() => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), [theme.camera.azimuthDeg, theme.camera.elevationDeg]);
+  const direction = useMemo(
+    () => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg),
+    [theme.camera.azimuthDeg, theme.camera.elevationDeg],
+  );
   // Same placement as ScenePlatforms (pure and deterministic): node labels yield to group titles.
   const titles = useMemo(
-    () => [...placeGroupTitles(model.groups, model.nodes, direction, labelSize, (group) => titleSize(labelSize, group), model.edges).values()].map((title) => title.rect),
+    () =>
+      [
+        ...placeGroupTitles(
+          model.groups,
+          model.nodes,
+          direction,
+          labelSize,
+          (group) => titleSize(labelSize, group),
+          model.edges,
+        ).values(),
+      ].map((title) => title.rect),
     [model.groups, model.nodes, model.edges, direction, labelSize],
   );
-  const visible = visibleLabels(mode, model.nodes, model.edges, highlight.labelPriority, highlight.activeEdges, crowded, (ranked, keep) =>
-    declutterNodeLabels(ranked, keep, direction, labelSize, titles),
+  const visible = visibleLabels(
+    mode,
+    model.nodes,
+    model.edges,
+    highlight.labelPriority,
+    highlight.activeEdges,
+    crowded,
+    (ranked, keep) => declutterNodeLabels(ranked, keep, direction, labelSize, titles),
   );
   return (
     <group name="labels">
-      {visible.nodes.map((node) => (highlight.node(node.id) === 'isolatedOut' ? null : <NodeLabel key={node.id} node={node} showKind={visible.showKind} />))}
+      {visible.nodes.map((node) =>
+        highlight.node(node.id) === 'isolatedOut' ? null : (
+          <NodeLabel key={node.id} node={node} showKind={visible.showKind} />
+        ),
+      )}
       {visible.edges.map(({ edge, compact }) =>
-        highlight.edge(edge.id) === 'isolatedOut' || (compact && markerCollides(edge, direction, labelSize, titles)) ? null : <EdgeLabel key={edge.id} edge={edge} compact={compact} />,
+        highlight.edge(edge.id) === 'isolatedOut' ||
+        (compact && markerCollides(edge, direction, labelSize, titles)) ? null : (
+          <EdgeLabel key={edge.id} edge={edge} compact={compact} />
+        ),
       )}
     </group>
   );

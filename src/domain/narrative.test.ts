@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { TEMPLATES } from '../features/templates';
 import * as cmd from './commands';
 import { validateInvariants } from './invariants';
 import { effectiveNarrative } from './narrative';
 import type { DiagramDocument } from './types';
-import { TEMPLATES } from '../features/templates';
 
 const aws = () => TEMPLATES[0]!.create();
 const orderOf = (doc: DiagramDocument, id: string) => doc.edges.find((edge) => edge.id === id)!.order;
@@ -77,7 +77,9 @@ describe('walkthrough editing', () => {
     expect(next.narrative.steps.some((step) => step.id === target.id)).toBe(false);
     expect(next.narrative.steps[0]!.id).toBe('intro');
     expect(validateInvariants(next)).toEqual([]);
-    next.narrative.steps.forEach((step, index) => step.edgeIds.forEach((id) => expect(orderOf(next, id)).toBe(index + 1)));
+    next.narrative.steps.forEach((step, index) =>
+      step.edgeIds.forEach((id) => expect(orderOf(next, id)).toBe(index + 1)),
+    );
   });
 
   it('rejects empty titles and unknown steps', () => {

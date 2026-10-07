@@ -1,7 +1,7 @@
-import { useDocumentStore } from '../../state/documentStore';
-import { replaceDocument } from '../../state/actions';
 import { TEMPLATES } from '../../features/templates';
 import { THEMES } from '../../features/viewer3d/themes';
+import { replaceDocument } from '../../state/actions';
+import { useDocumentStore } from '../../state/documentStore';
 
 const DOCUMENT_IDS = new Map(TEMPLATES.map((template) => [template.id, template.create().id]));
 
@@ -21,7 +21,14 @@ export function TemplatesPanel({ onOpen }: { onOpen: () => void }) {
                 className={`template-card${active ? ' is-active' : ''}`}
                 aria-current={active ? 'true' : undefined}
                 onClick={() => {
-                  if (replaceDocument(template.create(), `Cargar plantilla ${template.name}`, `Plantilla «${template.name}» cargada.`)) onOpen();
+                  if (
+                    replaceDocument(
+                      template.create(),
+                      `Cargar plantilla ${template.name}`,
+                      `Plantilla «${template.name}» cargada.`,
+                    )
+                  )
+                    onOpen();
                 }}
               >
                 <span className="template-card__swatch" aria-hidden="true" style={{ background: theme.background }}>

@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import * as cmd from '../../domain/commands';
-import { resolveAbsoluteLayout } from '../../domain/geometry';
+import { documentBounds, resolveAbsoluteLayout } from '../../domain/geometry';
 import { validateInvariants } from '../../domain/invariants';
 import { STYLE_IDS } from '../../domain/types';
 import { TEMPLATES } from '../templates';
 import { THEMES } from '../viewer3d/themes';
 import { computeAutoLayout } from './elkLayout';
 import { buildSceneModel, createWorldTransform, WORLD_SCALE } from './sceneModel';
-import { documentBounds } from '../../domain/geometry';
 
 const options = { layerHeight: 0.5, heightScale: 1, routeStyle: 'orthogonal' as const };
 
@@ -64,9 +63,17 @@ describe('scene model (2D → 3D)', () => {
     for (const styleId of STYLE_IDS) {
       const theme = THEMES[styleId];
       const styled = cmd.setPresentation(doc, { styleId });
-      const scene = buildSceneModel(styled, { layerHeight: 0.5, heightScale: theme.node.heightScale, routeStyle: theme.connector.route });
-      expect(scene.nodes.map((node) => [node.id, node.groupId])).toEqual(reference.nodes.map((node) => [node.id, node.groupId]));
-      expect(scene.edges.map((edge) => [edge.id, edge.sourceId, edge.targetId])).toEqual(reference.edges.map((edge) => [edge.id, edge.sourceId, edge.targetId]));
+      const scene = buildSceneModel(styled, {
+        layerHeight: 0.5,
+        heightScale: theme.node.heightScale,
+        routeStyle: theme.connector.route,
+      });
+      expect(scene.nodes.map((node) => [node.id, node.groupId])).toEqual(
+        reference.nodes.map((node) => [node.id, node.groupId]),
+      );
+      expect(scene.edges.map((edge) => [edge.id, edge.sourceId, edge.targetId])).toEqual(
+        reference.edges.map((edge) => [edge.id, edge.sourceId, edge.targetId]),
+      );
     }
   });
 });

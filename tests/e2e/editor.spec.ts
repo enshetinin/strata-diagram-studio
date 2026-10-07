@@ -31,7 +31,11 @@ test.describe('2D editing reflected in 3D', () => {
     await page.getByRole('button', { name: /Frontend\s+Panel de resultados/ }).click();
     await page.getByRole('button', { name: 'Enfocar en la vista' }).first().click();
     await page.waitForTimeout(600);
-    await dragHandle(page, '.react-flow__node[data-id="n-dashboard"] .react-flow__handle[data-handleid="p-right"]', '.react-flow__node[data-id="n-auth"] .react-flow__handle[data-handleid="p-left"]');
+    await dragHandle(
+      page,
+      '.react-flow__node[data-id="n-dashboard"] .react-flow__handle[data-handleid="p-right"]',
+      '.react-flow__node[data-id="n-auth"] .react-flow__handle[data-handleid="p-left"]',
+    );
     await expect(page.locator('.react-flow__edge')).toHaveCount(18);
     await expect(page.getByText('17 componentes · 18 relaciones · 5 grupos')).toBeVisible();
 
@@ -165,8 +169,14 @@ test('reconnecting an edge end in 2D keeps its id and updates the target', async
   await page.getByRole('button', { name: /Frontend\s+Panel de resultados/ }).click();
   await page.getByRole('button', { name: 'Enfocar en la vista' }).first().click();
   await page.waitForTimeout(600);
-  await dragHandle(page, '.react-flow__edge[data-id="e-n-dashboard-n-api"] .react-flow__edgeupdater-target', '.react-flow__node[data-id="n-auth"] .react-flow__handle[data-handleid="p-bottom"]');
-  await expect(page.getByRole('button', { name: /Panel de resultados → Autenticación «Consulta resultados»/ })).toBeVisible();
+  await dragHandle(
+    page,
+    '.react-flow__edge[data-id="e-n-dashboard-n-api"] .react-flow__edgeupdater-target',
+    '.react-flow__node[data-id="n-auth"] .react-flow__handle[data-handleid="p-bottom"]',
+  );
+  await expect(
+    page.getByRole('button', { name: /Panel de resultados → Autenticación «Consulta resultados»/ }),
+  ).toBeVisible();
   await expect(page.locator('.react-flow__edge[data-id="e-n-dashboard-n-api"]')).toHaveCount(1);
 });
 
@@ -203,8 +213,11 @@ test('dragging a selected edge slides its middle segment; double click restores 
   // Largest coordinate change against the initial route (sub-pixel noise from framing ignored).
   const numbers = (d: string | null) => (d?.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
   const initial = numbers(await path.getAttribute('d'));
-  const drift = async () => Math.max(...numbers(await path.getAttribute('d')).map((n, i) => Math.abs(n - (initial[i] ?? 0))));
-  await edge.locator('.react-flow__edge-interaction').click({ force: true, position: await midpoint(page, '[data-id="e-n-dashboard-n-api"] .react-flow__edge-path') });
+  const drift = async () =>
+    Math.max(...numbers(await path.getAttribute('d')).map((n, i) => Math.abs(n - (initial[i] ?? 0))));
+  await edge
+    .locator('.react-flow__edge-interaction')
+    .click({ force: true, position: await midpoint(page, '[data-id="e-n-dashboard-n-api"] .react-flow__edge-path') });
   await expect(edge).toHaveClass(/selected/);
 
   const grip = page.locator('.strata-edge-label.is-selected, .strata-edge-grip').first();
@@ -259,7 +272,9 @@ async function midpoint(page: import('@playwright/test').Page, selector: string)
     const screen = new DOMPoint(mid.x, mid.y).matrixTransform(svgPath.getScreenCTM()!);
     return { x: screen.x, y: screen.y };
   });
-  const box = await page.locator(selector.replace('.react-flow__edge-path', '.react-flow__edge-interaction')).boundingBox();
+  const box = await page
+    .locator(selector.replace('.react-flow__edge-path', '.react-flow__edge-interaction'))
+    .boundingBox();
   if (!box) throw new Error('edge not visible');
   return { x: point.x - box.x, y: point.y - box.y };
 }

@@ -79,9 +79,13 @@ export function SceneEnvironment() {
   return (
     <>
       <color attach="background" args={[theme.background]} />
-      {materials.quality !== 'low' && !software && theme.node.finish !== 'wire' ? <StudioEnvironment intensity={theme.dark ? 0.3 : 0.32} /> : null}
+      {materials.quality !== 'low' && !software && theme.node.finish !== 'wire' ? (
+        <StudioEnvironment intensity={theme.dark ? 0.3 : 0.32} />
+      ) : null}
       <ambientLight color={theme.light.ambient.color} intensity={theme.light.ambient.intensity} />
-      {theme.light.hemi ? <hemisphereLight args={[theme.light.hemi.sky, theme.light.hemi.ground, theme.light.hemi.intensity]} /> : null}
+      {theme.light.hemi ? (
+        <hemisphereLight args={[theme.light.hemi.sky, theme.light.hemi.ground, theme.light.hemi.intensity]} />
+      ) : null}
       <directionalLight
         color={key.color}
         intensity={key.intensity}
@@ -100,14 +104,25 @@ export function SceneEnvironment() {
       >
         <object3D attach="target" position={[cx, 0, cz]} />
       </directionalLight>
-      {theme.light.fill ? <directionalLight color={theme.light.fill.color} intensity={theme.light.fill.intensity} position={theme.light.fill.position} /> : null}
+      {theme.light.fill ? (
+        <directionalLight
+          color={theme.light.fill.color}
+          intensity={theme.light.fill.intensity}
+          position={theme.light.fill.position}
+        />
+      ) : null}
       {theme.ground.kind === 'shadow' && shadows ? (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, -0.001, cz]} receiveShadow>
           <planeGeometry args={[span, span]} />
           <shadowMaterial opacity={theme.ground.opacity} transparent />
         </mesh>
       ) : null}
-      {theme.ground.kind === 'grid' ? <gridHelper args={[Math.ceil(span), Math.ceil(span) * 2, theme.ground.color, theme.ground.color]} position={[cx, -0.01, cz]} /> : null}
+      {theme.ground.kind === 'grid' ? (
+        <gridHelper
+          args={[Math.ceil(span), Math.ceil(span) * 2, theme.ground.color, theme.ground.color]}
+          position={[cx, -0.01, cz]}
+        />
+      ) : null}
       {theme.ground.kind === 'dots' ? <DotGround color={theme.ground.color} y={-0.01} /> : null}
     </>
   );

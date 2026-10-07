@@ -1,7 +1,12 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { freshStart, openLeftTab } from './helpers';
 
-const savedName = (page: Page) => page.evaluate(() => (JSON.parse(localStorage.getItem('strata:document') ?? 'null') as { document?: { name?: string } } | null)?.document?.name ?? null);
+const savedName = (page: Page) =>
+  page.evaluate(
+    () =>
+      (JSON.parse(localStorage.getItem('strata:document') ?? 'null') as { document?: { name?: string } } | null)
+        ?.document?.name ?? null,
+  );
 
 /** Opens the share dialog and returns the generated link. */
 async function shareLink(page: Page, present = false): Promise<string> {
@@ -37,7 +42,10 @@ test.describe('share links', () => {
 
     // Edits are refused and nothing is saved.
     await openLeftTab(page, 'Estructura');
-    await page.getByRole('button', { name: /Base de datos|Índice|Almacenamiento/ }).first().click();
+    await page
+      .getByRole('button', { name: /Base de datos|Índice|Almacenamiento/ })
+      .first()
+      .click();
     await page.locator('body').press('Delete');
     await expect(page.getByText(/Vista compartida en solo lectura/)).toBeVisible();
     await page.waitForTimeout(900);
@@ -59,7 +67,9 @@ test.describe('share links', () => {
     await expect(banner).toBeHidden();
     await expect(page.getByRole('button', { name: /Deshacer/ })).toBeVisible();
     expect(await savedName(page)).toBe('RAG documental');
-    const backups = await page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith('strata:replaced:')));
+    const backups = await page.evaluate(() =>
+      Object.keys(localStorage).filter((key) => key.startsWith('strata:replaced:')),
+    );
     expect(backups).toHaveLength(1);
   });
 

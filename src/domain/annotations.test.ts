@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
+import { TEMPLATES } from '../features/templates';
 import * as cmd from './commands';
 import { extractFragment, pasteFragment } from './fragment';
 import { findFreeSpot, leaderLine, resolveAbsoluteLayout } from './geometry';
 import { validateInvariants } from './invariants';
 import { parseDocument, parseDocumentText, serializeDocument } from './parse';
 import type { DiagramDocument } from './types';
-import { TEMPLATES } from '../features/templates';
 
 const aws = () => TEMPLATES[0]!.create();
 
 function withNote(doc: DiagramDocument, targetNodeId: string | null = 'n-runner'): DiagramDocument {
-  return cmd.addAnnotation(doc, { id: 'a-1', text: '  Escala con la cola  ', position: { x: 40, y: -160 }, targetNodeId });
+  return cmd.addAnnotation(doc, {
+    id: 'a-1',
+    text: '  Escala con la cola  ',
+    position: { x: 40, y: -160 },
+    targetNodeId,
+  });
 }
 
 describe('annotations', () => {
   it('documents saved before notes existed still parse, with none', () => {
-    const legacy = JSON.parse(serializeDocument(aws())) as Record<string, unknown> & { layout: Record<string, unknown> };
+    const legacy = JSON.parse(serializeDocument(aws())) as Record<string, unknown> & {
+      layout: Record<string, unknown>;
+    };
     delete legacy.annotations;
     delete legacy.layout.annotations;
     const parsed = parseDocument(legacy);
@@ -35,9 +42,15 @@ describe('annotations', () => {
   });
 
   it('rejects empty text, unknown targets and duplicate ids', () => {
-    expect(() => cmd.addAnnotation(aws(), { id: 'a-1', text: '   ', position: { x: 0, y: 0 } })).toThrow(cmd.CommandError);
-    expect(() => cmd.addAnnotation(aws(), { id: 'a-1', text: 'x', position: { x: 0, y: 0 }, targetNodeId: 'ghost' })).toThrow(cmd.CommandError);
-    expect(() => cmd.addAnnotation(aws(), { id: 'n-runner', text: 'x', position: { x: 0, y: 0 } })).toThrow(cmd.CommandError);
+    expect(() => cmd.addAnnotation(aws(), { id: 'a-1', text: '   ', position: { x: 0, y: 0 } })).toThrow(
+      cmd.CommandError,
+    );
+    expect(() =>
+      cmd.addAnnotation(aws(), { id: 'a-1', text: 'x', position: { x: 0, y: 0 }, targetNodeId: 'ghost' }),
+    ).toThrow(cmd.CommandError);
+    expect(() => cmd.addAnnotation(aws(), { id: 'n-runner', text: 'x', position: { x: 0, y: 0 } })).toThrow(
+      cmd.CommandError,
+    );
     expect(() => cmd.updateAnnotation(withNote(aws()), 'a-1', { text: '' })).toThrow(cmd.CommandError);
   });
 
@@ -90,7 +103,10 @@ describe('annotations', () => {
     expect(pasted.doc.layout.annotations[copy.id]).toMatchObject({ x: 80, y: -120 });
     expect(validateInvariants(pasted.doc)).toEqual([]);
 
-    const alone = pasteFragment(doc, extractFragment(doc, [{ type: 'annotation', id: 'a-1' }])!, { containerId: null, offset: { x: 40, y: 40 } });
+    const alone = pasteFragment(doc, extractFragment(doc, [{ type: 'annotation', id: 'a-1' }])!, {
+      containerId: null,
+      offset: { x: 40, y: 40 },
+    });
     expect(alone.doc.annotations.at(-1)?.targetNodeId).toBeNull();
   });
 

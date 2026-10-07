@@ -29,10 +29,18 @@ export function eventCommerce() {
     .edge('n-customer', 'n-gateway', 'request', 'POST /orders', { order: 1 })
     .edge('n-gateway', 'n-orders', 'request', 'Crear pedido', { order: 2 })
     .edge('n-orders', 'n-orders-db', 'data', 'Persistir', { order: 3 })
-    .edge('n-orders', 'n-bus', 'event', 'OrderPlaced', { order: 4, explanation: 'El pedido se publica una sola vez; los consumidores reaccionan de forma independiente.' })
+    .edge('n-orders', 'n-bus', 'event', 'OrderPlaced', {
+      order: 4,
+      explanation: 'El pedido se publica una sola vez; los consumidores reaccionan de forma independiente.',
+    })
     .edge('n-bus', 'n-payments', 'event', 'OrderPlaced', { order: 5, fromSide: 'top', toSide: 'left' })
     .edge('n-payments', 'n-psp', 'request', 'Cobro', { order: 6 })
-    .edge('n-payments', 'n-bus', 'event', 'PaymentConfirmed', { order: 7, fromSide: 'bottom', toSide: 'top', explanation: 'Retorno al bus: el pago confirmado es otro evento.' })
+    .edge('n-payments', 'n-bus', 'event', 'PaymentConfirmed', {
+      order: 7,
+      fromSide: 'bottom',
+      toSide: 'top',
+      explanation: 'Retorno al bus: el pago confirmado es otro evento.',
+    })
     .edge('n-bus', 'n-inventory', 'event', 'PaymentConfirmed', { order: 8 })
     .edge('n-inventory', 'n-stock', 'data', 'Reserva stock', { order: 9 })
     .edge('n-inventory', 'n-bus', 'event', 'StockReserved', { order: 10, fromSide: 'bottom', toSide: 'bottom' })

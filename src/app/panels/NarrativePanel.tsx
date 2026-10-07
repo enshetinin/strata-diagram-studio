@@ -5,15 +5,15 @@
  * markers drawn on the relations in 2D, 3D and SVG.
  */
 import { ArrowDown, ArrowUp, GripVertical, Play, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState, type DragEvent, type KeyboardEvent } from 'react';
+import { type DragEvent, type KeyboardEvent, useEffect, useMemo, useState } from 'react';
+import { TextField } from '../../components/ui/fields';
+import { IconButton } from '../../components/ui/IconButton';
 import * as cmd from '../../domain/commands';
 import { effectiveNarrative } from '../../domain/narrative';
 import type { DiagramDocument, NarrativeStep } from '../../domain/types';
 import { addStepFromSelection, presentFrom, previewStep } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { useUiStore } from '../../state/uiStore';
-import { IconButton } from '../../components/ui/IconButton';
-import { TextField } from '../../components/ui/fields';
 
 const STEP_MIME = 'application/x-strata-step';
 
@@ -33,18 +33,42 @@ function edgeText(doc: DiagramDocument, edgeId: string): string {
 }
 
 function focusStep(id: string) {
-  requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-step-id="${CSS.escape(id)}"] .narrative-step__title`)?.focus());
+  requestAnimationFrame(() =>
+    document.querySelector<HTMLElement>(`[data-step-id="${CSS.escape(id)}"] .narrative-step__title`)?.focus(),
+  );
 }
 
-function StepDetail({ doc, step, index, count, selectedEdges }: { doc: DiagramDocument; step: NarrativeStep; index: number; count: number; selectedEdges: string[] }) {
+function StepDetail({
+  doc,
+  step,
+  index,
+  count,
+  selectedEdges,
+}: {
+  doc: DiagramDocument;
+  step: NarrativeStep;
+  index: number;
+  count: number;
+  selectedEdges: string[];
+}) {
   const addable = selectedEdges.filter((id) => !step.edgeIds.includes(id));
   const move = (to: number) => {
     if (run('Reordenar recorrido', (d) => cmd.moveStep(d, step.id, to))) focusStep(step.id);
   };
   return (
     <div className="narrative-step__detail">
-      <TextField label="Título" value={step.title} onCommit={(title) => run('Editar paso', (d) => cmd.updateStep(d, step.id, { title }))} />
-      <TextField label="Texto" value={step.caption ?? ''} multiline placeholder="Qué ocurre en este paso y por qué importa." onCommit={(caption) => run('Editar paso', (d) => cmd.updateStep(d, step.id, { caption }))} />
+      <TextField
+        label="Título"
+        value={step.title}
+        onCommit={(title) => run('Editar paso', (d) => cmd.updateStep(d, step.id, { title }))}
+      />
+      <TextField
+        label="Texto"
+        value={step.caption ?? ''}
+        multiline
+        placeholder="Qué ocurre en este paso y por qué importa."
+        onCommit={(caption) => run('Editar paso', (d) => cmd.updateStep(d, step.id, { caption }))}
+      />
 
       <p className="narrative-step__label">Relaciones</p>
       {step.edgeIds.length > 0 ? (
@@ -52,7 +76,12 @@ function StepDetail({ doc, step, index, count, selectedEdges }: { doc: DiagramDo
           {step.edgeIds.map((edgeId) => (
             <li key={edgeId}>
               <span>{edgeText(doc, edgeId)}</span>
-              <IconButton className="icon-button--small" label={`Quitar «${edgeText(doc, edgeId)}» del paso`} icon={X} onClick={() => run('Quitar relación del paso', (d) => cmd.setEdgeStep(d, edgeId, null))} />
+              <IconButton
+                className="icon-button--small"
+                label={`Quitar «${edgeText(doc, edgeId)}» del paso`}
+                icon={X}
+                onClick={() => run('Quitar relación del paso', (d) => cmd.setEdgeStep(d, edgeId, null))}
+              />
             </li>
           ))}
         </ul>
@@ -64,16 +93,35 @@ function StepDetail({ doc, step, index, count, selectedEdges }: { doc: DiagramDo
         className="button button--small"
         disabled={addable.length === 0}
         title={addable.length === 0 ? 'Selecciona relaciones en 2D, 3D o Estructura' : undefined}
-        onClick={() => run('Añadir relaciones al paso', (d) => addable.reduce((acc, id) => cmd.setEdgeStep(acc, id, step.id), d))}
+        onClick={() =>
+          run('Añadir relaciones al paso', (d) => addable.reduce((acc, id) => cmd.setEdgeStep(acc, id, step.id), d))
+        }
       >
         <Plus size={14} aria-hidden="true" />
         {addable.length > 0 ? `Añadir selección (${addable.length})` : 'Añadir selección'}
       </button>
 
       <div className="narrative-step__actions">
-        <IconButton className="icon-button--small" label="Subir paso (Alt+↑)" icon={ArrowUp} disabled={index === 0} onClick={() => move(index - 1)} />
-        <IconButton className="icon-button--small" label="Bajar paso (Alt+↓)" icon={ArrowDown} disabled={index === count - 1} onClick={() => move(index + 1)} />
-        <IconButton className="icon-button--small" label="Presentar desde este paso" icon={Play} onClick={() => presentFrom(index)} />
+        <IconButton
+          className="icon-button--small"
+          label="Subir paso (Alt+↑)"
+          icon={ArrowUp}
+          disabled={index === 0}
+          onClick={() => move(index - 1)}
+        />
+        <IconButton
+          className="icon-button--small"
+          label="Bajar paso (Alt+↓)"
+          icon={ArrowDown}
+          disabled={index === count - 1}
+          onClick={() => move(index + 1)}
+        />
+        <IconButton
+          className="icon-button--small"
+          label="Presentar desde este paso"
+          icon={Play}
+          onClick={() => presentFrom(index)}
+        />
         <IconButton
           className="icon-button--small"
           label="Borrar paso"
@@ -136,14 +184,21 @@ export function NarrativePanel() {
   return (
     <div className="panel-section narrative">
       <p className="panel-intro">
-        {steps.length === 1 ? '1 paso' : `${steps.length} pasos`} · {narrated} {narrated === 1 ? 'relación narrada' : 'relaciones narradas'}. Selecciona relaciones en cualquier vista y crea un paso con ellas; arrastra o usa Alt+↑/↓ para reordenar.
+        {steps.length === 1 ? '1 paso' : `${steps.length} pasos`} · {narrated}{' '}
+        {narrated === 1 ? 'relación narrada' : 'relaciones narradas'}. Selecciona relaciones en cualquier vista y crea
+        un paso con ellas; arrastra o usa Alt+↑/↓ para reordenar.
       </p>
       <div className="button-row">
         <button type="button" className="button button--small" onClick={addStepFromSelection}>
           <Plus size={14} aria-hidden="true" />
           {selectedEdges.length > 0 ? `Nuevo paso (${selectedEdges.length})` : 'Nuevo paso'}
         </button>
-        <button type="button" className="button button--small button--primary" disabled={steps.length === 0} onClick={() => presentFrom(0)}>
+        <button
+          type="button"
+          className="button button--small button--primary"
+          disabled={steps.length === 0}
+          onClick={() => presentFrom(0)}
+        >
           Presentar
           <span className="button__arrow" aria-hidden="true">
             →
@@ -195,8 +250,24 @@ export function NarrativePanel() {
                     {step.title}
                   </button>
                   {!open && step.caption ? <p className="narrative-step__caption">{step.caption}</p> : null}
-                  {!open ? <p className="narrative-step__meta">{step.edgeIds.length === 0 ? 'Sin relaciones' : step.edgeIds.length === 1 ? '1 relación' : `${step.edgeIds.length} relaciones`}</p> : null}
-                  {open ? <StepDetail doc={doc} step={step} index={index} count={steps.length} selectedEdges={selectedEdges} /> : null}
+                  {!open ? (
+                    <p className="narrative-step__meta">
+                      {step.edgeIds.length === 0
+                        ? 'Sin relaciones'
+                        : step.edgeIds.length === 1
+                          ? '1 relación'
+                          : `${step.edgeIds.length} relaciones`}
+                    </p>
+                  ) : null}
+                  {open ? (
+                    <StepDetail
+                      doc={doc}
+                      step={step}
+                      index={index}
+                      count={steps.length}
+                      selectedEdges={selectedEdges}
+                    />
+                  ) : null}
                 </div>
                 <span
                   className="narrative-step__grip"

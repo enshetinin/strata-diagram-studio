@@ -24,7 +24,13 @@ export function stressDocument(nodeCount = 100, edgeCount = 150) {
     const row0 = Math.floor(g / 5) * 5.8;
     for (let i = 0; i < perGroup && ids.length < nodeCount; i += 1) {
       const id = `n-${ids.length}`;
-      b.node(id, NODE_KINDS[ids.length % NODE_KINDS.length] ?? 'service', `Componente ${ids.length + 1}`, [col0 + (i % 2), row0 + Math.floor(i / 2)], { group: groupId });
+      b.node(
+        id,
+        NODE_KINDS[ids.length % NODE_KINDS.length] ?? 'service',
+        `Componente ${ids.length + 1}`,
+        [col0 + (i % 2), row0 + Math.floor(i / 2)],
+        { group: groupId },
+      );
       ids.push(id);
     }
   }
@@ -39,7 +45,13 @@ export function stressDocument(nodeCount = 100, edgeCount = 150) {
   let order = 0;
   for (const pair of pairs) {
     const [from, to] = pair.split('>') as [string, string];
-    b.edge(from, to, rng.pick(['request', 'data', 'event', 'telemetry'] as const), undefined, order < 12 ? { order: ++order } : {});
+    b.edge(
+      from,
+      to,
+      rng.pick(['request', 'data', 'event', 'telemetry'] as const),
+      undefined,
+      order < 12 ? { order: ++order } : {},
+    );
   }
   return b.build();
 }

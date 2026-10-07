@@ -85,23 +85,45 @@ export const useUiStore = create<UiState>()((set) => ({
   toggleSelect: (ref) =>
     set((state) => {
       const exists = state.selection.some((item) => item.type === ref.type && item.id === ref.id);
-      return { selection: exists ? state.selection.filter((item) => !(item.type === ref.type && item.id === ref.id)) : [...state.selection, ref] };
+      return {
+        selection: exists
+          ? state.selection.filter((item) => !(item.type === ref.type && item.id === ref.id))
+          : [...state.selection, ref],
+      };
     }),
   clearSelection: () => set({ selection: [] }),
-  setLeft: (open, tab) => set((state) => ({ leftOpen: open, leftTab: tab ?? state.leftTab, ...(open && narrow() ? { rightOpen: false } : {}) })),
-  setRight: (open, tab) => set((state) => ({ rightOpen: open, rightTab: tab ?? state.rightTab, ...(open && narrow() ? { leftOpen: false } : {}) })),
-  setPresenting: (presenting) => set({ presenting, presentationStep: 0, ...(presenting ? { mode: '3d' as const } : {}) }),
+  setLeft: (open, tab) =>
+    set((state) => ({
+      leftOpen: open,
+      leftTab: tab ?? state.leftTab,
+      ...(open && narrow() ? { rightOpen: false } : {}),
+    })),
+  setRight: (open, tab) =>
+    set((state) => ({
+      rightOpen: open,
+      rightTab: tab ?? state.rightTab,
+      ...(open && narrow() ? { leftOpen: false } : {}),
+    })),
+  setPresenting: (presenting) =>
+    set({ presenting, presentationStep: 0, ...(presenting ? { mode: '3d' as const } : {}) }),
   setPresentationStep: (presentationStep) => set({ presentationStep }),
   setNarrativeStep: (narrativeStepId) => set({ narrativeStepId }),
   isolateGroup: (isolatedGroupId) => set({ isolatedGroupId }),
   focus: (ref) => set((state) => ({ focusRequest: { ref, nonce: (state.focusRequest?.nonce ?? 0) + 1 } })),
   resetCamera: () => set((state) => ({ cameraResetNonce: state.cameraResetNonce + 1 })),
-  notify: (tone, text, action) => set((state) => ({ notices: [...state.notices.slice(-3), { id: ++noticeId, tone, text, ...(action ? { action } : {}) }] })),
+  notify: (tone, text, action) =>
+    set((state) => ({
+      notices: [...state.notices.slice(-3), { id: ++noticeId, tone, text, ...(action ? { action } : {}) }],
+    })),
   dismiss: (id) => set((state) => ({ notices: state.notices.filter((notice) => notice.id !== id) })),
   setWebgl: (webgl, message = null) => set({ webgl, webglMessage: message }),
   requestGroupDeletion: (pendingGroupDeletion) => set({ pendingGroupDeletion }),
   setOverlayInsets: (overlayInsets) =>
-    set((state) => (state.overlayInsets?.top === overlayInsets?.top && state.overlayInsets?.bottom === overlayInsets?.bottom ? state : { overlayInsets })),
+    set((state) =>
+      state.overlayInsets?.top === overlayInsets?.top && state.overlayInsets?.bottom === overlayInsets?.bottom
+        ? state
+        : { overlayInsets },
+    ),
 }));
 
 // Panels become drawers below 960px and only one fits: crossing into that

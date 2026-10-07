@@ -246,18 +246,18 @@
   border-top: 3px solid var(--accent);
 }
 
-.strata-group[data-depth='1'] {
+.strata-group[data-depth="1"] {
   background: color-mix(in srgb, var(--accent) 9%, transparent);
   border-style: solid;
 }
 
-.strata-group[data-depth='2'] {
+.strata-group[data-depth="2"] {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border-style: dashed;
 }
 
 /* Trust boundary: a line the flow crosses, not a container — no tint, ink dashes. */
-.strata-group[data-kind='boundary'] {
+.strata-group[data-kind="boundary"] {
   background: transparent;
   border: 1.5px dashed var(--sheet-ink);
   border-top: 3px solid var(--accent);
@@ -393,7 +393,7 @@
   color: var(--sheet-ink);
 }
 
-.editor-toolbar .icon-button[aria-pressed='true'] {
+.editor-toolbar .icon-button[aria-pressed="true"] {
   background: var(--sheet);
   box-shadow: inset 0 -2px 0 var(--signal);
 }
@@ -472,7 +472,7 @@
   transform: translate(-50%, 0);
 }
 
-.editor-toolbar__tool[aria-expanded='true']::after {
+.editor-toolbar__tool[aria-expanded="true"]::after {
   opacity: 0;
 }
 

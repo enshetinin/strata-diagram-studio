@@ -47,9 +47,9 @@
   --backdrop: rgb(0 0 0 / 0.45);
 
   /* Type families */
-  --font-ui: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
-  --font-display-face: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-ui: "Figtree", "Helvetica Neue", Arial, sans-serif;
+  --font-display-face: "Figtree", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Type scale — functional */
   --font-meta: 0.75rem;
@@ -115,7 +115,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root:not([data-theme="light"]) {
     --bg: #050506;
     --header: #000000;
     --header-rule: #1c1c1f;
@@ -145,7 +145,7 @@
   }
 }
 
-:root[data-theme='dark'] {
+:root[data-theme="dark"] {
   --bg: #050506;
   --header: #000000;
   --header-rule: #1c1c1f;

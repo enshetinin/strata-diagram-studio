@@ -6,7 +6,7 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { Dialog } from '../components/ui/Dialog';
-import { Tabs, type TabDef } from '../components/ui/Tabs';
+import { type TabDef, Tabs } from '../components/ui/Tabs';
 import { useGeneration } from '../features/generation/pipeline';
 import { GeneratePanel } from './panels/GeneratePanel';
 import { TemplatesPanel } from './panels/TemplatesPanel';
@@ -47,7 +47,13 @@ export function NewDocumentDialog() {
       <p className="field__hint">
         Reemplaza el diagrama actual: solo se guarda uno en este navegador. Puedes deshacerlo justo después.
       </p>
-      <Tabs idPrefix="new-doc" label="Origen del diagrama" tabs={TABS} active={tab} onChange={(next) => useNewDocumentDialog.setState({ tab: next })} />
+      <Tabs
+        idPrefix="new-doc"
+        label="Origen del diagrama"
+        tabs={TABS}
+        active={tab}
+        onChange={(next) => useNewDocumentDialog.setState({ tab: next })}
+      />
       <div className="new-doc__body" role="tabpanel" id="new-doc-panel" aria-labelledby={`new-doc-tab-${tab}`}>
         {tab === 'templates' ? <TemplatesPanel onOpen={close} /> : <GeneratePanel onHandOff={close} />}
       </div>

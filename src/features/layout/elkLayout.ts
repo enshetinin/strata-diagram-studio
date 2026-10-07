@@ -67,7 +67,11 @@ export function buildElkGraph(doc: DiagramDocument, options: AutoLayoutOptions):
 
   return {
     id: '__root__',
-    layoutOptions: { ...containerOptions, 'elk.hierarchyHandling': 'INCLUDE_CHILDREN', 'elk.padding': '[top=0,left=0,bottom=0,right=0]' },
+    layoutOptions: {
+      ...containerOptions,
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+      'elk.padding': '[top=0,left=0,bottom=0,right=0]',
+    },
     children: [
       ...doc.groups.filter((group) => group.parentGroupId === null).map((group) => elkGroupFor(group.id)),
       ...doc.nodes.filter((node) => node.groupId === null).map((node) => elkNodeFor(node.id)),
@@ -82,7 +86,12 @@ export function readElkResult(doc: DiagramDocument, root: ElkNode): DiagramLayou
   const layout: DiagramLayout = { nodes: {}, groups: {}, annotations: {} };
   const visit = (elkNode: ElkNode) => {
     for (const child of elkNode.children ?? []) {
-      const rect = { x: Math.round(child.x ?? 0), y: Math.round(child.y ?? 0), width: Math.round(child.width ?? 0), height: Math.round(child.height ?? 0) };
+      const rect = {
+        x: Math.round(child.x ?? 0),
+        y: Math.round(child.y ?? 0),
+        width: Math.round(child.width ?? 0),
+        height: Math.round(child.height ?? 0),
+      };
       if (groupIds.has(child.id)) layout.groups[child.id] = rect;
       else layout.nodes[child.id] = rect;
       visit(child);

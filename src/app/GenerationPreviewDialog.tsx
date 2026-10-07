@@ -12,7 +12,8 @@ export function GenerationPreviewDialog() {
     if (!pending) return;
     // The SVG renderer (and its routing code) is loaded only when needed.
     void import('../features/export/svg').then(({ documentToSvg }) => {
-      if (active) setPreview(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(documentToSvg(pending.result.document))}`);
+      if (active)
+        setPreview(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(documentToSvg(pending.result.document))}`);
     });
     return () => {
       active = false;
@@ -41,7 +42,8 @@ export function GenerationPreviewDialog() {
       {doc && pending ? (
         <>
           <p className="preview-meta">
-            <strong>{pending.result.provider.label}</strong> · {doc.nodes.length} componentes · {doc.edges.length} relaciones · {doc.groups.length} grupos
+            <strong>{pending.result.provider.label}</strong> · {doc.nodes.length} componentes · {doc.edges.length}{' '}
+            relaciones · {doc.groups.length} grupos
           </p>
           {pending.result.notes.map((note) => (
             <p key={note} className="field__hint">
@@ -50,7 +52,8 @@ export function GenerationPreviewDialog() {
           ))}
           {changed ? (
             <p className="notice notice--warning" role="alert">
-              Editaste el documento mientras se generaba. Si insertas, se reemplazará; tus cambios siguen disponibles con «Deshacer».
+              Editaste el documento mientras se generaba. Si insertas, se reemplazará; tus cambios siguen disponibles
+              con «Deshacer».
             </p>
           ) : null}
           {preview ? <img className="preview-image" src={preview} alt={`Vista previa 2D de ${doc.name}`} /> : null}

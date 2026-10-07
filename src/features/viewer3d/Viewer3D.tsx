@@ -5,11 +5,11 @@
  */
 import { PerformanceMonitor } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { ACESFilmicToneMapping, PCFShadowMap } from 'three';
-import { usePreferences, type Quality } from '../../state/preferencesStore';
-import { useUiStore } from '../../state/uiStore';
 import { useReducedMotion } from '../../components/ui/useReducedMotion';
+import { type Quality, usePreferences } from '../../state/preferencesStore';
+import { useUiStore } from '../../state/uiStore';
 import { Scene } from './Scene';
 import { ViewerOverlay } from './ViewerOverlay';
 import { WebglFallback } from './WebglFallback';
@@ -62,7 +62,13 @@ export default function Viewer3D() {
   }
 
   return (
-    <div className="viewer3d" ref={container} data-rendered-nodes={stats.nodes} data-rendered-edges={stats.edges} data-rendered-groups={stats.groups}>
+    <div
+      className="viewer3d"
+      ref={container}
+      data-rendered-nodes={stats.nodes}
+      data-rendered-edges={stats.edges}
+      data-rendered-groups={stats.groups}
+    >
       <CanvasBoundary key={attempt} onError={onError}>
         <Canvas
           frameloop="demand"

@@ -26,7 +26,10 @@ describe('new group and relation kinds', () => {
 
   it('draw a trust boundary as an unfilled dashed frame, other groups tinted', () => {
     const svg = documentToSvg(boundaryDocument());
-    const frames = [...svg.matchAll(/<g data-group="([^"]+)">\s*<rect ([^>]+)\/>/g)].map(([, id, attrs]) => ({ id, attrs }));
+    const frames = [...svg.matchAll(/<g data-group="([^"]+)">\s*<rect ([^>]+)\/>/g)].map(([, id, attrs]) => ({
+      id,
+      attrs,
+    }));
     expect(frames.find((frame) => frame.id === 'g-public')?.attrs).toContain('fill="none"');
     expect(frames.find((frame) => frame.id === 'g-public')?.attrs).toContain('stroke-dasharray');
     expect(frames.find((frame) => frame.id === 'g-prod')?.attrs).not.toContain('stroke-dasharray');
@@ -35,7 +38,12 @@ describe('new group and relation kinds', () => {
   });
 
   it('exports notes with their leader line above the components', () => {
-    const doc = addAnnotation(boundaryDocument(), { id: 'a-1', text: 'Solo con MFA', position: { x: 0, y: -200 }, targetNodeId: 'n-idp' });
+    const doc = addAnnotation(boundaryDocument(), {
+      id: 'a-1',
+      text: 'Solo con MFA',
+      position: { x: 0, y: -200 },
+      targetNodeId: 'n-idp',
+    });
     const svg = documentToSvg(doc);
     const note = svg.slice(svg.indexOf('<g data-annotation="a-1">'));
     expect(svg.indexOf('<g data-annotation')).toBeGreaterThan(svg.lastIndexOf('<g data-node'));

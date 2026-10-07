@@ -4,7 +4,7 @@
  * opening a link uploads nothing. Decoding goes through the same validation
  * as a JSON import.
  */
-import { parseDocumentText, type ParseResult } from '../../domain/parse';
+import { type ParseResult, parseDocumentText } from '../../domain/parse';
 import { LIMITS } from '../../domain/schema';
 import type { DiagramDocument } from '../../domain/types';
 
@@ -16,7 +16,8 @@ export const LONG_LINK = 8_000;
 
 function toBase64Url(bytes: Uint8Array): string {
   let binary = '';
-  for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  for (let index = 0; index < bytes.length; index += 0x8000)
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
@@ -26,7 +27,11 @@ function fromBase64Url(text: string): Uint8Array {
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
-async function pipe(bytes: Uint8Array, transform: CompressionStream | DecompressionStream, limit = Infinity): Promise<Uint8Array> {
+async function pipe(
+  bytes: Uint8Array,
+  transform: CompressionStream | DecompressionStream,
+  limit = Infinity,
+): Promise<Uint8Array> {
   const stream = new Blob([bytes as BlobPart]).stream().pipeThrough(transform);
   const reader = stream.getReader();
   const chunks: Uint8Array[] = [];
@@ -66,7 +71,8 @@ export async function decodeDocument(payload: string): Promise<ParseResult> {
     const bytes = await pipe(fromBase64Url(data), new DecompressionStream('deflate-raw'), LIMITS.maxBytes);
     text = new TextDecoder().decode(bytes);
   } catch (error) {
-    if (error instanceof RangeError) return { ok: false, code: 'too-large', message: 'El diagrama del enlace supera el tamaño máximo.', issues: [] };
+    if (error instanceof RangeError)
+      return { ok: false, code: 'too-large', message: 'El diagrama del enlace supera el tamaño máximo.', issues: [] };
     return fail('El enlace compartido está dañado o incompleto (¿se recortó al copiarlo?).');
   }
   return parseDocumentText(text);
@@ -84,6 +90,10 @@ export function readShareHash(hash: string): ShareHash | null {
   return payload ? { payload, present: params.get('p') === '1' } : null;
 }
 
-export function shareUrl(payload: string, options: { present: boolean }, base: Pick<Location, 'origin' | 'pathname'> = window.location): string {
+export function shareUrl(
+  payload: string,
+  options: { present: boolean },
+  base: Pick<Location, 'origin' | 'pathname'> = window.location,
+): string {
   return `${base.origin}${base.pathname}#s=${payload}${options.present ? '&p=1' : ''}`;
 }

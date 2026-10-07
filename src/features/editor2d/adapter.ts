@@ -3,7 +3,14 @@
  * second editable copy of the graph.
  */
 import type { Edge, Node } from '@xyflow/react';
-import type { DiagramAnnotation, DiagramDocument, DiagramEdge, DiagramGroup, DiagramNode, ElementRef } from '../../domain/types';
+import type {
+  DiagramAnnotation,
+  DiagramDocument,
+  DiagramEdge,
+  DiagramGroup,
+  DiagramNode,
+  ElementRef,
+} from '../../domain/types';
 
 export type StrataNodeData = { node: DiagramNode; accent: number };
 export type GroupNodeData = { group: DiagramGroup; accent: number; depth: number };
@@ -63,7 +70,11 @@ export function topLevelAccents(doc: DiagramDocument): (groupId: string | null) 
 }
 
 /** Parents are emitted before children, as React Flow requires. */
-export function toFlowNodes(doc: DiagramDocument, selection: ElementRef[], isolatedGroupId: string | null = null): FlowNode[] {
+export function toFlowNodes(
+  doc: DiagramDocument,
+  selection: ElementRef[],
+  isolatedGroupId: string | null = null,
+): FlowNode[] {
   const depths = groupDepths(doc);
   const accentOf = topLevelAccents(doc);
   const groups = [...doc.groups].sort((a, b) => (depths.get(a.id) ?? 0) - (depths.get(b.id) ?? 0));

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import type { ParseResult } from '../domain/parse';
 import { Dialog } from '../components/ui/Dialog';
+import type { ParseResult } from '../domain/parse';
 
 type ParseFailure = Extract<ParseResult, { ok: false }>;
 

@@ -1,17 +1,36 @@
-import { ChevronDown, Download, Ellipsis, Link2, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
+import {
+  ChevronDown,
+  Download,
+  Ellipsis,
+  Link2,
+  Moon,
+  PanelLeft,
+  PanelRight,
+  Play,
+  Redo2,
+  Sun,
+  Undo2,
+  Workflow,
+} from 'lucide-react';
 import { useRef } from 'react';
-import { setDocumentInfo } from '../domain/commands';
-import { parseDocumentText } from '../domain/parse';
-import { autoLayout, replaceDocument } from '../state/actions';
-import { selectCanRedo, selectCanUndo, selectRedoLabel, selectUndoLabel, useDocumentStore } from '../state/documentStore';
-import { usePreferences } from '../state/preferencesStore';
-import { useUiStore } from '../state/uiStore';
+import { StrataMark } from '../components/ui/FluidLines';
 import { IconButton } from '../components/ui/IconButton';
 import { Menu } from '../components/ui/Menu';
-import { StrataMark } from '../components/ui/FluidLines';
+import { setDocumentInfo } from '../domain/commands';
+import { parseDocumentText } from '../domain/parse';
 import { exportJson, exportSvgFile } from '../features/export/exportActions';
-import { blankDocument } from '../features/templates';
 import { saveNow, useSaveStatus } from '../features/persistence/autosave';
+import { blankDocument } from '../features/templates';
+import { autoLayout, replaceDocument } from '../state/actions';
+import {
+  selectCanRedo,
+  selectCanUndo,
+  selectRedoLabel,
+  selectUndoLabel,
+  useDocumentStore,
+} from '../state/documentStore';
+import { usePreferences } from '../state/preferencesStore';
+import { useUiStore } from '../state/uiStore';
 import { usePngDialog } from './ExportPngDialog';
 import { useImportErrors } from './ImportErrorDialog';
 import { openNewDocument } from './NewDocumentDialog';
@@ -52,7 +71,8 @@ function DocumentName() {
       aria-label="Nombre del diagrama"
       onBlur={(event) => {
         const value = event.target.value.trim();
-        if (value && value !== name) useDocumentStore.getState().execute('Renombrar diagrama', (doc) => setDocumentInfo(doc, { name: value }));
+        if (value && value !== name)
+          useDocumentStore.getState().execute('Renombrar diagrama', (doc) => setDocumentInfo(doc, { name: value }));
         else event.target.value = name;
       }}
       onKeyDown={(event) => {
@@ -89,8 +109,18 @@ export function TopBar() {
   const openShare = () => useShareDialog.setState({ open: true });
   const exportItems = [
     { label: 'JSON del documento', menuLabel: 'Exportar JSON', hint: 'portable, validado', onSelect: exportJson },
-    { label: 'SVG de la vista 2D', menuLabel: 'Exportar SVG (2D)', hint: 'vectorial', onSelect: () => void exportSvgFile() },
-    { label: 'Imagen PNG de la escena 3D…', menuLabel: 'Exportar imagen PNG…', hint: 'título, leyenda, hasta 4K', onSelect: () => usePngDialog.setState({ open: true }) },
+    {
+      label: 'SVG de la vista 2D',
+      menuLabel: 'Exportar SVG (2D)',
+      hint: 'vectorial',
+      onSelect: () => void exportSvgFile(),
+    },
+    {
+      label: 'Imagen PNG de la escena 3D…',
+      menuLabel: 'Exportar imagen PNG…',
+      hint: 'título, leyenda, hasta 4K',
+      onSelect: () => usePngDialog.setState({ open: true }),
+    },
   ];
 
   const onImport = async (file: File | undefined) => {
@@ -106,7 +136,12 @@ export function TopBar() {
   return (
     <header className="topbar">
       <div className="topbar__identity">
-        <IconButton label={leftOpen ? 'Ocultar estructura y biblioteca' : 'Mostrar estructura y biblioteca'} icon={PanelLeft} pressed={leftOpen} onClick={() => useUiStore.getState().setLeft(!leftOpen)} />
+        <IconButton
+          label={leftOpen ? 'Ocultar estructura y biblioteca' : 'Mostrar estructura y biblioteca'}
+          icon={PanelLeft}
+          pressed={leftOpen}
+          onClick={() => useUiStore.getState().setLeft(!leftOpen)}
+        />
         <p className="topbar__brand" aria-hidden="true">
           <StrataMark />
           <span className="topbar__brand-word">Strata</span>
@@ -134,7 +169,14 @@ export function TopBar() {
       <div className="topbar__primary">
         <div className="segmented" role="radiogroup" aria-label="Vista">
           {(['3d', '2d'] as const).map((value) => (
-            <button key={value} type="button" role="radio" aria-checked={mode === value} className="segmented__option" onClick={() => setMode(value)}>
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={mode === value}
+              className="segmented__option"
+              onClick={() => setMode(value)}
+            >
               {value === '3d' ? '3D' : readOnly ? '2D' : 'Editar 2D'}
             </button>
           ))}
@@ -142,16 +184,38 @@ export function TopBar() {
 
         {!readOnly ? (
           <div className="topbar__group" role="toolbar" aria-label="Documento">
-            <IconButton label={undoLabel ? `Deshacer: ${undoLabel} (Ctrl+Z)` : 'Deshacer'} icon={Undo2} onClick={() => useDocumentStore.getState().undo()} disabled={!canUndo} />
-            <IconButton label={redoLabel ? `Rehacer: ${redoLabel} (Ctrl+Shift+Z)` : 'Rehacer'} icon={Redo2} onClick={() => useDocumentStore.getState().redo()} disabled={!canRedo} />
-            <IconButton label="Ordenar" title="Ordenar el diagrama automáticamente" icon={Workflow} showLabel className="hide-narrow-label" onClick={() => void autoLayout()} />
+            <IconButton
+              label={undoLabel ? `Deshacer: ${undoLabel} (Ctrl+Z)` : 'Deshacer'}
+              icon={Undo2}
+              onClick={() => useDocumentStore.getState().undo()}
+              disabled={!canUndo}
+            />
+            <IconButton
+              label={redoLabel ? `Rehacer: ${redoLabel} (Ctrl+Shift+Z)` : 'Rehacer'}
+              icon={Redo2}
+              onClick={() => useDocumentStore.getState().redo()}
+              disabled={!canRedo}
+            />
+            <IconButton
+              label="Ordenar"
+              title="Ordenar el diagrama automáticamente"
+              icon={Workflow}
+              showLabel
+              className="hide-narrow-label"
+              onClick={() => void autoLayout()}
+            />
           </div>
         ) : null}
       </div>
 
       <div className="topbar__group topbar__group--end">
         {!readOnly ? <SaveIndicator /> : null}
-        <IconButton className="topbar__secondary" label={themeLabel} icon={theme === 'dark' ? Sun : Moon} onClick={toggleTheme} />
+        <IconButton
+          className="topbar__secondary"
+          label={themeLabel}
+          icon={theme === 'dark' ? Sun : Moon}
+          onClick={toggleTheme}
+        />
         <input
           ref={fileInput}
           type="file"
@@ -164,7 +228,11 @@ export function TopBar() {
           }}
         />
         <div className="topbar__secondary">
-          <Menu label="Exportar" icon={<Download size={17} strokeWidth={1.75} aria-hidden="true" />} items={exportItems} />
+          <Menu
+            label="Exportar"
+            icon={<Download size={17} strokeWidth={1.75} aria-hidden="true" />}
+            items={exportItems}
+          />
         </div>
         <IconButton className="topbar__secondary" label="Compartir enlace" icon={Link2} onClick={openShare} />
         {/* Phones: theme, export and share fold into one menu. */}
@@ -180,11 +248,21 @@ export function TopBar() {
             ]}
           />
         </div>
-        <button type="button" className="button button--primary button--cta" title="Presentar" onClick={() => useUiStore.getState().setPresenting(true)}>
+        <button
+          type="button"
+          className="button button--primary button--cta"
+          title="Presentar"
+          onClick={() => useUiStore.getState().setPresenting(true)}
+        >
           <Play className="button__compact-icon" size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="button__label">Presentar</span>
         </button>
-        <IconButton label={rightOpen ? 'Ocultar inspector' : 'Mostrar inspector'} icon={PanelRight} pressed={rightOpen} onClick={() => useUiStore.getState().setRight(!rightOpen)} />
+        <IconButton
+          label={rightOpen ? 'Ocultar inspector' : 'Mostrar inspector'}
+          icon={PanelRight}
+          pressed={rightOpen}
+          onClick={() => useUiStore.getState().setRight(!rightOpen)}
+        />
       </div>
     </header>
   );

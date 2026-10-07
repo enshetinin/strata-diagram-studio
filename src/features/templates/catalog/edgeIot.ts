@@ -38,7 +38,10 @@ export function edgeIot() {
     .edge('n-vehicles', 'n-cell', 'telemetry', 'LTE', { order: 1 })
     .edge('n-gw-north', 'n-inference', 'data', 'Ventanas de señal', { order: 2 })
     .edge('n-inference', 'n-gw-north', 'event', 'Anomalías', { order: 3, fromSide: 'right', toSide: 'right' })
-    .edge('n-gw-north', 'n-broker', 'telemetry', 'MQTT/TLS', { order: 4, explanation: 'Los tres clusters convergen en el broker regional.' })
+    .edge('n-gw-north', 'n-broker', 'telemetry', 'MQTT/TLS', {
+      order: 4,
+      explanation: 'Los tres clusters convergen en el broker regional.',
+    })
     .edge('n-gw-south', 'n-broker', 'telemetry', undefined, { order: 4 })
     .edge('n-cell', 'n-broker', 'telemetry', undefined, { order: 4, fromSide: 'right', toSide: 'bottom' })
     .edge('n-broker', 'n-rules', 'event', 'Telemetría', { order: 5 })

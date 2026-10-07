@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import * as cmd from '../domain/commands';
 import { TEMPLATES } from '../features/templates';
-import { useDocumentStore } from './documentStore';
 import { appearanceVariant } from './actions';
+import { useDocumentStore } from './documentStore';
 
 const store = () => useDocumentStore.getState();
 
@@ -49,7 +49,9 @@ describe('history', () => {
     expect(appearanceVariant(doc, 9)).toEqual(appearanceVariant(doc, 9));
     expect(appearanceVariant(doc, 9).styleId).not.toBe(doc.presentation.styleId);
     const variant = appearanceVariant(doc, 9);
-    store().execute('Apariencia', (d) => cmd.setPresentation(d, { styleId: variant.styleId, appearance: { layerHeight: variant.layerHeight } }));
+    store().execute('Apariencia', (d) =>
+      cmd.setPresentation(d, { styleId: variant.styleId, appearance: { layerHeight: variant.layerHeight } }),
+    );
     expect(store().doc.nodes).toBe(doc.nodes);
     expect(store().doc.edges).toBe(doc.edges);
     expect(store().doc.groups).toBe(doc.groups);

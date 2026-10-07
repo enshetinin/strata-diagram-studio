@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 const OUT = 'docs/qa';
 const TEMPLATES = ['aws-load-testing', 'rag', 'multi-agent', 'event-commerce', 'data-platform', 'edge-iot'];

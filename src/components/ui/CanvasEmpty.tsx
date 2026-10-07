@@ -1,5 +1,13 @@
 /** Empty-diagram guidance laid over a canvas; only the action takes pointer events. */
-export function CanvasEmpty({ title, text, action }: { title: string; text: string; action: { label: string; onClick: () => void } }) {
+export function CanvasEmpty({
+  title,
+  text,
+  action,
+}: {
+  title: string;
+  text: string;
+  action: { label: string; onClick: () => void };
+}) {
   return (
     <div className="canvas-empty" role="note">
       <p className="eyebrow">Diagrama vacío</p>

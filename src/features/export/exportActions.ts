@@ -30,7 +30,10 @@ export async function exportSvgFile(): Promise<void> {
  * needed, since the exporter lives in the 3D view. `size` overrides the
  * format's pixels for previews.
  */
-export async function renderPng(options: PngComposeOptions, size?: { width: number; height: number }): Promise<HTMLCanvasElement> {
+export async function renderPng(
+  options: PngComposeOptions,
+  size?: { width: number; height: number },
+): Promise<HTMLCanvasElement> {
   const ui = useUiStore.getState();
   if (ui.mode !== '3d') ui.setMode('3d');
   const [exporter, { composePng }] = await Promise.all([waitForPngExporter(), import('./pngComposition')]);
@@ -42,8 +45,14 @@ export async function exportPngFile(options: PngComposeOptions): Promise<boolean
   try {
     const { canvasToPng } = await import('./pngComposition');
     const blob = await canvasToPng(await renderPng(options));
-    downloadBlob(blob, `${slugify(current().name)}-3d-${options.format}${options.transparent ? '-transparente' : ''}.png`);
-    notify('success', `PNG ${format.width}×${format.height} exportado${options.transparent ? ' con fondo transparente' : ''}.`);
+    downloadBlob(
+      blob,
+      `${slugify(current().name)}-3d-${options.format}${options.transparent ? '-transparente' : ''}.png`,
+    );
+    notify(
+      'success',
+      `PNG ${format.width}×${format.height} exportado${options.transparent ? ' con fondo transparente' : ''}.`,
+    );
     return true;
   } catch (error) {
     notify('error', `No se pudo exportar el PNG: ${error instanceof Error ? error.message : String(error)}`);

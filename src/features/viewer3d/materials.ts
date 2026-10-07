@@ -3,7 +3,16 @@
  * material by (colour, finish, opacity) and receives the same instance;
  * everything is disposed together when the theme or quality changes.
  */
-import { Color, DoubleSide, FrontSide, MeshBasicMaterial, MeshLambertMaterial, MeshPhysicalMaterial, MeshStandardMaterial, type Material } from 'three';
+import {
+  Color,
+  DoubleSide,
+  FrontSide,
+  type Material,
+  MeshBasicMaterial,
+  MeshLambertMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+} from 'three';
 import type { Quality } from '../../state/preferencesStore';
 import type { NodeFinish, ThemeTokens } from './themes';
 
@@ -77,11 +86,19 @@ export class MaterialLibrary {
 
   /** Glossy accent (cores, LEDs, bands): lacquered rather than matte. */
   gloss(color: string): Material {
-    if (this.quality === 'low' || this.theme.node.finish === 'wire' || this.theme.node.finish === 'ink') return this.surface(color, 1, this.theme.node.finish);
+    if (this.quality === 'low' || this.theme.node.finish === 'wire' || this.theme.node.finish === 'ink')
+      return this.surface(color, 1, this.theme.node.finish);
     const key = `l|${color}`;
     const cached = this.cache.get(key);
     if (cached) return cached;
-    const material = new MeshPhysicalMaterial({ color, roughness: 0.28, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.12, emissive: new Color(color).multiplyScalar(this.theme.dark ? 0.2 : 0.04) });
+    const material = new MeshPhysicalMaterial({
+      color,
+      roughness: 0.28,
+      metalness: 0.05,
+      clearcoat: 1,
+      clearcoatRoughness: 0.12,
+      emissive: new Color(color).multiplyScalar(this.theme.dark ? 0.2 : 0.04),
+    });
     this.cache.set(key, material);
     return material;
   }
@@ -104,7 +121,14 @@ export class MaterialLibrary {
     const material =
       this.quality === 'low'
         ? new MeshBasicMaterial({ color, transparent: opacity < 1, opacity })
-        : new MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.1, transparent: opacity < 1, opacity, emissive: new Color(color).multiplyScalar(this.theme.dark ? 0.35 : 0.05) });
+        : new MeshStandardMaterial({
+            color,
+            roughness: 0.5,
+            metalness: 0.1,
+            transparent: opacity < 1,
+            opacity,
+            emissive: new Color(color).multiplyScalar(this.theme.dark ? 0.35 : 0.05),
+          });
     this.cache.set(key, material);
     return material;
   }

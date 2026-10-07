@@ -8,13 +8,12 @@
  */
 import { z } from 'zod';
 import { CommandError, descendantGroups, growGroupsToContain, nextId } from './commands';
-import { containerOrigin, resolveAbsoluteLayout, unionRects, type Point } from './geometry';
+import { containerOrigin, type Point, resolveAbsoluteLayout, unionRects } from './geometry';
 import { parseDocument } from './parse';
 import { annotationSchema, edgeSchema, groupSchema, LIMITS, nodeSchema, rectSchema } from './schema';
 import {
   DEFAULT_ANNOTATION_SIZE,
   DEFAULT_NODE_SIZE,
-  SCHEMA_VERSION,
   type DiagramAnnotation,
   type DiagramDocument,
   type DiagramEdge,
@@ -22,6 +21,7 @@ import {
   type DiagramNode,
   type ElementRef,
   type Rect,
+  SCHEMA_VERSION,
 } from './types';
 
 export const FRAGMENT_FORMAT = 'strata/fragment';
@@ -42,12 +42,19 @@ export interface DiagramFragment {
 const fragmentSchema = z.object({
   format: z.literal(FRAGMENT_FORMAT),
   schemaVersion: z.literal(SCHEMA_VERSION),
-  origin: z.object({ documentId: z.string().max(LIMITS.maxIdLength), containerId: z.string().max(LIMITS.maxIdLength).nullable() }),
+  origin: z.object({
+    documentId: z.string().max(LIMITS.maxIdLength),
+    containerId: z.string().max(LIMITS.maxIdLength).nullable(),
+  }),
   nodes: z.array(nodeSchema).max(LIMITS.maxNodes),
   groups: z.array(groupSchema).max(LIMITS.maxGroups),
   edges: z.array(edgeSchema).max(LIMITS.maxEdges),
   annotations: z.array(annotationSchema).max(LIMITS.maxAnnotations).default([]),
-  layout: z.object({ nodes: z.record(z.string(), rectSchema), groups: z.record(z.string(), rectSchema), annotations: z.record(z.string(), rectSchema).default({}) }),
+  layout: z.object({
+    nodes: z.record(z.string(), rectSchema),
+    groups: z.record(z.string(), rectSchema),
+    annotations: z.record(z.string(), rectSchema).default({}),
+  }),
 });
 
 /**
@@ -63,7 +70,9 @@ export function extractFragment(doc: DiagramDocument, refs: readonly ElementRef[
     descendantGroups(doc, ref.id).forEach((id) => groupIds.add(id));
   }
   const selectedNodes = new Set(refs.filter((ref) => ref.type === 'node').map((ref) => ref.id));
-  const nodes = doc.nodes.filter((node) => selectedNodes.has(node.id) || (node.groupId !== null && groupIds.has(node.groupId)));
+  const nodes = doc.nodes.filter(
+    (node) => selectedNodes.has(node.id) || (node.groupId !== null && groupIds.has(node.groupId)),
+  );
   const groups = doc.groups.filter((group) => groupIds.has(group.id));
   const selectedAnnotations = new Set(refs.filter((ref) => ref.type === 'annotation').map((ref) => ref.id));
   const annotations = doc.annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
@@ -92,7 +101,9 @@ export function extractFragment(doc: DiagramDocument, refs: readonly ElementRef[
     if (!inside) containers.add(node.groupId);
     return { ...structuredClone(node), groupId: inside ? node.groupId : null };
   });
-  const edges = doc.edges.filter((edge) => nodeIds.has(edge.source.nodeId) && nodeIds.has(edge.target.nodeId)).map((edge) => structuredClone(edge));
+  const edges = doc.edges
+    .filter((edge) => nodeIds.has(edge.source.nodeId) && nodeIds.has(edge.target.nodeId))
+    .map((edge) => structuredClone(edge));
 
   return {
     format: FRAGMENT_FORMAT,
@@ -114,12 +125,23 @@ function fragmentFromDocument(doc: DiagramDocument): DiagramFragment {
     ...doc.annotations.map((annotation) => ({ type: 'annotation' as const, id: annotation.id })),
   ]);
   return {
-    ...(fragment ?? { format: FRAGMENT_FORMAT, schemaVersion: SCHEMA_VERSION, nodes: [], groups: [], edges: [], annotations: [], layout: { nodes: {}, groups: {}, annotations: {} } }),
+    ...(fragment ?? {
+      format: FRAGMENT_FORMAT,
+      schemaVersion: SCHEMA_VERSION,
+      nodes: [],
+      groups: [],
+      edges: [],
+      annotations: [],
+      layout: { nodes: {}, groups: {}, annotations: {} },
+    }),
     origin: { documentId: doc.id, containerId: null },
   };
 }
 
-export type ClipboardParse = { status: 'none' } | { status: 'ok'; fragment: DiagramFragment } | { status: 'invalid'; message: string };
+export type ClipboardParse =
+  | { status: 'none' }
+  | { status: 'ok'; fragment: DiagramFragment }
+  | { status: 'invalid'; message: string };
 
 /**
  * Reads clipboard text. Anything that is not Strata content returns `none`
@@ -129,7 +151,8 @@ export type ClipboardParse = { status: 'none' } | { status: 'ok'; fragment: Diag
 export function parseClipboardText(text: string): ClipboardParse {
   const trimmed = text.trim();
   if (!trimmed.startsWith('{')) return { status: 'none' };
-  if (trimmed.length > LIMITS.maxBytes) return { status: 'invalid', message: 'El contenido del portapapeles es demasiado grande.' };
+  if (trimmed.length > LIMITS.maxBytes)
+    return { status: 'invalid', message: 'El contenido del portapapeles es demasiado grande.' };
   let raw: unknown;
   try {
     raw = JSON.parse(trimmed);
@@ -143,7 +166,10 @@ export function parseClipboardText(text: string): ClipboardParse {
     const parsed = fragmentSchema.safeParse(raw);
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
-      return { status: 'invalid', message: `El fragmento copiado no es válido${issue ? ` (${issue.path.join('.')}: ${issue.message})` : ''}.` };
+      return {
+        status: 'invalid',
+        message: `El fragmento copiado no es válido${issue ? ` (${issue.path.join('.')}: ${issue.message})` : ''}.`,
+      };
     }
     return { status: 'ok', fragment: parsed.data };
   }
@@ -169,10 +195,16 @@ export interface PastePlacement {
  * fragment are dropped and walkthrough order is cleared, as with duplication.
  * Returns the new top-level elements so the caller can select them.
  */
-export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, placement: PastePlacement): { doc: DiagramDocument; roots: ElementRef[] } {
+export function pasteFragment(
+  doc: DiagramDocument,
+  fragment: DiagramFragment,
+  placement: PastePlacement,
+): { doc: DiagramDocument; roots: ElementRef[] } {
   const { containerId } = placement;
-  if (containerId !== null && !doc.groups.some((group) => group.id === containerId)) throw new CommandError(`El grupo «${containerId}» no existe.`);
-  if (fragment.nodes.length === 0 && fragment.groups.length === 0 && fragment.annotations.length === 0) throw new CommandError('No hay nada que pegar.');
+  if (containerId !== null && !doc.groups.some((group) => group.id === containerId))
+    throw new CommandError(`El grupo «${containerId}» no existe.`);
+  if (fragment.nodes.length === 0 && fragment.groups.length === 0 && fragment.annotations.length === 0)
+    throw new CommandError('No hay nada que pegar.');
   if (
     doc.nodes.length + fragment.nodes.length > LIMITS.maxNodes ||
     doc.groups.length + fragment.groups.length > LIMITS.maxGroups ||
@@ -197,14 +229,28 @@ export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, p
   const groupRect = (group: DiagramGroup) => fragment.layout.groups[group.id] ?? fallbackRect();
   const nodeRect = (node: DiagramNode) => fragment.layout.nodes[node.id] ?? fallbackRect();
 
-  const annotationRect = (annotation: DiagramAnnotation) => fragment.layout.annotations[annotation.id] ?? { x: 0, y: 0, ...DEFAULT_ANNOTATION_SIZE };
-  const rootRects = [...fragment.groups.filter(isRootGroup).map(groupRect), ...fragment.nodes.filter(isRootNode).map(nodeRect), ...fragment.annotations.map(annotationRect)];
+  const annotationRect = (annotation: DiagramAnnotation) =>
+    fragment.layout.annotations[annotation.id] ?? { x: 0, y: 0, ...DEFAULT_ANNOTATION_SIZE };
+  const rootRects = [
+    ...fragment.groups.filter(isRootGroup).map(groupRect),
+    ...fragment.nodes.filter(isRootNode).map(nodeRect),
+    ...fragment.annotations.map(annotationRect),
+  ];
   const bounds = unionRects(rootRects) ?? { x: 0, y: 0, width: 0, height: 0 };
-  const shift = placement.at ? { x: placement.at.x - bounds.x, y: placement.at.y - bounds.y } : (placement.offset ?? { x: 0, y: 0 });
+  const shift = placement.at
+    ? { x: placement.at.x - bounds.x, y: placement.at.y - bounds.y }
+    : (placement.offset ?? { x: 0, y: 0 });
   const origin = containerOrigin(doc, containerId);
-  const place = (rect: Rect, root: boolean): Rect => (root ? { ...rect, x: Math.round(rect.x + shift.x - origin.x), y: Math.round(rect.y + shift.y - origin.y) } : { ...rect });
+  const place = (rect: Rect, root: boolean): Rect =>
+    root
+      ? { ...rect, x: Math.round(rect.x + shift.x - origin.x), y: Math.round(rect.y + shift.y - origin.y) }
+      : { ...rect };
 
-  const layout = { nodes: { ...doc.layout.nodes }, groups: { ...doc.layout.groups }, annotations: { ...doc.layout.annotations } };
+  const layout = {
+    nodes: { ...doc.layout.nodes },
+    groups: { ...doc.layout.groups },
+    annotations: { ...doc.layout.annotations },
+  };
   const roots: ElementRef[] = [];
 
   const groups = fragment.groups.map((group): DiagramGroup => {
@@ -225,7 +271,12 @@ export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, p
     const source = nodeMap.get(edge.source.nodeId);
     const target = nodeMap.get(edge.target.nodeId);
     if (!source || !target) return [];
-    const copy: DiagramEdge = { ...structuredClone(edge), id: fresh('e'), source: { ...edge.source, nodeId: source }, target: { ...edge.target, nodeId: target } };
+    const copy: DiagramEdge = {
+      ...structuredClone(edge),
+      id: fresh('e'),
+      source: { ...edge.source, nodeId: source },
+      target: { ...edge.target, nodeId: target },
+    };
     delete copy.order;
     return [copy];
   });
@@ -236,7 +287,11 @@ export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, p
     const rect = annotationRect(annotation);
     layout.annotations[id] = { ...rect, x: Math.round(rect.x + shift.x), y: Math.round(rect.y + shift.y) };
     roots.push({ type: 'annotation', id });
-    return { ...structuredClone(annotation), id, targetNodeId: annotation.targetNodeId ? (nodeMap.get(annotation.targetNodeId) ?? null) : null };
+    return {
+      ...structuredClone(annotation),
+      id,
+      targetNodeId: annotation.targetNodeId ? (nodeMap.get(annotation.targetNodeId) ?? null) : null,
+    };
   });
 
   const next: DiagramDocument = {

@@ -1,17 +1,32 @@
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Tabs, type TabDef } from '../components/ui/Tabs';
-import { useUiStore, type LeftTab, type RightTab } from '../state/uiStore';
+import { type TabDef, Tabs } from '../components/ui/Tabs';
+import { type LeftTab, type RightTab, useUiStore } from '../state/uiStore';
 import { AppearancePanel } from './panels/AppearancePanel';
 import { Inspector } from './panels/Inspector';
 import { LibraryPanel } from './panels/LibraryPanel';
 import { NarrativePanel } from './panels/NarrativePanel';
 import { OutlinePanel } from './panels/OutlinePanel';
 
-function Panel({ side, label, children, onClose }: { side: 'left' | 'right'; label: string; children: ReactNode; onClose: () => void }) {
+function Panel({
+  side,
+  label,
+  children,
+  onClose,
+}: {
+  side: 'left' | 'right';
+  label: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
   return (
     <aside className={`side-panel side-panel--${side}`} aria-label={label}>
-      <button type="button" className="icon-button side-panel__close" aria-label={`Cerrar ${label.toLowerCase()}`} onClick={onClose}>
+      <button
+        type="button"
+        className="icon-button side-panel__close"
+        aria-label={`Cerrar ${label.toLowerCase()}`}
+        onClick={onClose}
+      >
         <X size={16} aria-hidden="true" />
       </button>
       {children}
@@ -49,7 +64,13 @@ export function RightPanel() {
   const setRight = useUiStore((state) => state.setRight);
   return (
     <Panel side="right" label="Inspector, recorrido y apariencia" onClose={() => setRight(false)}>
-      <Tabs idPrefix="right" label="Propiedades" tabs={RIGHT_TABS} active={tab} onChange={(next) => setRight(true, next)} />
+      <Tabs
+        idPrefix="right"
+        label="Propiedades"
+        tabs={RIGHT_TABS}
+        active={tab}
+        onChange={(next) => setRight(true, next)}
+      />
       <div className="side-panel__body" role="tabpanel" id="right-panel" aria-labelledby={`right-tab-${tab}`}>
         {tab === 'inspector' ? <Inspector /> : tab === 'narrative' ? <NarrativePanel /> : <AppearancePanel />}
       </div>

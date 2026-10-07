@@ -93,7 +93,8 @@ export function deepestGroupAt(abs: AbsoluteLayout, point: Point): string | null
   let target: string | null = null;
   let depth = -1;
   for (const [id, rect] of abs.groups) {
-    const inside = point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
+    const inside =
+      point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
     const d = abs.groupDepth.get(id) ?? 0;
     if (inside && d > depth) {
       target = id;
@@ -104,7 +105,9 @@ export function deepestGroupAt(abs: AbsoluteLayout, point: Point): string | null
 }
 
 export function rectsOverlap(a: Rect, b: Rect, gap = 0): boolean {
-  return a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap;
+  return (
+    a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap
+  );
 }
 
 /**
@@ -112,14 +115,20 @@ export function rectsOverlap(a: Rect, b: Rect, gap = 0): boolean {
  * starting at `preferred` and trying rings of neighbouring slots outwards
  * (nearest first, upwards before downwards). Falls back to `preferred`.
  */
-export function findFreeSpot(preferred: Point, size: { width: number; height: number }, obstacles: readonly Rect[], gap = 24): Point {
+export function findFreeSpot(
+  preferred: Point,
+  size: { width: number; height: number },
+  obstacles: readonly Rect[],
+  gap = 24,
+): Point {
   const fits = (point: Point) => !obstacles.some((obstacle) => rectsOverlap({ ...point, ...size }, obstacle, gap));
   if (fits(preferred)) return preferred;
   const stepX = size.width + gap;
   const stepY = size.height + gap;
   for (let ring = 1; ring <= 6; ring += 1) {
     const slots: [number, number][] = [];
-    for (let i = -ring; i <= ring; i += 1) for (let j = -ring; j <= ring; j += 1) if (Math.max(Math.abs(i), Math.abs(j)) === ring) slots.push([i, j]);
+    for (let i = -ring; i <= ring; i += 1)
+      for (let j = -ring; j <= ring; j += 1) if (Math.max(Math.abs(i), Math.abs(j)) === ring) slots.push([i, j]);
     slots.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]) || a[1] - b[1]);
     for (const [i, j] of slots) {
       const candidate = { x: preferred.x + i * stepX, y: preferred.y + j * stepY };
@@ -131,7 +140,14 @@ export function findFreeSpot(preferred: Point, size: { width: number; height: nu
 
 export function documentBounds(doc: DiagramDocument, abs?: AbsoluteLayout): Rect {
   const layout = abs ?? resolveAbsoluteLayout(doc);
-  return unionRects([...layout.nodes.values(), ...layout.groups.values(), ...layout.annotations.values()]) ?? { x: 0, y: 0, width: 800, height: 600 };
+  return (
+    unionRects([...layout.nodes.values(), ...layout.groups.values(), ...layout.annotations.values()]) ?? {
+      x: 0,
+      y: 0,
+      width: 800,
+      height: 600,
+    }
+  );
 }
 
 /** Where the segment from the centre of `rect` towards `toward` leaves the rectangle. */
@@ -141,7 +157,10 @@ function exitPoint(rect: Rect, toward: Point): Point {
   const dx = toward.x - cx;
   const dy = toward.y - cy;
   if (dx === 0 && dy === 0) return { x: cx, y: cy };
-  const scale = Math.min(dx === 0 ? Infinity : rect.width / 2 / Math.abs(dx), dy === 0 ? Infinity : rect.height / 2 / Math.abs(dy));
+  const scale = Math.min(
+    dx === 0 ? Infinity : rect.width / 2 / Math.abs(dx),
+    dy === 0 ? Infinity : rect.height / 2 / Math.abs(dy),
+  );
   return { x: cx + dx * Math.min(1, scale), y: cy + dy * Math.min(1, scale) };
 }
 
@@ -164,7 +183,10 @@ export function leaderLine(note: Rect, target: Rect): { from: Point; to: Point }
  */
 export function portOffset(rect: Pick<Rect, 'width' | 'height'>, port: Port, ports: readonly Port[]): Point {
   const sameSide = ports.filter((candidate) => candidate.side === port.side);
-  const index = Math.max(0, sameSide.findIndex((candidate) => candidate.id === port.id));
+  const index = Math.max(
+    0,
+    sameSide.findIndex((candidate) => candidate.id === port.id),
+  );
   const fraction = (index + 1) / (sameSide.length + 1);
   switch (port.side) {
     case 'top':
@@ -181,7 +203,10 @@ export function portOffset(rect: Pick<Rect, 'width' | 'height'>, port: Port, por
 /** Fraction (0–1) along the side where a port sits; used by 2D handle styling. */
 export function portFraction(port: Port, ports: readonly Port[]): number {
   const sameSide = ports.filter((candidate) => candidate.side === port.side);
-  const index = Math.max(0, sameSide.findIndex((candidate) => candidate.id === port.id));
+  const index = Math.max(
+    0,
+    sameSide.findIndex((candidate) => candidate.id === port.id),
+  );
   return (index + 1) / (sameSide.length + 1);
 }
 

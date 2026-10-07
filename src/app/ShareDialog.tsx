@@ -63,18 +63,29 @@ export function ShareDialog() {
       }
     >
       <p>
-        El diagrama viaja comprimido dentro del enlace, detrás de <code>#</code>: no se sube a ningún servidor. Quien lo abra lo verá en solo lectura y podrá
-        presentarlo o guardar una copia.
+        El diagrama viaja comprimido dentro del enlace, detrás de <code>#</code>: no se sube a ningún servidor. Quien lo
+        abra lo verá en solo lectura y podrá presentarlo o guardar una copia.
       </p>
       <div className="field share-link">
         <label htmlFor={fieldId}>Enlace</label>
-        <input id={fieldId} readOnly value={payload === null ? 'Generando…' : payload === '' ? 'No se pudo generar el enlace.' : url} onFocus={(event) => event.currentTarget.select()} />
+        <input
+          id={fieldId}
+          readOnly
+          value={payload === null ? 'Generando…' : payload === '' ? 'No se pudo generar el enlace.' : url}
+          onFocus={(event) => event.currentTarget.select()}
+        />
         {url ? (
           <p className="field__hint share-link__meta">
-            {formatCount(url.length)} caracteres · {formatCount(doc.nodes.length)} nodos · {formatCount(doc.edges.length)} relaciones
+            {formatCount(url.length)} caracteres · {formatCount(doc.nodes.length)} nodos ·{' '}
+            {formatCount(doc.edges.length)} relaciones
           </p>
         ) : null}
-        {url.length > LONG_LINK ? <p className="field__error">Enlace largo: algunas apps de mensajería o correo recortan los enlaces. Si llega roto, comparte el JSON exportado.</p> : null}
+        {url.length > LONG_LINK ? (
+          <p className="field__error">
+            Enlace largo: algunas apps de mensajería o correo recortan los enlaces. Si llega roto, comparte el JSON
+            exportado.
+          </p>
+        ) : null}
       </div>
       <CheckboxField label="Abrir directamente en modo presentación" checked={present} onChange={setPresent} />
       <p className="field__hint">El enlace es una instantánea: los cambios posteriores no se reflejan en él.</p>

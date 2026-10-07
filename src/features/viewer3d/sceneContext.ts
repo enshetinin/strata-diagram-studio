@@ -37,4 +37,9 @@ export const DIM_AMOUNT = { selected: 0, related: 0, normal: 0, dimmed: 0.55, is
  * never hide text. Shared for the app lifetime (troika derives per-text
  * materials from it).
  */
-export const LABEL_MATERIAL = new MeshBasicMaterial({ depthTest: false, depthWrite: false, transparent: true, toneMapped: false });
+export const LABEL_MATERIAL = new MeshBasicMaterial({
+  depthTest: false,
+  depthWrite: false,
+  transparent: true,
+  toneMapped: false,
+});

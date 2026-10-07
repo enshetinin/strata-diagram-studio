@@ -48,11 +48,23 @@ describe('remote output validation', () => {
   });
 
   it('rejects schema violations and oversize output', () => {
-    expect(() => graphToDocument({ ...graph, nodes: [{ id: 'bad id!', kind: 'api', label: 'x' }] }, 'porcelain')).toThrow(GenerationError);
-    const many = Array.from({ length: 81 }, (_, index) => ({ id: `n-${index}`, kind: 'service', label: `S${index}`, groupId: null }));
-    expect(() => graphToDocument({ ...graph, groups: [], nodes: many, edges: [] }, 'porcelain')).toThrow(GenerationError);
+    expect(() =>
+      graphToDocument({ ...graph, nodes: [{ id: 'bad id!', kind: 'api', label: 'x' }] }, 'porcelain'),
+    ).toThrow(GenerationError);
+    const many = Array.from({ length: 81 }, (_, index) => ({
+      id: `n-${index}`,
+      kind: 'service',
+      label: `S${index}`,
+      groupId: null,
+    }));
+    expect(() => graphToDocument({ ...graph, groups: [], nodes: many, edges: [] }, 'porcelain')).toThrow(
+      GenerationError,
+    );
     // HTML/script in labels is kept as inert text, never interpreted.
-    const doc = graphToDocument({ ...graph, nodes: [{ ...graph.nodes[0]!, label: '<img src=x onerror=alert(1)>' }, graph.nodes[1]!] }, 'porcelain');
+    const doc = graphToDocument(
+      { ...graph, nodes: [{ ...graph.nodes[0]!, label: '<img src=x onerror=alert(1)>' }, graph.nodes[1]!] },
+      'porcelain',
+    );
     expect(doc.nodes[0]?.label).toBe('<img src=x onerror=alert(1)>');
   });
 });
@@ -68,7 +80,9 @@ describe('local generator', () => {
     const aborted = new AbortController();
     aborted.abort();
     await expect(generator.generate(request, aborted.signal)).rejects.toMatchObject({ code: 'cancelled' });
-    await expect(generator.generate({ mode: 'prompt', prompt: 'hola' }, new AbortController().signal)).rejects.toMatchObject({ code: 'unsupported' });
+    await expect(
+      generator.generate({ mode: 'prompt', prompt: 'hola' }, new AbortController().signal),
+    ).rejects.toMatchObject({ code: 'unsupported' });
   });
 
   it('keyword suggestions only point at compatible examples', () => {

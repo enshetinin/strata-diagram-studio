@@ -1,16 +1,23 @@
 import { useReactFlow } from '@xyflow/react';
-import { CircleHelp, Copy, Group, Grid3x3, Maximize, Plus, StickyNote, Trash2, Ungroup } from 'lucide-react';
+import { CircleHelp, Copy, Grid3x3, Group, Maximize, Plus, StickyNote, Trash2, Ungroup } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { IconButton } from '../../components/ui/IconButton';
+import { Menu } from '../../components/ui/Menu';
 import { KIND_INFO } from '../../domain/catalog';
 import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
 import { kindSeed } from '../../domain/library';
 import { DEFAULT_ANNOTATION_SIZE, DEFAULT_NODE_SIZE, NODE_KINDS, type NodeKind } from '../../domain/types';
-import { addAnnotationAt, addNodeAt, deleteSelection, duplicateSelection, groupSelection, ungroupSelection } from '../../state/actions';
+import {
+  addAnnotationAt,
+  addNodeAt,
+  deleteSelection,
+  duplicateSelection,
+  groupSelection,
+  ungroupSelection,
+} from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
-import { IconButton } from '../../components/ui/IconButton';
-import { Menu } from '../../components/ui/Menu';
 import { KIND_GLYPH } from './visual';
 
 const HELP: [string, string][] = [
@@ -42,7 +49,13 @@ function CanvasHelp() {
   }, [open]);
   return (
     <div className="editor-help" ref={root}>
-      <ToolButton label="Cómo se usa el lienzo" icon={CircleHelp} aria-expanded={open} aria-controls="editor-help" onClick={() => setOpen(!open)} />
+      <ToolButton
+        label="Cómo se usa el lienzo"
+        icon={CircleHelp}
+        aria-expanded={open}
+        aria-controls="editor-help"
+        onClick={() => setOpen(!open)}
+      />
       {open ? (
         <dl className="editor-help__panel" id="editor-help">
           {HELP.map(([term, text]) => (
@@ -91,7 +104,11 @@ export function EditorToolbar() {
     const gap = 48;
     const blocking = () =>
       [...layout.nodes.values()].find(
-        (rect) => position.x < rect.x + rect.width + gap && rect.x < position.x + DEFAULT_NODE_SIZE.width + gap && position.y < rect.y + rect.height + gap && rect.y < position.y + DEFAULT_NODE_SIZE.height + gap,
+        (rect) =>
+          position.x < rect.x + rect.width + gap &&
+          rect.x < position.x + DEFAULT_NODE_SIZE.width + gap &&
+          position.y < rect.y + rect.height + gap &&
+          rect.y < position.y + DEFAULT_NODE_SIZE.height + gap,
       );
     for (let rect = blocking(); rect; rect = blocking()) position.x = rect.x + rect.width + gap;
     addNodeAt(kindSeed(kind), position, deepestGroupAt(layout, centre));
@@ -121,20 +138,45 @@ export function EditorToolbar() {
             icon={StickyNote}
             onClick={() => {
               const centre = paneCentre();
-              if (centre) addAnnotationAt({ x: centre.x - DEFAULT_ANNOTATION_SIZE.width / 2, y: centre.y - DEFAULT_ANNOTATION_SIZE.height / 2 });
+              if (centre)
+                addAnnotationAt({
+                  x: centre.x - DEFAULT_ANNOTATION_SIZE.width / 2,
+                  y: centre.y - DEFAULT_ANNOTATION_SIZE.height / 2,
+                });
             }}
           />
           <span className="editor-toolbar__sep" aria-hidden="true" />
           <ToolButton label="Agrupar selección (Ctrl+G)" icon={Group} onClick={groupSelection} disabled={!groupable} />
-          <ToolButton label="Desagrupar (Ctrl+Shift+G)" icon={Ungroup} onClick={ungroupSelection} disabled={!hasGroup} />
+          <ToolButton
+            label="Desagrupar (Ctrl+Shift+G)"
+            icon={Ungroup}
+            onClick={ungroupSelection}
+            disabled={!hasGroup}
+          />
           <ToolButton label="Duplicar (Ctrl+D)" icon={Copy} onClick={duplicateSelection} disabled={!hasNodes} />
-          <ToolButton label="Borrar selección (Supr)" icon={Trash2} onClick={deleteSelection} disabled={selection.length === 0} />
+          <ToolButton
+            label="Borrar selección (Supr)"
+            icon={Trash2}
+            onClick={deleteSelection}
+            disabled={selection.length === 0}
+          />
           <span className="editor-toolbar__sep" aria-hidden="true" />
         </>
       ) : null}
       {/* Secondary on phones: framing is also in the zoom controls. */}
-      <ToolButton label={snap ? 'Desactivar ajuste a rejilla' : 'Activar ajuste a rejilla'} icon={Grid3x3} onClick={() => setSnap(!snap)} pressed={snap} className="editor-toolbar__wide" />
-      <ToolButton label="Encuadrar todo" icon={Maximize} onClick={() => void fitView({ padding: 0.15, duration: 250 })} className="editor-toolbar__wide" />
+      <ToolButton
+        label={snap ? 'Desactivar ajuste a rejilla' : 'Activar ajuste a rejilla'}
+        icon={Grid3x3}
+        onClick={() => setSnap(!snap)}
+        pressed={snap}
+        className="editor-toolbar__wide"
+      />
+      <ToolButton
+        label="Encuadrar todo"
+        icon={Maximize}
+        onClick={() => void fitView({ padding: 0.15, duration: 250 })}
+        className="editor-toolbar__wide"
+      />
       <span className="editor-toolbar__sep editor-toolbar__wide" aria-hidden="true" />
       <CanvasHelp />
     </div>

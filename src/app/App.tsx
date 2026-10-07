@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, type ReactNode } from 'react';
+import { Component, lazy, type ReactNode, Suspense } from 'react';
 import { FluidLines } from '../components/ui/FluidLines';
 import { useShareSession } from '../features/share/session';
 import { useUiStore } from '../state/uiStore';
@@ -70,7 +70,9 @@ export function App() {
       {showLeft ? <LeftPanel /> : null}
       <main id="stage" className="stage" aria-label={mode === '3d' ? 'Vista 3D' : 'Editor 2D'} data-mode={mode}>
         <ViewBoundary resetKey={mode}>
-          <Suspense fallback={<Loading label={mode === '3d' ? 'Cargando escena 3D…' : 'Cargando editor 2D…'} />}>{mode === '3d' ? <Viewer3D /> : <Editor2D />}</Suspense>
+          <Suspense fallback={<Loading label={mode === '3d' ? 'Cargando escena 3D…' : 'Cargando editor 2D…'} />}>
+            {mode === '3d' ? <Viewer3D /> : <Editor2D />}
+          </Suspense>
         </ViewBoundary>
       </main>
       {showRight ? <RightPanel /> : null}

@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Handle, type NodeProps, Position } from '@xyflow/react';
 import { memo } from 'react';
 import { KIND_INFO } from '../../domain/catalog';
 import { portFraction } from '../../domain/geometry';
@@ -24,7 +24,10 @@ export const StrataNode = memo(function StrataNode({ data, selected }: NodeProps
   const { node, accent } = data;
   const info = KIND_INFO[node.kind];
   return (
-    <div className={`strata-node strata-node--${node.kind}${selected ? ' is-selected' : ''}`} style={{ '--accent': accent2d(accent) } as React.CSSProperties}>
+    <div
+      className={`strata-node strata-node--${node.kind}${selected ? ' is-selected' : ''}`}
+      style={{ '--accent': accent2d(accent) } as React.CSSProperties}
+    >
       <svg className="strata-node__glyph" viewBox="0 0 20 20" aria-hidden="true">
         <path d={KIND_GLYPH[node.kind]} />
       </svg>

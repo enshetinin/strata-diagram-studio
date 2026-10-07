@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react';
+import { type KeyboardEvent, useRef } from 'react';
 
 export interface TabDef<T extends string> {
   id: T;
@@ -6,7 +6,19 @@ export interface TabDef<T extends string> {
 }
 
 /** WAI-ARIA tabs with arrow-key navigation; the tab panel uses id `${idPrefix}-panel`. */
-export function Tabs<T extends string>({ idPrefix, tabs, active, onChange, label }: { idPrefix: string; tabs: TabDef<T>[]; active: T; onChange: (tab: T) => void; label: string }) {
+export function Tabs<T extends string>({
+  idPrefix,
+  tabs,
+  active,
+  onChange,
+  label,
+}: {
+  idPrefix: string;
+  tabs: TabDef<T>[];
+  active: T;
+  onChange: (tab: T) => void;
+  label: string;
+}) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const onKeyDown = (event: KeyboardEvent, index: number) => {
     const delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;

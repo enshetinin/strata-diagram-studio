@@ -15,10 +15,14 @@ import { decodeDocument, readShareHash, type ShareHash } from './shareLink';
 export const READ_ONLY_MESSAGE = 'Vista compartida en solo lectura. Usa «Editar una copia» para cambiar el diagrama.';
 
 /** `confirmCopy` holds the name of the saved diagram a copy would replace, while asking. */
-export const useShareSession = create<{ active: boolean; confirmCopy: string | null }>()(() => ({ active: false, confirmCopy: null }));
+export const useShareSession = create<{ active: boolean; confirmCopy: string | null }>()(() => ({
+  active: false,
+  confirmCopy: null,
+}));
 
 function clearHash() {
-  if (readShareHash(window.location.hash)) history.replaceState(history.state, '', `${window.location.pathname}${window.location.search}`);
+  if (readShareHash(window.location.hash))
+    history.replaceState(history.state, '', `${window.location.pathname}${window.location.search}`);
 }
 
 function resetView() {
@@ -77,8 +81,18 @@ export function keepSharedCopy(): void {
   clearHash();
   const saved = saveNow();
   const ui = useUiStore.getState();
-  if (!saved) ui.notify('warning', 'La copia está abierta, pero no se pudo guardar en este navegador. Exporta el JSON para no perderla.');
-  else ui.notify('success', backupKey ? `Copia guardada. El diagrama anterior quedó en localStorage «${backupKey}».` : 'Copia guardada en este navegador.');
+  if (!saved)
+    ui.notify(
+      'warning',
+      'La copia está abierta, pero no se pudo guardar en este navegador. Exporta el JSON para no perderla.',
+    );
+  else
+    ui.notify(
+      'success',
+      backupKey
+        ? `Copia guardada. El diagrama anterior quedó en localStorage «${backupKey}».`
+        : 'Copia guardada en este navegador.',
+    );
 }
 
 /** Name of the diagram a copy would replace, if any. */

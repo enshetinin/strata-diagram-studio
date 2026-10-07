@@ -5,7 +5,7 @@
  */
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { InstancedMesh, Object3D, SphereGeometry, type CurvePath, type Vector3 } from 'three';
+import { type CurvePath, type InstancedMesh, Object3D, SphereGeometry, type Vector3 } from 'three';
 import { buildCurve } from './SceneConnectors';
 import { useScene } from './sceneContext';
 
@@ -22,7 +22,9 @@ export function FlowParticles() {
 
   const curves = useMemo(() => {
     const active = new Set(highlight.activeEdges);
-    return model.edges.filter((edge) => active.has(edge.id)).map((edge) => buildCurve(edge.points)) as CurvePath<Vector3>[];
+    return model.edges
+      .filter((edge) => active.has(edge.id))
+      .map((edge) => buildCurve(edge.points)) as CurvePath<Vector3>[];
   }, [model.edges, highlight.activeEdges]);
   const count = curves.length * PER_EDGE;
 
@@ -40,10 +42,10 @@ export function FlowParticles() {
     mesh.instanceMatrix.needsUpdate = true;
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-place particles only when curves or motion preference change.
   useLayoutEffect(() => {
     place(0);
     invalidate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curves, reducedMotion]);
 
   useFrame((state) => {
@@ -53,5 +55,14 @@ export function FlowParticles() {
   });
 
   if (count === 0) return null;
-  return <instancedMesh key={count} ref={ref} args={[geometry, materials.flat(theme.particles), count]} frustumCulled={false} renderOrder={15} userData={{ illustrative: true }} />;
+  return (
+    <instancedMesh
+      key={count}
+      ref={ref}
+      args={[geometry, materials.flat(theme.particles), count]}
+      frustumCulled={false}
+      renderOrder={15}
+      userData={{ illustrative: true }}
+    />
+  );
 }
