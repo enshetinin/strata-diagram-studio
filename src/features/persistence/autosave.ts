@@ -18,6 +18,7 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 export function saveNow(): boolean {
   if (timer) clearTimeout(timer);
   timer = null;
+  if (useDocumentStore.getState().readOnly) return false;
   const result = saveDocument(useDocumentStore.getState().doc);
   if (result.ok) useSaveStatus.setState({ state: 'saved', savedAt: result.savedAt, message: null });
   else useSaveStatus.setState({ state: 'error', message: result.message });
@@ -27,7 +28,8 @@ export function saveNow(): boolean {
 /** Starts debounced autosave; returns the unsubscribe function. */
 export function startAutosave(): () => void {
   const unsubscribe = useDocumentStore.subscribe((state, previous) => {
-    if (state.doc === previous.doc) return;
+    // A read-only (shared) document never replaces what this browser saved.
+    if (state.doc === previous.doc || state.readOnly) return;
     useSaveStatus.setState({ state: 'pending' });
     if (timer) clearTimeout(timer);
     timer = setTimeout(saveNow, DEBOUNCE_MS);

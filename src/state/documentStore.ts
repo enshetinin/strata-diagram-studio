@@ -25,11 +25,14 @@ interface DocumentState {
   /** Increments on every accepted change (including undo/redo). */
   revision: number;
   lastLabel: string | null;
+  /** When set, every change is refused with this message (shared links open read-only). */
+  readOnly: string | null;
   execute(label: string, command: (doc: DiagramDocument) => DiagramDocument): CommandResult;
   undo(): void;
   redo(): void;
   /** Loads a document without recording history (startup / recovery). */
   load(doc: DiagramDocument): void;
+  setReadOnly(reason: string | null): void;
 }
 
 export const useDocumentStore = create<DocumentState>()((set, get) => ({
@@ -38,9 +41,11 @@ export const useDocumentStore = create<DocumentState>()((set, get) => ({
   future: [],
   revision: 0,
   lastLabel: null,
+  readOnly: null,
 
   execute(label, command) {
-    const current = get().doc;
+    const { doc: current, readOnly } = get();
+    if (readOnly) return { ok: false, error: readOnly };
     let next: DiagramDocument;
     try {
       next = command(current);
@@ -91,6 +96,10 @@ export const useDocumentStore = create<DocumentState>()((set, get) => ({
 
   load(doc) {
     set((state) => ({ doc, past: [], future: [], revision: state.revision + 1, lastLabel: null }));
+  },
+
+  setReadOnly(readOnly) {
+    set({ readOnly });
   },
 }));
 

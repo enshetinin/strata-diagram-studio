@@ -1,4 +1,4 @@
-import { Download, FileUp, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
+import { Download, FileUp, Link2, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
 import { useRef } from 'react';
 import { setDocumentInfo } from '../domain/commands';
 import { parseDocumentText } from '../domain/parse';
@@ -13,6 +13,7 @@ import { exportJson, exportSvgFile } from '../features/export/exportActions';
 import { saveNow, useSaveStatus } from '../features/persistence/autosave';
 import { usePngDialog } from './ExportPngDialog';
 import { useImportErrors } from './ImportErrorDialog';
+import { useShareDialog } from './ShareDialog';
 
 function SaveIndicator() {
   const status = useSaveStatus();
@@ -39,11 +40,13 @@ function SaveIndicator() {
 
 function DocumentName() {
   const name = useDocumentStore((state) => state.doc.name);
+  const readOnly = useDocumentStore((state) => state.readOnly !== null);
   return (
     <input
       key={name}
       className="topbar__name"
       defaultValue={name}
+      readOnly={readOnly}
       aria-label="Nombre del diagrama"
       onBlur={(event) => {
         const value = event.target.value.trim();
@@ -68,6 +71,7 @@ export function TopBar() {
   const redoLabel = useDocumentStore(selectRedoLabel);
   const fileInput = useRef<HTMLInputElement>(null);
   const theme = usePreferences((state) => state.theme);
+  const readOnly = useDocumentStore((state) => state.readOnly !== null);
   const setTheme = usePreferences((state) => state.setTheme);
 
   const onImport = async (file: File | undefined) => {
@@ -98,26 +102,28 @@ export function TopBar() {
         <div className="segmented" role="radiogroup" aria-label="Vista">
           {(['3d', '2d'] as const).map((value) => (
             <button key={value} type="button" role="radio" aria-checked={mode === value} className="segmented__option" onClick={() => setMode(value)}>
-              {value === '3d' ? '3D' : 'Editar 2D'}
+              {value === '3d' ? '3D' : readOnly ? '2D' : 'Editar 2D'}
             </button>
           ))}
         </div>
 
-        <div className="topbar__group" role="toolbar" aria-label="Documento">
-          <IconButton label={undoLabel ? `Deshacer: ${undoLabel} (Ctrl+Z)` : 'Deshacer'} icon={Undo2} onClick={() => useDocumentStore.getState().undo()} disabled={!canUndo} />
-          <IconButton label={redoLabel ? `Rehacer: ${redoLabel} (Ctrl+Shift+Z)` : 'Rehacer'} icon={Redo2} onClick={() => useDocumentStore.getState().redo()} disabled={!canRedo} />
-          <IconButton label="Auto-layout (ELK)" icon={Workflow} showLabel className="hide-narrow-label" onClick={() => void autoLayout()} />
-        </div>
+        {!readOnly ? (
+          <div className="topbar__group" role="toolbar" aria-label="Documento">
+            <IconButton label={undoLabel ? `Deshacer: ${undoLabel} (Ctrl+Z)` : 'Deshacer'} icon={Undo2} onClick={() => useDocumentStore.getState().undo()} disabled={!canUndo} />
+            <IconButton label={redoLabel ? `Rehacer: ${redoLabel} (Ctrl+Shift+Z)` : 'Rehacer'} icon={Redo2} onClick={() => useDocumentStore.getState().redo()} disabled={!canRedo} />
+            <IconButton label="Auto-layout (ELK)" icon={Workflow} showLabel className="hide-narrow-label" onClick={() => void autoLayout()} />
+          </div>
+        ) : null}
       </div>
 
       <div className="topbar__group topbar__group--end">
-        <SaveIndicator />
+        {!readOnly ? <SaveIndicator /> : null}
         <IconButton
           label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           icon={theme === 'dark' ? Sun : Moon}
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         />
-        <IconButton label="Importar JSON" icon={FileUp} onClick={() => fileInput.current?.click()} />
+        {!readOnly ? <IconButton label="Importar JSON" icon={FileUp} onClick={() => fileInput.current?.click()} /> : null}
         <input
           ref={fileInput}
           type="file"
@@ -138,6 +144,7 @@ export function TopBar() {
             { label: 'Imagen PNG de la escena 3D…', hint: 'título, leyenda, hasta 4K', onSelect: () => usePngDialog.setState({ open: true }) },
           ]}
         />
+        <IconButton label="Compartir enlace" icon={Link2} onClick={() => useShareDialog.setState({ open: true })} />
         <button type="button" className="button button--primary button--cta" title="Presentar" onClick={() => useUiStore.getState().setPresenting(true)}>
           <Play className="button__compact-icon" size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="button__label">Presentar</span>

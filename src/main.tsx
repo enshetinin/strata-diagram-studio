@@ -16,11 +16,11 @@ import { bootstrap } from './app/bootstrap';
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
 
-// Load the document (URL, autosave or default) before the first render.
-bootstrap();
-
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+// Load the document (shared link, URL, autosave or default) before the first render.
+void bootstrap().finally(() =>
+  createRoot(root).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  ),
 );

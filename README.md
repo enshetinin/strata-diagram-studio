@@ -61,6 +61,12 @@ Atajos (ignorados mientras se escribe): Ctrl/⌘+Z deshacer, Ctrl/⌘+Shift+Z o 
 Supr/Retroceso borrar, Ctrl/⌘+C / X / V copiar, cortar y pegar, Ctrl/⌘+D duplicar, Ctrl/⌘+G agrupar, Ctrl/⌘+Shift+G desagrupar,
 Ctrl/⌘+S guardar, F enfocar, Esc deseleccionar, flechas mover en 2D (Mayús: ×4).
 
+Compartir: el botón de enlace genera una URL con el diagrama comprimido en el fragmento
+(`#s=1.…`, deflate + base64url, ~2–3 mil caracteres para las plantillas); no se sube a ningún
+servidor. Al abrirla se ve en **solo lectura** (autosave en pausa, el diagrama guardado no se toca)
+con opciones para presentar, volver al propio diagrama o editar una copia (pide confirmación y deja
+una copia de seguridad del anterior en `strata:replaced:<fecha>`). `&p=1` abre en modo presentación.
+
 Parámetros de URL útiles: `?template=rag|aws-load-testing|multi-agent|event-commerce|data-platform|edge-iot`,
 `&style=porcelain|midnight|glass|blueprint|monochrome|orbit`, `&mode=2d`, `&panels=closed`,
 `?variation=iot:42:3`, `?stress=1` (fixture 100/150 para medir).

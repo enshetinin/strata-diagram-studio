@@ -49,7 +49,9 @@ export function useShortcuts() {
         useDocumentStore.getState().redo();
       } else if (mod && key === 's') {
         event.preventDefault();
-        if (saveNow()) ui.notify('success', 'Guardado en este navegador.');
+        const readOnly = useDocumentStore.getState().readOnly;
+        if (readOnly) ui.notify('info', readOnly);
+        else if (saveNow()) ui.notify('success', 'Guardado en este navegador.');
       } else if (mod && key === 'd') {
         event.preventDefault();
         duplicateSelection();

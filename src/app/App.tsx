@@ -1,11 +1,14 @@
 import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { FluidLines } from '../components/ui/FluidLines';
+import { useShareSession } from '../features/share/session';
 import { useUiStore } from '../state/uiStore';
 import { ExportPngDialog } from './ExportPngDialog';
 import { GenerationPreviewDialog } from './GenerationPreviewDialog';
 import { GroupDeleteDialog } from './GroupDeleteDialog';
 import { ImportErrorDialog } from './ImportErrorDialog';
 import { Notices } from './Notices';
+import { ShareDialog } from './ShareDialog';
+import { SharedViewBanner } from './SharedViewBanner';
 import { LeftPanel, RightPanel } from './SidePanels';
 import { TopBar } from './TopBar';
 import { useClipboard } from './useClipboard';
@@ -49,6 +52,7 @@ export function App() {
   const leftOpen = useUiStore((state) => state.leftOpen);
   const rightOpen = useUiStore((state) => state.rightOpen);
   const presenting = useUiStore((state) => state.presenting);
+  const shared = useShareSession((state) => state.active);
   useShortcuts();
   useClipboard();
 
@@ -56,11 +60,12 @@ export function App() {
   const showRight = rightOpen && !presenting;
 
   return (
-    <div className="app" data-left={showLeft} data-right={showRight} data-presenting={presenting}>
+    <div className="app" data-left={showLeft} data-right={showRight} data-presenting={presenting} data-shared={shared}>
       <a className="skip-link" href="#stage">
         Saltar al lienzo
       </a>
       {!presenting ? <TopBar /> : null}
+      <SharedViewBanner />
       {showLeft ? <LeftPanel /> : null}
       <main id="stage" className="stage" aria-label={mode === '3d' ? 'Vista 3D' : 'Editor 2D'} data-mode={mode}>
         <ViewBoundary resetKey={mode}>
@@ -73,6 +78,7 @@ export function App() {
       <ImportErrorDialog />
       <GenerationPreviewDialog />
       <ExportPngDialog />
+      <ShareDialog />
     </div>
   );
 }

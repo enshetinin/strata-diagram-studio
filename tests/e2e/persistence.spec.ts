@@ -84,6 +84,8 @@ test.describe('save, reload, import and export', () => {
   });
 
   test('PNG export composes the 3D scene with title and legend in several formats', async ({ page }, testInfo) => {
+    // Three exports, one of them 4K, rendered by software WebGL (SwiftShader) in CI.
+    test.setTimeout(120_000);
     await freshStart(page, '?template=aws-load-testing');
     await expectSceneCounts(page, { nodes: 16, edges: 17 });
     const cases = [

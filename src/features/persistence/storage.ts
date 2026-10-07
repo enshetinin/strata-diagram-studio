@@ -8,6 +8,7 @@ import { SCHEMA_VERSION, type DiagramDocument } from '../../domain/types';
 
 export const STORAGE_KEY = 'strata:document';
 const BACKUP_PREFIX = 'strata:recovered:';
+const REPLACED_PREFIX = 'strata:replaced:';
 
 interface Envelope {
   schemaVersion: number;
@@ -28,10 +29,10 @@ function storage(): Storage | null {
   }
 }
 
-function backup(raw: string): string | null {
+function backup(raw: string, prefix = BACKUP_PREFIX): string | null {
   const store = storage();
   if (!store) return null;
-  const key = `${BACKUP_PREFIX}${new Date().toISOString()}`;
+  const key = `${prefix}${new Date().toISOString()}`;
   try {
     store.setItem(key, raw);
     return key;
@@ -74,4 +75,14 @@ export function saveDocument(doc: DiagramDocument): SaveResult {
       ? { ok: false, reason: 'quota', message: 'Sin espacio en el almacenamiento local. Exporta el JSON para no perder cambios.' }
       : { ok: false, reason: 'unknown', message: `No se pudo guardar: ${error instanceof Error ? error.message : String(error)}` };
   }
+}
+
+/**
+ * Copies the saved document aside before something replaces it on purpose
+ * (keeping a shared diagram). Returns the backup key, or `null` when there
+ * was nothing to keep or storage failed.
+ */
+export function backupSavedDocument(): string | null {
+  const raw = storage()?.getItem(STORAGE_KEY);
+  return raw ? backup(raw, REPLACED_PREFIX) : null;
 }

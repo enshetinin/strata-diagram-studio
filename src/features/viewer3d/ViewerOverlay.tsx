@@ -90,6 +90,7 @@ function Presentation() {
 export function ViewerOverlay() {
   const doc = useDocumentStore((state) => state.doc);
   const presenting = useUiStore((state) => state.presenting);
+  const readOnly = useDocumentStore((state) => state.readOnly !== null);
   const primary = useUiStore(selectPrimary);
   const isolated = useUiStore((state) => state.isolatedGroupId);
   const selection = useUiStore((state) => state.selection);
@@ -122,7 +123,7 @@ export function ViewerOverlay() {
         <div className="viewer-actions">
           <button type="button" className="button button--primary viewer-actions__edit" onClick={editIn2d}>
             <PencilRuler size={17} strokeWidth={1.75} aria-hidden="true" />
-            {primary && primary.type !== 'edge' ? 'Editar selección en 2D' : 'Editar en 2D'}
+            {readOnly ? 'Ver en 2D' : primary && primary.type !== 'edge' ? 'Editar selección en 2D' : 'Editar en 2D'}
             <span className="button__arrow" aria-hidden="true">
               →
             </span>

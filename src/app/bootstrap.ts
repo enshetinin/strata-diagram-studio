@@ -1,7 +1,7 @@
 /**
- * Startup: URL parameters (for sharing / QA), then the autosaved document,
- * then the default template. Invalid saved data is backed up, never parsed
- * half-way.
+ * Startup: a shared link in the fragment (read-only view), URL parameters
+ * (QA), then the autosaved document, then the default template. Invalid
+ * saved data is backed up, never parsed half-way.
  */
 import { setPresentation } from '../domain/commands';
 import { STYLE_IDS, type DiagramDocument, type StyleId } from '../domain/types';
@@ -9,6 +9,8 @@ import { useDocumentStore } from '../state/documentStore';
 import { useUiStore } from '../state/uiStore';
 import { startAutosave } from '../features/persistence/autosave';
 import { loadSaved } from '../features/persistence/storage';
+import { openSharedLink } from '../features/share/session';
+import { readShareHash } from '../features/share/shareLink';
 import { defaultDocument, findTemplate, TEMPLATE_CATEGORIES, type TemplateCategory } from '../features/templates';
 import { stressDocument } from '../features/templates/stress';
 import { generateVariation, type Complexity } from '../features/templates/variations';
@@ -30,7 +32,8 @@ function fromUrl(params: URLSearchParams): DiagramDocument | null {
   return null;
 }
 
-export function bootstrap(): () => void {
+/** Resolves once the first document is loaded, so the app never flashes another one. */
+export async function bootstrap(): Promise<() => void> {
   const params = new URLSearchParams(window.location.search);
   const ui = useUiStore.getState();
   let doc = fromUrl(params);
@@ -53,5 +56,18 @@ export function bootstrap(): () => void {
     ui.setLeft(false);
     ui.setRight(false);
   }
-  return startAutosave();
+  const stopAutosave = startAutosave();
+
+  const share = readShareHash(window.location.hash);
+  if (share) await openSharedLink(share);
+  // A shared link pasted into an open tab only changes the fragment.
+  const onHashChange = () => {
+    const next = readShareHash(window.location.hash);
+    if (next) void openSharedLink(next);
+  };
+  window.addEventListener('hashchange', onHashChange);
+  return () => {
+    stopAutosave();
+    window.removeEventListener('hashchange', onHashChange);
+  };
 }

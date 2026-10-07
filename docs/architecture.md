@@ -57,6 +57,11 @@ app/         shell, paneles, diálogos, atajos y arranque
     baja) y lo notifica.
 12. **Aleatoriedad controlada.** Solo `createRng(seed)` (mulberry32). La única seed «nueva» se
     obtiene con `crypto.getRandomValues` en un clic del usuario y queda visible.
+13. **Enlaces sin backend y en solo lectura.** El documento viaja en el fragmento de la URL
+    (deflate-raw + base64url, versionado) y se valida como un import, con límite de tamaño también
+    al descomprimir. El solo lectura se impone en un único punto: `documentStore.readOnly` hace que
+    `execute` rechace cualquier cambio y que el autosave lo ignore, así que ninguna vista necesita
+    saber que el documento es compartido.
 
 ## Estilo de la interfaz
 
