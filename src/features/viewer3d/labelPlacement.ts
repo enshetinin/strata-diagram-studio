@@ -20,10 +20,12 @@ export interface ScreenRect {
   maxY: number;
 }
 
-const overlaps = (a: ScreenRect, b: ScreenRect, gap: number) => a.minX < b.maxX + gap && b.minX < a.maxX + gap && a.minY < b.maxY + gap && b.minY < a.maxY + gap;
+const overlaps = (a: ScreenRect, b: ScreenRect, gap: number) =>
+  a.minX < b.maxX + gap && b.minX < a.maxX + gap && a.minY < b.maxY + gap && b.minY < a.maxY + gap;
 
 /** Group title font size: top-level platforms read slightly larger. */
-export const titleSize = (labelSize: number, group: SceneGroup) => Math.min(0.5, labelSize * (group.depth === 0 ? 1.05 : 0.95));
+export const titleSize = (labelSize: number, group: SceneGroup) =>
+  Math.min(0.5, labelSize * (group.depth === 0 ? 1.05 : 0.95));
 
 /** Approximate text width for the uppercase bold title font. */
 export function titleWidth(text: string, fontSize: number): number {
@@ -37,7 +39,12 @@ function nodeLabelRect(node: SceneNode, size: number, toScreen: (point: Vector3)
   const raw = node.label.length * size * 0.55;
   const width = Math.min(raw, maxWidth);
   const lines = Math.ceil(raw / maxWidth);
-  return { minX: anchor.x - width / 2, maxX: anchor.x + width / 2, minY: anchor.y, maxY: anchor.y + lines * size * 1.15 };
+  return {
+    minX: anchor.x - width / 2,
+    maxX: anchor.x + width / 2,
+    minY: anchor.y,
+    maxY: anchor.y + lines * size * 1.15,
+  };
 }
 
 /** Screen footprint of a walkthrough number drawn on a relation. */
@@ -62,7 +69,13 @@ function projector(direction: Vector3) {
  * (most important first) or a `blocked` area such as a group title. `keep`
  * ids are always drawn. Returns the ids whose labels stay visible.
  */
-export function declutterNodeLabels(ranked: SceneNode[], keep: Set<string>, direction: Vector3, labelSize: number, blocked: ScreenRect[] = []): Set<string> {
+export function declutterNodeLabels(
+  ranked: SceneNode[],
+  keep: Set<string>,
+  direction: Vector3,
+  labelSize: number,
+  blocked: ScreenRect[] = [],
+): Set<string> {
   const toScreen = projector(direction);
   const placed: ScreenRect[] = [...blocked];
   const visible = new Set<string>();
@@ -118,7 +131,10 @@ export function placeGroupTitles(
       const rect = { minX: anchor.x, maxX: anchor.x + width, minY: anchor.y - size * 0.6, maxY: anchor.y + size * 0.6 };
       chosen ??= { position, rect };
       const gap = size * 0.2;
-      if (!placed.some((other) => overlaps(rect, other, gap)) && !obstacles.some((other) => overlaps(rect, other, gap))) {
+      if (
+        !placed.some((other) => overlaps(rect, other, gap)) &&
+        !obstacles.some((other) => overlaps(rect, other, gap))
+      ) {
         chosen = { position, rect };
         break;
       }

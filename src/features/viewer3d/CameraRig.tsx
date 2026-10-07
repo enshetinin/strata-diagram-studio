@@ -5,7 +5,7 @@
  */
 import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useCallback, useEffect, useMemo, useRef, type ComponentRef } from 'react';
+import { type ComponentRef, useCallback, useEffect, useMemo, useRef } from 'react';
 import { OrthographicCamera as ThreeOrtho, PerspectiveCamera as ThreePerspective, Vector3 } from 'three';
 import { useUiStore } from '../../state/uiStore';
 import { computeDefaultView, viewDirection } from './cameraFit';
@@ -37,16 +37,33 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
   const presenting = useUiStore((state) => state.presenting);
   const insets = useUiStore((state) => state.overlayInsets);
 
-  const direction = useMemo(() => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), [theme.camera.azimuthDeg, theme.camera.elevationDeg]);
+  const direction = useMemo(
+    () => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg),
+    [theme.camera.azimuthDeg, theme.camera.elevationDeg],
+  );
   // biome-ignore lint/correctness/useExhaustiveDependencies: refit only on explicit triggers, not on every model edit.
   const fit = useMemo(
     () => computeDefaultView(model, direction, projection, theme.camera.fov, size, presenting, insets),
-    [projection, direction, size.width, size.height, presenting, resetNonce, theme.camera.fov, insets?.top, insets?.bottom],
+    [
+      projection,
+      direction,
+      size.width,
+      size.height,
+      presenting,
+      resetNonce,
+      theme.camera.fov,
+      insets?.top,
+      insets?.bottom,
+    ],
   );
 
   const frameAll = useCallback(
     (animate: boolean) => {
-      const to = { target: fit.center.clone(), position: fit.center.clone().addScaledVector(direction, fit.distance), zoom: fit.zoom };
+      const to = {
+        target: fit.center.clone(),
+        position: fit.center.clone().addScaledVector(direction, fit.distance),
+        zoom: fit.zoom,
+      };
       if (!animate || reducedMotion) {
         camera.position.copy(to.position);
         if (camera instanceof ThreeOrtho) camera.zoom = to.zoom;
@@ -101,7 +118,8 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
     if (!element) return;
     const target = new Vector3(element.x, element.top, element.z);
     const span = Math.max(element.sizeX, element.sizeZ, 1.5);
-    const toZoom = camera instanceof ThreeOrtho ? Math.min(fit.zoom * 4, Math.max(fit.zoom, size.height / (span * 2.6))) : 1;
+    const toZoom =
+      camera instanceof ThreeOrtho ? Math.min(fit.zoom * 4, Math.max(fit.zoom, size.height / (span * 2.6))) : 1;
     const offset = camera.position.clone().sub(controls.current?.target ?? fit.center);
     const distance = camera instanceof ThreePerspective ? Math.max(span * 2.4, 4) : offset.length();
     const toPosition = target.clone().addScaledVector(offset.normalize(), distance);
@@ -151,7 +169,14 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
       {projection === 'orthographic' ? (
         <OrthographicCamera key="ortho" makeDefault position={initialPosition} zoom={fit.zoom} near={0.1} far={400} />
       ) : (
-        <PerspectiveCamera key="persp" makeDefault position={initialPosition} fov={theme.camera.fov} near={0.1} far={400} />
+        <PerspectiveCamera
+          key="persp"
+          makeDefault
+          position={initialPosition}
+          fov={theme.camera.fov}
+          near={0.1}
+          far={400}
+        />
       )}
       <OrbitControls
         key={projection}

@@ -26,14 +26,19 @@ test.describe('save, reload, import and export', () => {
     await page.reload();
     await expect(page.getByText(/dañado/)).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: 'AWS Load Testing' })).toBeVisible();
-    const backups = await page.evaluate(() => Object.keys(localStorage).filter((key) => key.startsWith('strata:recovered:')).length);
+    const backups = await page.evaluate(
+      () => Object.keys(localStorage).filter((key) => key.startsWith('strata:recovered:')).length,
+    );
     expect(backups).toBeGreaterThan(0);
   });
 
   test('JSON export → import round-trip; invalid imports do not touch the document', async ({ page }, testInfo) => {
     await freshStart(page, '?template=rag');
     await page.getByRole('button', { name: 'Exportar' }).click();
-    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: /JSON del documento/ }).click()]);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('menuitem', { name: /JSON del documento/ }).click(),
+    ]);
     const path = testInfo.outputPath('rag.json');
     await download.saveAs(path);
     const exported = JSON.parse(await readFile(path, 'utf8'));
@@ -60,7 +65,9 @@ test.describe('save, reload, import and export', () => {
     exported.edges[0].target.nodeId = 'ghost';
     await writeFile(broken, JSON.stringify(exported));
     await page.locator('[data-testid="import-input"]').setInputFiles(broken);
-    await expect(page.getByRole('dialog', { name: 'No se pudo importar el archivo' })).toContainText('referencias inválidas');
+    await expect(page.getByRole('dialog', { name: 'No se pudo importar el archivo' })).toContainText(
+      'referencias inválidas',
+    );
     await page.getByRole('button', { name: 'Entendido' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'RAG importado' })).toBeVisible();
   });
@@ -68,7 +75,10 @@ test.describe('save, reload, import and export', () => {
   test('SVG export contains real vector content', async ({ page }, testInfo) => {
     await freshStart(page, '?template=event-commerce');
     await page.getByRole('button', { name: 'Exportar' }).click();
-    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: /SVG de la vista 2D/ }).click()]);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('menuitem', { name: /SVG de la vista 2D/ }).click(),
+    ]);
     const path = testInfo.outputPath('diagram.svg');
     await download.saveAs(path);
     const svg = await readFile(path, 'utf8');
@@ -102,7 +112,10 @@ test.describe('save, reload, import and export', () => {
       if (transparent) await background.check();
       else await background.uncheck();
       await expect(dialog.locator('figure')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
-      const [download] = await Promise.all([page.waitForEvent('download', { timeout: 60_000 }), dialog.getByRole('button', { name: 'Exportar PNG' }).click()]);
+      const [download] = await Promise.all([
+        page.waitForEvent('download', { timeout: 60_000 }),
+        dialog.getByRole('button', { name: 'Exportar PNG' }).click(),
+      ]);
       await expect(dialog).toBeHidden();
       const path = testInfo.outputPath(file);
       await download.saveAs(path);

@@ -45,7 +45,8 @@ class Kit {
     const flat = geometry.index ? geometry.toNonIndexed() : geometry;
     if (flat !== geometry) geometry.dispose();
     // Only the attributes every part shares survive the merge.
-    for (const name of Object.keys(flat.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'uv') flat.deleteAttribute(name);
+    for (const name of Object.keys(flat.attributes))
+      if (name !== 'position' && name !== 'normal' && name !== 'uv') flat.deleteAttribute(name);
     flat.clearGroups();
     this.parts[role].push(flat);
   }
@@ -65,7 +66,13 @@ class Kit {
 
   /** Surface of revolution from (radius, height) pairs, base at `y`. */
   lathe(role: ModelRole, profile: [number, number][], x = 0, y = 0, z = 0, segments = 28) {
-    this.add(role, new LatheGeometry(profile.map(([r, py]) => new Vector2(Math.max(0, r), py)), segments).translate(x, y, z));
+    this.add(
+      role,
+      new LatheGeometry(
+        profile.map(([r, py]) => new Vector2(Math.max(0, r), py)),
+        segments,
+      ).translate(x, y, z),
+    );
   }
 
   sphere(role: ModelRole, radius: number, x = 0, y = 0, z = 0) {
@@ -83,7 +90,14 @@ class Kit {
   /** Shape in the X/Y plane extruded `depth` along Z, standing upright, centred on z. */
   upright(role: ModelRole, shape: Shape, depth: number, x = 0, y = 0, z = 0) {
     const bevel = this.soft ? Math.min(0.012, depth / 4) : 0;
-    const geometry = new ExtrudeGeometry(shape, { depth: depth - bevel * 2, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 16 });
+    const geometry = new ExtrudeGeometry(shape, {
+      depth: depth - bevel * 2,
+      bevelEnabled: bevel > 0,
+      bevelThickness: bevel,
+      bevelSize: bevel,
+      bevelSegments: 2,
+      curveSegments: 16,
+    });
     geometry.translate(x, y, z - depth / 2 + bevel);
     this.add(role, geometry);
   }
@@ -91,8 +105,18 @@ class Kit {
   /** Shape in the X/Z plane (shape y → −z) extruded `height` upwards from `y`, turned `turn` about Y. */
   flat(role: ModelRole, shape: Shape, height: number, x = 0, y = 0, z = 0, turn = 0) {
     const bevel = this.soft ? Math.min(0.012, height / 4) : 0;
-    const geometry = new ExtrudeGeometry(shape, { depth: height - bevel * 2, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 16 });
-    geometry.rotateX(-Math.PI / 2).rotateY(turn).translate(x, y + bevel, z);
+    const geometry = new ExtrudeGeometry(shape, {
+      depth: height - bevel * 2,
+      bevelEnabled: bevel > 0,
+      bevelThickness: bevel,
+      bevelSize: bevel,
+      bevelSegments: 2,
+      curveSegments: 16,
+    });
+    geometry
+      .rotateX(-Math.PI / 2)
+      .rotateY(turn)
+      .translate(x, y + bevel, z);
     this.add(role, geometry);
   }
 
@@ -296,7 +320,17 @@ function figure(kit: Kit, x: number, base: number, z: number, s: number) {
 }
 
 /** Bar from (x1, z1) to (x2, z2) in plan, `width` wide and `height` tall, resting on `y`. */
-function planBar(kit: Kit, role: ModelRole, x1: number, z1: number, x2: number, z2: number, width: number, height: number, y: number) {
+function planBar(
+  kit: Kit,
+  role: ModelRole,
+  x1: number,
+  z1: number,
+  x2: number,
+  z2: number,
+  width: number,
+  height: number,
+  y: number,
+) {
   const length = Math.hypot(x2 - x1, z2 - z1);
   if (length < 1e-3) return;
   // rotateY(θ) maps +X to (cos θ, −sin θ) in X/Z.
@@ -315,8 +349,10 @@ const MODELS: Record<NodeKind, Builder> = {
     const bd = d * 0.76;
     const bh = (h - PLINTH) * 0.74;
     kit.block('body', bw, bh, bd, 0, PLINTH);
-    for (let i = 0; i < 3; i += 1) kit.block('detail', bw * 0.56, 0.012, 0.012, -bw * 0.12, PLINTH + bh * (0.28 + i * 0.2), bd / 2);
-    for (let i = 0; i < 3; i += 1) kit.block('accent', 0.034, 0.034, 0.014, bw * 0.3 + i * 0.06, PLINTH + bh * 0.62, bd / 2, 0.008);
+    for (let i = 0; i < 3; i += 1)
+      kit.block('detail', bw * 0.56, 0.012, 0.012, -bw * 0.12, PLINTH + bh * (0.28 + i * 0.2), bd / 2);
+    for (let i = 0; i < 3; i += 1)
+      kit.block('accent', 0.034, 0.034, 0.014, bw * 0.3 + i * 0.06, PLINTH + bh * 0.62, bd / 2, 0.008);
     kit.block('glass', bw, (h - PLINTH) * 0.2, bd, 0, PLINTH + bh + GAP);
   },
 
@@ -428,8 +464,17 @@ const MODELS: Record<NodeKind, Builder> = {
     kit.block('body', w * 0.82, bh, d * 0.74, 0, PLINTH, 0, 0.04);
     kit.block('glass', w * 0.82, (h - PLINTH) * 0.2, d * 0.74, 0, PLINTH + bh + GAP * 0.5, 0, 0.03);
     // Turned to face the default camera so the bolt reads at a glance.
-    kit.flat('body', bolt(d * 0.82), (h - PLINTH) * 0.24, 0, PLINTH + bh + GAP * 0.5 + (h - PLINTH) * 0.2, 0, Math.PI / 4);
-    for (let i = 0; i < 4; i += 1) kit.block('detail', 0.03, 0.012, 0.012, -w * 0.32 + i * 0.05, PLINTH + bh * 0.5, d * 0.37, 0.004);
+    kit.flat(
+      'body',
+      bolt(d * 0.82),
+      (h - PLINTH) * 0.24,
+      0,
+      PLINTH + bh + GAP * 0.5 + (h - PLINTH) * 0.2,
+      0,
+      Math.PI / 4,
+    );
+    for (let i = 0; i < 4; i += 1)
+      kit.block('detail', 0.03, 0.012, 0.012, -w * 0.32 + i * 0.05, PLINTH + bh * 0.5, d * 0.37, 0.004);
   },
 
   /** Autonomous process: a glossy core on a column, circled by glass orbits. */
@@ -501,7 +546,8 @@ const MODELS: Record<NodeKind, Builder> = {
     kit.upright('body', arch(aw, ah, ow, oh), depth, 0, PLINTH, 0);
     kit.upright('glass', archPane(ow * 0.98, oh * 0.98), 0.02, 0, PLINTH, 0);
     kit.block('accent', ow * 0.3, 0.03, depth * 1.02, 0, PLINTH + ah - 0.03, 0, 0.008);
-    for (const side of [-1, 1]) kit.block('body', w * 0.16, (h - PLINTH) * 0.3, d * 0.5, side * (aw / 2 + w * 0.08), PLINTH);
+    for (const side of [-1, 1])
+      kit.block('body', w * 0.16, (h - PLINTH) * 0.3, d * 0.5, side * (aw / 2 + w * 0.08), PLINTH);
   },
 
   /** Connected hardware: a chip with pins on a glass pad and an antenna. */
@@ -539,7 +585,8 @@ const MODELS: Record<NodeKind, Builder> = {
       kit.block('body', sw, sh, sd, x, PLINTH);
       kit.block(index === steps.length - 1 ? 'accent' : 'glass', sw, cap, sd, x, PLINTH + sh + GAP, 0, 0.01);
       kit.block('detail', sw * 0.5, 0.012, 0.012, x, PLINTH + sh * 0.5, sd / 2);
-      if (index < steps.length - 1) kit.block('detail', w * 0.08 + 0.02, 0.014, 0.014, x + w * 0.15, PLINTH + sh * 0.85, 0);
+      if (index < steps.length - 1)
+        kit.block('detail', w * 0.08 + 0.02, 0.014, 0.014, x + w * 0.15, PLINTH + sh * 0.85, 0);
     });
   },
 
@@ -557,7 +604,13 @@ const MODELS: Record<NodeKind, Builder> = {
       for (let j = 0; j < 3; j += 1) {
         // Fixed pseudo-random heights: a cloud, not a lattice.
         const lift = 0.5 + 0.5 * Math.sin(i * 2.3 + j * 4.1 + 0.7);
-        kit.crystal((i + j) % 3 === 0 ? 'accent' : 'detail', 0.026, (i - 1) * cs * 0.28, base + gh * (0.2 + 0.6 * lift), (j - 1) * cs * 0.28);
+        kit.crystal(
+          (i + j) % 3 === 0 ? 'accent' : 'detail',
+          0.026,
+          (i - 1) * cs * 0.28,
+          base + gh * (0.2 + 0.6 * lift),
+          (j - 1) * cs * 0.28,
+        );
       }
     }
   },
@@ -579,7 +632,8 @@ const MODELS: Record<NodeKind, Builder> = {
       }
     }
     kit.block('accent', w * 0.88 * 0.6 * 0.5, 0.012, d * 0.78 * 0.68 * 0.5, 0, y, 0, 0.004);
-    for (let i = 0; i < 4; i += 1) kit.block('detail', w * 0.1, 0.012, 0.012, -w * 0.3 + i * w * 0.13, PLINTH + level * 0.5, d * 0.39);
+    for (let i = 0; i < 4; i += 1)
+      kit.block('detail', w * 0.1, 0.012, 0.012, -w * 0.3 + i * w * 0.13, PLINTH + level * 0.5, d * 0.39);
   },
 
   /** Reference content: an upright page with a folded corner over glass sheets. */
@@ -607,7 +661,16 @@ const MODELS: Record<NodeKind, Builder> = {
     const lines = [0.62, 0.62, 0.62, 0.4];
     lines.forEach((fraction, index) => {
       const lw = pw * fraction;
-      kit.block('detail', lw, 0.014, 0.008, w * 0.04 - pw * 0.42 + lw / 2, PLINTH + ph * (0.56 - index * 0.12), front + 0.019, 0.004);
+      kit.block(
+        'detail',
+        lw,
+        0.014,
+        0.008,
+        w * 0.04 - pw * 0.42 + lw / 2,
+        PLINTH + ph * (0.56 - index * 0.12),
+        front + 0.019,
+        0.004,
+      );
     });
   },
 
@@ -625,7 +688,16 @@ const MODELS: Record<NodeKind, Builder> = {
       kit.block('body', rw, rh, rd, 0, PLINTH, z, 0.012);
       for (let i = 0; i < length; i += 1) {
         const x = -rw / 2 + 0.05 + i * step;
-        kit.block(i === length - 1 ? 'accent' : 'glass', 0.05, (h - PLINTH - rh - GAP) * 0.7, rd * 0.8, x, PLINTH + rh + GAP, z, 0.006);
+        kit.block(
+          i === length - 1 ? 'accent' : 'glass',
+          0.05,
+          (h - PLINTH - rh - GAP) * 0.7,
+          rd * 0.8,
+          x,
+          PLINTH + rh + GAP,
+          z,
+          0.006,
+        );
       }
     });
   },
@@ -665,7 +737,8 @@ const MODELS: Record<NodeKind, Builder> = {
     kit.block('glass', cw * 0.9, ch * 0.86, 0.012, 0, y + ch * 0.07, face);
     kit.upright('accent', circle(Math.min(cw * 0.14, ch * 0.16)), 0.014, -cw * 0.2, y + ch * 0.58, face + 0.013);
     kit.block('accent', cw * 0.3, ch * 0.08, 0.012, -cw * 0.2, y + ch * 0.26, face + 0.012, 0.006);
-    for (const fraction of [0.62, 0.48, 0.34]) kit.block('detail', cw * 0.3, 0.014, 0.008, cw * 0.2, y + ch * fraction, face + 0.012, 0.004);
+    for (const fraction of [0.62, 0.48, 0.34])
+      kit.block('detail', cw * 0.3, 0.014, 0.008, cw * 0.2, y + ch * fraction, face + 0.012, 0.004);
   },
 
   /** Secrets: a safe with an accent dial, a handle and a glass lid. */
@@ -681,7 +754,8 @@ const MODELS: Record<NodeKind, Builder> = {
     kit.upright('accent', circle(r), 0.024, -bw * 0.1, PLINTH + bh * 0.5, face + 0.012);
     kit.upright('detail', circle(r * 0.32), 0.05, -bw * 0.1, PLINTH + bh * 0.5, face + 0.025);
     kit.block('detail', 0.03, bh * 0.36, 0.03, bw * 0.32, PLINTH + bh * 0.32, face + 0.015, 0.008);
-    for (const fraction of [0.2, 0.7]) kit.block('body', 0.03, bh * 0.14, 0.04, -bw / 2 - 0.01, PLINTH + bh * fraction, face - 0.04, 0.008);
+    for (const fraction of [0.2, 0.7])
+      kit.block('body', 0.03, bh * 0.14, 0.04, -bw / 2 - 0.01, PLINTH + bh * fraction, face - 0.04, 0.008);
   },
 
   /** Telemetry: a console carrying a bar chart in glass and accent. */
@@ -756,7 +830,8 @@ const MODELS: Record<NodeKind, Builder> = {
     const face = z + 0.0225;
     kit.block('glass', pw * 0.86, ph * 0.8, 0.012, 0, y + ph * 0.1, face);
     kit.block('accent', pw * 0.62, ph * 0.16, 0.01, 0, y + ph * 0.66, face + 0.01, 0.006);
-    for (let i = 0; i < 3; i += 1) kit.block('detail', pw * (i === 2 ? 0.4 : 0.62), 0.012, 0.008, 0, y + ph * (0.5 - i * 0.1), face + 0.01, 0.004);
+    for (let i = 0; i < 3; i += 1)
+      kit.block('detail', pw * (i === 2 ? 0.4 : 0.62), 0.012, 0.008, 0, y + ph * (0.5 - i * 0.1), face + 0.01, 0.004);
     kit.block('detail', pw * 0.24, 0.012, 0.008, 0, y + ph * 0.04, face, 0.004);
   },
 
@@ -772,7 +847,8 @@ const MODELS: Record<NodeKind, Builder> = {
       const x = -bw * 0.42 + (i * bw * 0.72) / (ribs - 1);
       kit.block('glass', 0.014, bh * 0.8, 0.01, x, PLINTH + bh * 0.1, bd / 2 + 0.004);
     }
-    for (const offset of [0.03, 0.07]) kit.block('accent', 0.014, bh * 0.8, 0.012, bw / 2 - offset, PLINTH + bh * 0.1, bd / 2 + 0.005, 0.004);
+    for (const offset of [0.03, 0.07])
+      kit.block('accent', 0.014, bh * 0.8, 0.012, bw / 2 - offset, PLINTH + bh * 0.1, bd / 2 + 0.005, 0.004);
     kit.block('glass', bw, (h - PLINTH) * 0.2, bd, 0, PLINTH + bh + GAP, 0, 0.012);
   },
 
@@ -811,7 +887,8 @@ const MODELS: Record<NodeKind, Builder> = {
     kit.plinth(w, d);
     const bh = (h - PLINTH) * 0.22;
     kit.block('body', w * 0.72, bh, d * 0.6, 0, PLINTH);
-    for (let i = 0; i < 3; i += 1) kit.block('detail', w * (0.4 - i * 0.08), 0.012, 0.01, -w * 0.12, PLINTH + bh * (0.3 + i * 0.22), d * 0.3, 0.004);
+    for (let i = 0; i < 3; i += 1)
+      kit.block('detail', w * (0.4 - i * 0.08), 0.012, 0.01, -w * 0.12, PLINTH + bh * (0.3 + i * 0.22), d * 0.3, 0.004);
     const top = PLINTH + bh;
     const tube = 0.03;
     const ring = Math.min((h - top) * 0.34, w * 0.2);
@@ -853,7 +930,9 @@ const MODELS: Record<NodeKind, Builder> = {
     for (const y of [PLINTH, middle, h - t]) kit.block('body', sw, t, sd, 0, y, 0, 0.008);
     const box = Math.min(sd * 0.62, (sh * 0.46 - t) * 0.78, (h - t - middle - t) * 0.78);
     const inner = sw - t * 2;
-    [-0.3, 0, 0.3].forEach((f, i) => kit.block(i === 2 ? 'accent' : 'glass', box, box, box, f * inner, PLINTH + t, 0, 0.01));
+    [-0.3, 0, 0.3].forEach((f, i) =>
+      kit.block(i === 2 ? 'accent' : 'glass', box, box, box, f * inner, PLINTH + t, 0, 0.01),
+    );
     [-0.22, 0.12].forEach((f) => kit.block('glass', box, box * 0.8, box, f * inner, middle + t, 0, 0.01));
   },
 
@@ -1006,7 +1085,10 @@ const MODELS: Record<NodeKind, Builder> = {
     for (let row = 0; row < rows; row += 1) {
       const y = PLINTH + row * rh;
       // Odd rows start half a brick in: running bond.
-      const edges = row % 2 === 0 ? Array.from({ length: count + 1 }, (_, i) => -lw / 2 + i * bw) : [-lw / 2, ...Array.from({ length: count }, (_, i) => -lw / 2 + bw / 2 + i * bw), lw / 2];
+      const edges =
+        row % 2 === 0
+          ? Array.from({ length: count + 1 }, (_, i) => -lw / 2 + i * bw)
+          : [-lw / 2, ...Array.from({ length: count }, (_, i) => -lw / 2 + bw / 2 + i * bw), lw / 2];
       for (let i = 0; i < edges.length - 1; i += 1) {
         const x0 = edges[i] ?? 0;
         const x1 = edges[i + 1] ?? 0;

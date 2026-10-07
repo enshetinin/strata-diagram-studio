@@ -4,16 +4,16 @@
  * saved data is backed up, never parsed half-way.
  */
 import { setPresentation } from '../domain/commands';
-import { STYLE_IDS, type DiagramDocument, type StyleId } from '../domain/types';
-import { useDocumentStore } from '../state/documentStore';
-import { useUiStore } from '../state/uiStore';
+import { type DiagramDocument, STYLE_IDS, type StyleId } from '../domain/types';
 import { startAutosave } from '../features/persistence/autosave';
 import { loadSaved } from '../features/persistence/storage';
 import { openSharedLink } from '../features/share/session';
 import { readShareHash } from '../features/share/shareLink';
 import { defaultDocument, findTemplate, TEMPLATE_CATEGORIES, type TemplateCategory } from '../features/templates';
 import { stressDocument } from '../features/templates/stress';
-import { generateVariation, type Complexity } from '../features/templates/variations';
+import { type Complexity, generateVariation } from '../features/templates/variations';
+import { useDocumentStore } from '../state/documentStore';
+import { useUiStore } from '../state/uiStore';
 
 function fromUrl(params: URLSearchParams): DiagramDocument | null {
   if (params.get('stress') === '1') return stressDocument();
@@ -26,7 +26,11 @@ function fromUrl(params: URLSearchParams): DiagramDocument | null {
   if (variation) {
     const [category, seed, complexity] = variation.split(':');
     if (TEMPLATE_CATEGORIES.includes(category as TemplateCategory)) {
-      return generateVariation({ category: category as TemplateCategory, seed: Number(seed) || 1, complexity: (Math.min(3, Math.max(1, Number(complexity) || 2)) as Complexity) });
+      return generateVariation({
+        category: category as TemplateCategory,
+        seed: Number(seed) || 1,
+        complexity: Math.min(3, Math.max(1, Number(complexity) || 2)) as Complexity,
+      });
     }
   }
   return null;
@@ -42,7 +46,10 @@ export async function bootstrap(): Promise<() => void> {
     const saved = loadSaved();
     if (saved.status === 'ok') doc = saved.document;
     else if (saved.status === 'invalid') {
-      ui.notify('warning', `${saved.message} Se cargó la plantilla por defecto${saved.backupKey ? `; los datos originales están en localStorage «${saved.backupKey}»` : ''}.`);
+      ui.notify(
+        'warning',
+        `${saved.message} Se cargó la plantilla por defecto${saved.backupKey ? `; los datos originales están en localStorage «${saved.backupKey}»` : ''}.`,
+      );
     }
   }
   doc ??= defaultDocument();

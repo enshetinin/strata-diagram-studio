@@ -88,14 +88,20 @@ export function validateInvariants(doc: DiagramDocument): ValidationIssue[] {
   doc.groups.forEach((group, index) => {
     if (group.parentGroupId === null) return;
     if (!groups.has(group.parentGroupId)) {
-      issues.push({ path: `groups[${index}].parentGroupId`, message: `Grupo padre inexistente «${group.parentGroupId}».` });
+      issues.push({
+        path: `groups[${index}].parentGroupId`,
+        message: `Grupo padre inexistente «${group.parentGroupId}».`,
+      });
       return;
     }
     const seen = new Set<string>([group.id]);
     let current: string | null = group.parentGroupId;
     while (current) {
       if (seen.has(current)) {
-        issues.push({ path: `groups[${index}].parentGroupId`, message: `Ciclo de pertenencia en el grupo «${group.id}».` });
+        issues.push({
+          path: `groups[${index}].parentGroupId`,
+          message: `Ciclo de pertenencia en el grupo «${group.id}».`,
+        });
         break;
       }
       seen.add(current);
@@ -110,7 +116,10 @@ export function validateInvariants(doc: DiagramDocument): ValidationIssue[] {
     const portIds = new Set<string>();
     node.ports.forEach((port, portIndex) => {
       if (portIds.has(port.id)) {
-        issues.push({ path: `nodes[${index}].ports[${portIndex}]`, message: `Puerto duplicado «${port.id}» en «${node.id}».` });
+        issues.push({
+          path: `nodes[${index}].ports[${portIndex}]`,
+          message: `Puerto duplicado «${port.id}» en «${node.id}».`,
+        });
       }
       portIds.add(port.id);
     });
@@ -139,7 +148,10 @@ export function validateInvariants(doc: DiagramDocument): ValidationIssue[] {
   doc.narrative.steps.forEach((step, index) => {
     step.edgeIds.forEach((edgeId) => {
       if (!edgeIds.has(edgeId)) {
-        issues.push({ path: `narrative.steps[${index}]`, message: `El paso «${step.id}» cita una relación inexistente «${edgeId}».` });
+        issues.push({
+          path: `narrative.steps[${index}]`,
+          message: `El paso «${step.id}» cita una relación inexistente «${edgeId}».`,
+        });
       }
     });
   });
@@ -147,10 +159,16 @@ export function validateInvariants(doc: DiagramDocument): ValidationIssue[] {
   const annotations = new Set(doc.annotations.map((annotation) => annotation.id));
   doc.annotations.forEach((annotation, index) => {
     if (annotation.targetNodeId !== null && !nodes.has(annotation.targetNodeId)) {
-      issues.push({ path: `annotations[${index}].targetNodeId`, message: `La nota «${annotation.id}» apunta a un nodo inexistente.` });
+      issues.push({
+        path: `annotations[${index}].targetNodeId`,
+        message: `La nota «${annotation.id}» apunta a un nodo inexistente.`,
+      });
     }
     if (!doc.layout.annotations[annotation.id]) {
-      issues.push({ path: `layout.annotations.${annotation.id}`, message: `Falta el layout de la nota «${annotation.id}».` });
+      issues.push({
+        path: `layout.annotations.${annotation.id}`,
+        message: `Falta el layout de la nota «${annotation.id}».`,
+      });
     }
   });
   for (const key of Object.keys(doc.layout.annotations)) {

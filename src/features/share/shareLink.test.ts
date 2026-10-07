@@ -33,6 +33,8 @@ describe('share links', () => {
     expect(readShareHash('#s=1.abc')).toEqual({ payload: '1.abc', present: false });
     expect(readShareHash('#stage')).toBeNull();
     expect(readShareHash('')).toBeNull();
-    expect(shareUrl('1.abc', { present: true }, { origin: 'https://x.dev', pathname: '/app/' })).toBe('https://x.dev/app/#s=1.abc&p=1');
+    expect(shareUrl('1.abc', { present: true }, { origin: 'https://x.dev', pathname: '/app/' })).toBe(
+      'https://x.dev/app/#s=1.abc&p=1',
+    );
   });
 });

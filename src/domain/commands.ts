@@ -2,10 +2,11 @@
  * Atomic, pure document commands. Each returns a new document or throws a
  * `CommandError`; the store wraps them in a single history transaction.
  */
+
+import { GROUP_PADDING, type Point, resolveAbsoluteLayout, unionRects } from './geometry';
 import { checkConnection, wouldCreateGroupCycle } from './invariants';
 import { deriveNarrative, syncEdgeOrder } from './narrative';
 import { LIMITS } from './schema';
-import { GROUP_PADDING, resolveAbsoluteLayout, unionRects, type Point } from './geometry';
 import {
   DEFAULT_ANNOTATION_SIZE,
   DEFAULT_NODE_SIZE,
@@ -17,8 +18,8 @@ import {
   type DiagramNode,
   type EdgeEndpoint,
   type ElementRef,
-  type NodeKind,
   type NarrativeStep,
+  type NodeKind,
   type Port,
   type Presentation,
   type Rect,
@@ -42,7 +43,13 @@ export function defaultPorts(): Port[] {
 
 /** Deterministic, collision-free ID: `${prefix}-${n}` with the lowest free n. */
 export function nextId(doc: DiagramDocument, prefix: string, reserved: ReadonlySet<string> = new Set()): string {
-  const used = new Set<string>([...doc.nodes.map((n) => n.id), ...doc.groups.map((g) => g.id), ...doc.edges.map((e) => e.id), ...doc.annotations.map((a) => a.id), ...reserved]);
+  const used = new Set<string>([
+    ...doc.nodes.map((n) => n.id),
+    ...doc.groups.map((g) => g.id),
+    ...doc.edges.map((e) => e.id),
+    ...doc.annotations.map((a) => a.id),
+    ...reserved,
+  ]);
   let index = 1;
   while (used.has(`${prefix}-${index}`)) index += 1;
   return `${prefix}-${index}`;
@@ -77,11 +84,19 @@ function cloneRects(rects: Record<string, Rect>): Record<string, Rect> {
 }
 
 function cloneLayout(layout: DiagramLayout): DiagramLayout {
-  return { nodes: cloneRects(layout.nodes), groups: cloneRects(layout.groups), annotations: cloneRects(layout.annotations) };
+  return {
+    nodes: cloneRects(layout.nodes),
+    groups: cloneRects(layout.groups),
+    annotations: cloneRects(layout.annotations),
+  };
 }
 
 type LayoutBucket = 'nodes' | 'groups' | 'annotations';
-const BUCKET: Record<'node' | 'group' | 'annotation', LayoutBucket> = { node: 'nodes', group: 'groups', annotation: 'annotations' };
+const BUCKET: Record<'node' | 'group' | 'annotation', LayoutBucket> = {
+  node: 'nodes',
+  group: 'groups',
+  annotation: 'annotations',
+};
 
 /** Container whose padding must follow an element's move; notes live on the canvas. */
 function containerOf(doc: DiagramDocument, type: 'node' | 'group' | 'annotation', id: string): string | null {
@@ -126,7 +141,9 @@ export function growGroupsToContain(doc: DiagramDocument, groupId: string | null
     const rect = layout.groups[current];
     if (!group || !rect) break;
     const childNodes = doc.nodes.filter((node) => node.groupId === current).map((node) => layout.nodes[node.id]);
-    const childGroups = doc.groups.filter((child) => child.parentGroupId === current).map((child) => layout.groups[child.id]);
+    const childGroups = doc.groups
+      .filter((child) => child.parentGroupId === current)
+      .map((child) => layout.groups[child.id]);
     const children = [...childNodes, ...childGroups].filter((child): child is Rect => Boolean(child));
     const bounds = unionRects(children);
     if (bounds) {
@@ -201,7 +218,8 @@ export type NodePatch = Partial<Pick<DiagramNode, 'label' | 'description' | 'kin
 
 export function updateNode(doc: DiagramDocument, id: string, patch: NodePatch): DiagramDocument {
   requireNode(doc, id);
-  if (patch.label !== undefined && patch.label.trim() === '') throw new CommandError('La etiqueta no puede estar vacía.');
+  if (patch.label !== undefined && patch.label.trim() === '')
+    throw new CommandError('La etiqueta no puede estar vacía.');
   return {
     ...doc,
     nodes: doc.nodes.map((node) => {
@@ -222,11 +240,21 @@ export function setNodePorts(doc: DiagramDocument, id: string, ports: Port[]): D
   const ids = new Set(ports.map((port) => port.id));
   if (ids.size !== ports.length) throw new CommandError('Los IDs de puerto deben ser únicos.');
   let next: DiagramDocument = { ...doc, nodes: doc.nodes.map((node) => (node.id === id ? { ...node, ports } : node)) };
-  next = withoutEdges(next, (edge) => (edge.source.nodeId === id && !ids.has(edge.source.portId)) || (edge.target.nodeId === id && !ids.has(edge.target.portId)));
-  const invalid = next.edges.find((edge) => (edge.source.nodeId === id || edge.target.nodeId === id) && !checkConnection(next, edge.source, edge.target).ok);
+  next = withoutEdges(
+    next,
+    (edge) =>
+      (edge.source.nodeId === id && !ids.has(edge.source.portId)) ||
+      (edge.target.nodeId === id && !ids.has(edge.target.portId)),
+  );
+  const invalid = next.edges.find(
+    (edge) =>
+      (edge.source.nodeId === id || edge.target.nodeId === id) && !checkConnection(next, edge.source, edge.target).ok,
+  );
   if (invalid) {
     const check = checkConnection(next, invalid.source, invalid.target);
-    throw new CommandError(`El cambio rompe la relación «${invalid.label ?? invalid.id}»: ${check.ok ? '' : check.reason}`);
+    throw new CommandError(
+      `El cambio rompe la relación «${invalid.label ?? invalid.id}»: ${check.ok ? '' : check.reason}`,
+    );
   }
   return next;
 }
@@ -260,7 +288,11 @@ const MIN_SIZE: Record<'node' | 'group' | 'annotation', { width: number; height:
   annotation: { width: 120, height: 48 },
 };
 
-export function resizeElement(doc: DiagramDocument, ref: { type: 'node' | 'group' | 'annotation'; id: string }, rect: Rect): DiagramDocument {
+export function resizeElement(
+  doc: DiagramDocument,
+  ref: { type: 'node' | 'group' | 'annotation'; id: string },
+  rect: Rect,
+): DiagramDocument {
   const layout = cloneLayout(doc.layout);
   const bucket = layout[BUCKET[ref.type]];
   if (!bucket[ref.id]) throw new CommandError(`No hay layout para «${ref.id}».`);
@@ -303,14 +335,17 @@ export function setGroupParent(doc: DiagramDocument, groupId: string, parentId: 
   const group = requireGroup(doc, groupId);
   if (parentId) requireGroup(doc, parentId);
   if (group.parentGroupId === parentId) return doc;
-  if (wouldCreateGroupCycle(doc, groupId, parentId)) throw new CommandError('Ese cambio crearía un ciclo de pertenencia entre grupos.');
+  if (wouldCreateGroupCycle(doc, groupId, parentId))
+    throw new CommandError('Ese cambio crearía un ciclo de pertenencia entre grupos.');
   const abs = resolveAbsoluteLayout(doc);
   const absolute = abs.groups.get(groupId);
   const origin = parentId ? abs.groups.get(parentId) : { x: 0, y: 0 };
   if (!absolute || !origin) throw new CommandError('Layout incompleto.');
   const next: DiagramDocument = {
     ...doc,
-    groups: doc.groups.map((candidate) => (candidate.id === groupId ? { ...candidate, parentGroupId: parentId } : candidate)),
+    groups: doc.groups.map((candidate) =>
+      candidate.id === groupId ? { ...candidate, parentGroupId: parentId } : candidate,
+    ),
     layout: {
       ...doc.layout,
       groups: { ...doc.layout.groups, [groupId]: { ...absolute, x: absolute.x - origin.x, y: absolute.y - origin.y } },
@@ -330,7 +365,8 @@ export interface GroupInput {
 /** Wraps nodes/groups that share a container in a new group. */
 export function groupElements(doc: DiagramDocument, input: GroupInput): DiagramDocument {
   const groupIds = input.groupIds ?? [];
-  if (input.nodeIds.length + groupIds.length === 0) throw new CommandError('Selecciona al menos un elemento para agrupar.');
+  if (input.nodeIds.length + groupIds.length === 0)
+    throw new CommandError('Selecciona al menos un elemento para agrupar.');
   if (doc.groups.some((group) => group.id === input.id)) throw new CommandError(`ID duplicado «${input.id}».`);
   const containers = new Set<string | null>([
     ...input.nodeIds.map((id) => requireNode(doc, id).groupId),
@@ -340,7 +376,9 @@ export function groupElements(doc: DiagramDocument, input: GroupInput): DiagramD
   const parentId = [...containers][0] ?? null;
 
   const abs = resolveAbsoluteLayout(doc);
-  const rects = [...input.nodeIds.map((id) => abs.nodes.get(id)), ...groupIds.map((id) => abs.groups.get(id))].filter((rect): rect is Rect => Boolean(rect));
+  const rects = [...input.nodeIds.map((id) => abs.nodes.get(id)), ...groupIds.map((id) => abs.groups.get(id))].filter(
+    (rect): rect is Rect => Boolean(rect),
+  );
   const bounds = unionRects(rects);
   if (!bounds) throw new CommandError('Layout incompleto.');
   const parentOrigin = parentId ? (abs.groups.get(parentId) ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
@@ -403,7 +441,8 @@ export type GroupUpdate = Partial<Pick<DiagramGroup, 'label' | 'description' | '
 
 export function updateGroup(doc: DiagramDocument, id: string, patch: GroupUpdate): DiagramDocument {
   requireGroup(doc, id);
-  if (patch.label !== undefined && patch.label.trim() === '') throw new CommandError('La etiqueta no puede estar vacía.');
+  if (patch.label !== undefined && patch.label.trim() === '')
+    throw new CommandError('La etiqueta no puede estar vacía.');
   return { ...doc, groups: doc.groups.map((group) => (group.id === id ? { ...group, ...patch } : group)) };
 }
 
@@ -459,16 +498,22 @@ export function deleteElements(doc: DiagramDocument, refs: ElementRef[], options
       }
       return d;
     };
-    [...groupIds].sort((a, b) => depth(b) - depth(a)).forEach((id) => {
-      if (next.groups.some((group) => group.id === id)) next = ungroup(next, id);
-    });
+    [...groupIds]
+      .sort((a, b) => depth(b) - depth(a))
+      .forEach((id) => {
+        if (next.groups.some((group) => group.id === id)) next = ungroup(next, id);
+      });
   }
 
   if (nodeIds.size > 0) {
     const layout = cloneLayout(next.layout);
     nodeIds.forEach((id) => delete layout.nodes[id]);
     // Notes outlive the node they pointed at: they only lose the leader line.
-    const annotations = next.annotations.map((annotation) => (annotation.targetNodeId !== null && nodeIds.has(annotation.targetNodeId) ? { ...annotation, targetNodeId: null } : annotation));
+    const annotations = next.annotations.map((annotation) =>
+      annotation.targetNodeId !== null && nodeIds.has(annotation.targetNodeId)
+        ? { ...annotation, targetNodeId: null }
+        : annotation,
+    );
     next = { ...next, nodes: next.nodes.filter((node) => !nodeIds.has(node.id)), annotations, layout };
   }
   if (annotationIds.size > 0) {
@@ -476,7 +521,10 @@ export function deleteElements(doc: DiagramDocument, refs: ElementRef[], options
     annotationIds.forEach((id) => delete layout.annotations[id]);
     next = { ...next, annotations: next.annotations.filter((annotation) => !annotationIds.has(annotation.id)), layout };
   }
-  return withoutEdges(next, (edge) => edgeIds.has(edge.id) || nodeIds.has(edge.source.nodeId) || nodeIds.has(edge.target.nodeId));
+  return withoutEdges(
+    next,
+    (edge) => edgeIds.has(edge.id) || nodeIds.has(edge.source.nodeId) || nodeIds.has(edge.target.nodeId),
+  );
 }
 
 // ─── Annotations ────────────────────────────────────────────────────────────
@@ -497,8 +545,10 @@ function requireNoteText(text: string): string {
 }
 
 export function addAnnotation(doc: DiagramDocument, input: AddAnnotationInput): DiagramDocument {
-  if ([...doc.nodes, ...doc.groups, ...doc.edges, ...doc.annotations].some((element) => element.id === input.id)) throw new CommandError(`ID duplicado «${input.id}».`);
-  if (doc.annotations.length >= LIMITS.maxAnnotations) throw new CommandError(`Máximo ${LIMITS.maxAnnotations} notas por documento.`);
+  if ([...doc.nodes, ...doc.groups, ...doc.edges, ...doc.annotations].some((element) => element.id === input.id))
+    throw new CommandError(`ID duplicado «${input.id}».`);
+  if (doc.annotations.length >= LIMITS.maxAnnotations)
+    throw new CommandError(`Máximo ${LIMITS.maxAnnotations} notas por documento.`);
   const targetNodeId = input.targetNodeId ?? null;
   if (targetNodeId !== null) requireNode(doc, targetNodeId);
   const annotation: DiagramAnnotation = { id: input.id, text: requireNoteText(input.text), targetNodeId };
@@ -507,7 +557,14 @@ export function addAnnotation(doc: DiagramDocument, input: AddAnnotationInput): 
     annotations: [...doc.annotations, annotation],
     layout: {
       ...doc.layout,
-      annotations: { ...doc.layout.annotations, [annotation.id]: { x: Math.round(input.position.x), y: Math.round(input.position.y), ...DEFAULT_ANNOTATION_SIZE } },
+      annotations: {
+        ...doc.layout.annotations,
+        [annotation.id]: {
+          x: Math.round(input.position.x),
+          y: Math.round(input.position.y),
+          ...DEFAULT_ANNOTATION_SIZE,
+        },
+      },
     },
   };
 }
@@ -521,14 +578,21 @@ export function updateAnnotation(doc: DiagramDocument, id: string, patch: Annota
   return {
     ...doc,
     annotations: doc.annotations.map((annotation) =>
-      annotation.id === id ? { ...annotation, ...(text !== undefined ? { text } : {}), ...(patch.targetNodeId !== undefined ? { targetNodeId: patch.targetNodeId } : {}) } : annotation,
+      annotation.id === id
+        ? {
+            ...annotation,
+            ...(text !== undefined ? { text } : {}),
+            ...(patch.targetNodeId !== undefined ? { targetNodeId: patch.targetNodeId } : {}),
+          }
+        : annotation,
     ),
   };
 }
 
 // ─── Edges ──────────────────────────────────────────────────────────────────
 
-export type NewEdge = Pick<DiagramEdge, 'id' | 'source' | 'target'> & Partial<Omit<DiagramEdge, 'id' | 'source' | 'target'>>;
+export type NewEdge = Pick<DiagramEdge, 'id' | 'source' | 'target'> &
+  Partial<Omit<DiagramEdge, 'id' | 'source' | 'target'>>;
 
 export function addEdge(doc: DiagramDocument, input: NewEdge): DiagramDocument {
   if (doc.edges.some((edge) => edge.id === input.id) || doc.nodes.some((node) => node.id === input.id)) {
@@ -548,7 +612,9 @@ export function addEdge(doc: DiagramDocument, input: NewEdge): DiagramDocument {
   return { ...doc, edges: [...doc.edges, edge] };
 }
 
-export type EdgePatch = Partial<Pick<DiagramEdge, 'relation' | 'label' | 'direction' | 'order' | 'explanation' | 'bend'>>;
+export type EdgePatch = Partial<
+  Pick<DiagramEdge, 'relation' | 'label' | 'direction' | 'order' | 'explanation' | 'bend'>
+>;
 
 export function updateEdge(doc: DiagramDocument, id: string, patch: EdgePatch): DiagramDocument {
   requireEdge(doc, id);
@@ -566,13 +632,20 @@ export function updateEdge(doc: DiagramDocument, id: string, patch: EdgePatch): 
   };
 }
 
-export function reconnectEdge(doc: DiagramDocument, id: string, endpoints: { source?: EdgeEndpoint; target?: EdgeEndpoint }): DiagramDocument {
+export function reconnectEdge(
+  doc: DiagramDocument,
+  id: string,
+  endpoints: { source?: EdgeEndpoint; target?: EdgeEndpoint },
+): DiagramDocument {
   const edge = requireEdge(doc, id);
   const source = endpoints.source ?? edge.source;
   const target = endpoints.target ?? edge.target;
   const check = checkConnection(doc, source, target);
   if (!check.ok) throw new CommandError(check.reason);
-  return { ...doc, edges: doc.edges.map((candidate) => (candidate.id === id ? { ...candidate, source, target } : candidate)) };
+  return {
+    ...doc,
+    edges: doc.edges.map((candidate) => (candidate.id === id ? { ...candidate, source, target } : candidate)),
+  };
 }
 
 export function reverseEdge(doc: DiagramDocument, id: string): DiagramDocument {
@@ -583,7 +656,11 @@ export function reverseEdge(doc: DiagramDocument, id: string): DiagramDocument {
 // ─── Duplication ────────────────────────────────────────────────────────────
 
 /** Copies nodes (and edges between them) with an offset; returns the new node ids in order. */
-export function duplicateNodes(doc: DiagramDocument, nodeIds: string[], offset: Point = { x: 32, y: 32 }): { doc: DiagramDocument; ids: string[] } {
+export function duplicateNodes(
+  doc: DiagramDocument,
+  nodeIds: string[],
+  offset: Point = { x: 32, y: 32 },
+): { doc: DiagramDocument; ids: string[] } {
   const reserved = new Set<string>();
   const idMap = new Map<string, string>();
   for (const id of nodeIds) {
@@ -608,11 +685,21 @@ export function duplicateNodes(doc: DiagramDocument, nodeIds: string[], offset: 
     if (!source || !target) continue;
     const id = nextId(doc, 'e', reserved);
     reserved.add(id);
-    const copy: DiagramEdge = { ...structuredClone(edge), id, source: { ...edge.source, nodeId: source }, target: { ...edge.target, nodeId: target } };
+    const copy: DiagramEdge = {
+      ...structuredClone(edge),
+      id,
+      source: { ...edge.source, nodeId: source },
+      target: { ...edge.target, nodeId: target },
+    };
     delete copy.order;
     edgeCopies.push(copy);
   }
-  let next: DiagramDocument = { ...doc, nodes: [...doc.nodes, ...copies], edges: [...doc.edges, ...edgeCopies], layout };
+  let next: DiagramDocument = {
+    ...doc,
+    nodes: [...doc.nodes, ...copies],
+    edges: [...doc.edges, ...edgeCopies],
+    layout,
+  };
   for (const groupId of new Set(copies.map((copy) => copy.groupId))) next = growGroupsToContain(next, groupId);
   return { doc: next, ids: [...idMap.values()] };
 }
@@ -628,7 +715,9 @@ const NUMBER_PREFIX = /^\d+\.\s+(?=\S)/;
  */
 function editableNarrative(doc: DiagramDocument): NarrativeStep[] {
   const steps = doc.narrative.steps.length > 0 ? doc.narrative.steps : deriveNarrative(doc);
-  return steps.map((step) => (NUMBER_PREFIX.test(step.title) ? { ...step, title: step.title.replace(NUMBER_PREFIX, '') } : step));
+  return steps.map((step) =>
+    NUMBER_PREFIX.test(step.title) ? { ...step, title: step.title.replace(NUMBER_PREFIX, '') } : step,
+  );
 }
 
 function withSteps(doc: DiagramDocument, steps: NarrativeStep[]): DiagramDocument {
@@ -665,22 +754,40 @@ export function addStep(doc: DiagramDocument, input: NewStep): DiagramDocument {
   const edgeIds = [...new Set(input.edgeIds ?? [])];
   edgeIds.forEach((id) => requireEdge(doc, id));
   const claimed = new Set(edgeIds);
-  const rest = steps.map((step) => (step.edgeIds.some((id) => claimed.has(id)) ? { ...step, edgeIds: step.edgeIds.filter((id) => !claimed.has(id)) } : step));
-  const step: NarrativeStep = { id: input.id, title: input.title, ...(input.caption ? { caption: input.caption } : {}), edgeIds };
+  const rest = steps.map((step) =>
+    step.edgeIds.some((id) => claimed.has(id))
+      ? { ...step, edgeIds: step.edgeIds.filter((id) => !claimed.has(id)) }
+      : step,
+  );
+  const step: NarrativeStep = {
+    id: input.id,
+    title: input.title,
+    ...(input.caption ? { caption: input.caption } : {}),
+    edgeIds,
+  };
   const index = Math.max(0, Math.min(rest.length, input.index ?? rest.length));
   return withSteps(doc, [...rest.slice(0, index), step, ...rest.slice(index)]);
 }
 
-export function updateStep(doc: DiagramDocument, id: string, patch: { title?: string; caption?: string }): DiagramDocument {
+export function updateStep(
+  doc: DiagramDocument,
+  id: string,
+  patch: { title?: string; caption?: string },
+): DiagramDocument {
   const steps = editableNarrative(doc);
   const index = requireStepIndex(steps, id);
   const next = { ...steps[index]!, ...patch };
   next.title = next.title.trim();
   if (!next.title) throw new CommandError('El paso necesita un título.');
-  if (next.title.length > LIMITS.maxLabel) throw new CommandError(`El título admite como máximo ${LIMITS.maxLabel} caracteres.`);
-  if (next.caption && next.caption.length > LIMITS.maxText) throw new CommandError(`El texto admite como máximo ${LIMITS.maxText} caracteres.`);
+  if (next.title.length > LIMITS.maxLabel)
+    throw new CommandError(`El título admite como máximo ${LIMITS.maxLabel} caracteres.`);
+  if (next.caption && next.caption.length > LIMITS.maxText)
+    throw new CommandError(`El texto admite como máximo ${LIMITS.maxText} caracteres.`);
   if (!next.caption) delete next.caption;
-  return withSteps(doc, steps.map((step, i) => (i === index ? next : step)));
+  return withSteps(
+    doc,
+    steps.map((step, i) => (i === index ? next : step)),
+  );
 }
 
 /** Moves a step to `toIndex` (clamped); the markers on the relations renumber. */
@@ -698,7 +805,10 @@ export function moveStep(doc: DiagramDocument, id: string, toIndex: number): Dia
 export function removeStep(doc: DiagramDocument, id: string): DiagramDocument {
   const steps = editableNarrative(doc);
   requireStepIndex(steps, id);
-  return withSteps(doc, steps.filter((step) => step.id !== id));
+  return withSteps(
+    doc,
+    steps.filter((step) => step.id !== id),
+  );
 }
 
 /**
@@ -713,7 +823,11 @@ export function setEdgeStep(doc: DiagramDocument, edgeId: string, stepId: string
     doc,
     steps.map((step) => {
       const without = step.edgeIds.filter((id) => id !== edgeId);
-      return step.id === stepId ? { ...step, edgeIds: [...without, edgeId] } : without.length === step.edgeIds.length ? step : { ...step, edgeIds: without };
+      return step.id === stepId
+        ? { ...step, edgeIds: [...without, edgeId] }
+        : without.length === step.edgeIds.length
+          ? step
+          : { ...step, edgeIds: without };
     }),
   );
 }

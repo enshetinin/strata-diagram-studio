@@ -2,10 +2,29 @@
  * Shared unit geometries (1×1×1, centred) for platforms and other scaled
  * primitives. Created once and reused. Node models live in `nodeModels.ts`.
  */
-import { BoxGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, OctahedronGeometry, SphereGeometry, type BufferGeometry } from 'three';
+import {
+  BoxGeometry,
+  type BufferGeometry,
+  ConeGeometry,
+  CylinderGeometry,
+  IcosahedronGeometry,
+  OctahedronGeometry,
+  SphereGeometry,
+} from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
-export type GeometryKey = 'box' | 'rounded' | 'hex' | 'cylinder' | 'octagon' | 'cone' | 'sphere' | 'icosa' | 'octa' | 'pyramid' | 'frustum';
+export type GeometryKey =
+  | 'box'
+  | 'rounded'
+  | 'hex'
+  | 'cylinder'
+  | 'octagon'
+  | 'cone'
+  | 'sphere'
+  | 'icosa'
+  | 'octa'
+  | 'pyramid'
+  | 'frustum';
 
 const cache = new Map<string, BufferGeometry>();
 

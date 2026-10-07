@@ -5,7 +5,6 @@
  */
 import { Dices, Loader2 } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
-import { replaceDocument } from '../../state/actions';
 import { SelectField } from '../../components/ui/fields';
 import { LocalRuleGenerator } from '../../features/generation/localGenerator';
 import { cancelGeneration, runGeneration, useGeneration } from '../../features/generation/pipeline';
@@ -13,8 +12,9 @@ import { configuredRemoteGenerator } from '../../features/generation/remoteGener
 import { suggestTemplates } from '../../features/generation/suggest';
 import { GENERATION_LIMITS } from '../../features/generation/types';
 import { TEMPLATES, type TemplateCategory } from '../../features/templates';
-import type { Complexity } from '../../features/templates/variations';
 import { normalizeSeed } from '../../features/templates/random';
+import type { Complexity } from '../../features/templates/variations';
+import { replaceDocument } from '../../state/actions';
 
 const local = new LocalRuleGenerator();
 
@@ -25,13 +25,32 @@ export function freshSeed(): number {
   return (values[0] ?? 1) % 100_000;
 }
 
-export function SeedInput({ value, onChange, label }: { value: number; onChange: (seed: number) => void; label: string }) {
+export function SeedInput({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (seed: number) => void;
+  label: string;
+}) {
   const id = useId();
   return (
     <div className="field field--inline">
       <label htmlFor={id}>{label}</label>
-      <input id={id} inputMode="numeric" value={value} onChange={(event) => onChange(normalizeSeed(event.target.value.replace(/\D/g, '') || '0'))} />
-      <button type="button" className="icon-button" aria-label="Otra variante al azar" title="Otra variante al azar" onClick={() => onChange(freshSeed())}>
+      <input
+        id={id}
+        inputMode="numeric"
+        value={value}
+        onChange={(event) => onChange(normalizeSeed(event.target.value.replace(/\D/g, '') || '0'))}
+      />
+      <button
+        type="button"
+        className="icon-button"
+        aria-label="Otra variante al azar"
+        title="Otra variante al azar"
+        onClick={() => onChange(freshSeed())}
+      >
         <Dices size={16} aria-hidden="true" />
       </button>
     </div>
@@ -58,9 +77,15 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
           Nueva arquitectura
         </h3>
         <p className="panel-intro">
-          <strong>Generador local basado en reglas.</strong> Crea una arquitectura del tipo y tamaño que elijas. Cada número de variante da siempre el mismo resultado, así que puedes volver a uno que te gustó.
+          <strong>Generador local basado en reglas.</strong> Crea una arquitectura del tipo y tamaño que elijas. Cada
+          número de variante da siempre el mismo resultado, así que puedes volver a uno que te gustó.
         </p>
-        <SelectField label="Categoría" value={category} onChange={setCategory} options={TEMPLATES.map((template) => ({ value: template.category, label: template.name }))} />
+        <SelectField
+          label="Categoría"
+          value={category}
+          onChange={setCategory}
+          options={TEMPLATES.map((template) => ({ value: template.category, label: template.name }))}
+        />
         <SelectField
           label="Complejidad"
           value={String(complexity) as '1' | '2' | '3'}
@@ -72,7 +97,12 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
           ]}
         />
         <SeedInput label="Variante nº" value={seed} onChange={setSeed} />
-        <button type="button" className="button button--primary button--block" disabled={running} onClick={() => void runGeneration(local, { mode: 'rules', category, seed, complexity })}>
+        <button
+          type="button"
+          className="button button--primary button--block"
+          disabled={running}
+          onClick={() => void runGeneration(local, { mode: 'rules', category, seed, complexity })}
+        >
           Generar vista previa
           <span className="button__arrow" aria-hidden="true">
             →
@@ -86,15 +116,28 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
         </h3>
         <div className="field">
           <label htmlFor={promptId}>Descripción</label>
-          <textarea id={promptId} rows={4} maxLength={GENERATION_LIMITS.maxPromptChars} value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="p. ej. pipeline de eventos con Kafka, pagos e inventario" />
+          <textarea
+            id={promptId}
+            rows={4}
+            maxLength={GENERATION_LIMITS.maxPromptChars}
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder="p. ej. pipeline de eventos con Kafka, pagos e inventario"
+          />
         </div>
         {remote ? (
           <>
             <p className="panel-intro">
-              Proveedor configurado: <strong>{remote.info.label}</strong>. La respuesta se valida y se muestra antes de insertarla.
+              Proveedor configurado: <strong>{remote.info.label}</strong>. La respuesta se valida y se muestra antes de
+              insertarla.
             </p>
             <div className="button-row">
-              <button type="button" className="button button--primary" disabled={running || !prompt.trim()} onClick={() => void runGeneration(remote, { mode: 'prompt', prompt })}>
+              <button
+                type="button"
+                className="button button--primary"
+                disabled={running || !prompt.trim()}
+                onClick={() => void runGeneration(remote, { mode: 'prompt', prompt })}
+              >
                 {running ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}
                 Generar con proveedor
               </button>
@@ -108,14 +151,21 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
         ) : (
           <>
             <p className="panel-intro">
-              Generar a partir de texto no está disponible en esta instalación. Mientras tanto, buscamos <em>palabras clave</em> en tu descripción para sugerirte plantillas parecidas.
+              Generar a partir de texto no está disponible en esta instalación. Mientras tanto, buscamos{' '}
+              <em>palabras clave</em> en tu descripción para sugerirte plantillas parecidas.
             </p>
             {import.meta.env.DEV ? (
               <p className="field__hint">
-                Desarrollo: define <code>VITE_STRATA_GENERATOR_URL</code> apuntando a tu backend (ver <code>docs/generation-contract.md</code>).
+                Desarrollo: define <code>VITE_STRATA_GENERATOR_URL</code> apuntando a tu backend (ver{' '}
+                <code>docs/generation-contract.md</code>).
               </p>
             ) : null}
-            <button type="button" className="button button--block" disabled={!prompt.trim()} onClick={() => setSubmitted(prompt)}>
+            <button
+              type="button"
+              className="button button--block"
+              disabled={!prompt.trim()}
+              onClick={() => setSubmitted(prompt)}
+            >
               Buscar ejemplos compatibles
             </button>
             {submitted !== null ? (
@@ -124,7 +174,10 @@ export function GeneratePanel({ onHandOff }: { onHandOff: () => void }) {
                   {suggestions.map((template) => (
                     <li key={template.id}>
                       <span>{template.name}</span>
-                      <button type="button" className="link-button" onClick={() => {
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => {
                           onHandOff();
                           replaceDocument(template.create(), `Cargar plantilla ${template.name}`);
                         }}

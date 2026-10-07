@@ -10,7 +10,12 @@ export interface KindInfo {
 }
 
 export const KIND_INFO: Record<NodeKind, KindInfo> = {
-  client: { label: 'Cliente', code: 'USR', summary: 'Persona, dispositivo o sistema que inicia la interacción', height: 0.55 },
+  client: {
+    label: 'Cliente',
+    code: 'USR',
+    summary: 'Persona, dispositivo o sistema que inicia la interacción',
+    height: 0.55,
+  },
   human: { label: 'Revisión humana', code: 'HIL', summary: 'Persona en el bucle que revisa o aprueba', height: 0.55 },
   device: { label: 'Dispositivo', code: 'DEV', summary: 'Sensor, actuador o hardware conectado', height: 0.44 },
   frontend: { label: 'Frontend', code: 'UI', summary: 'Interfaz web o móvil', height: 0.42 },
@@ -25,7 +30,12 @@ export const KIND_INFO: Record<NodeKind, KindInfo> = {
   database: { label: 'Base de datos', code: 'DB', summary: 'Almacenamiento estructurado consultable', height: 0.62 },
   vector: { label: 'Base vectorial', code: 'VEC', summary: 'Embeddings consultables por similitud', height: 0.6 },
   search: { label: 'Búsqueda', code: 'IDX', summary: 'Índice de texto completo', height: 0.58 },
-  warehouse: { label: 'Data warehouse', code: 'DWH', summary: 'Analítica sobre grandes volúmenes de datos', height: 0.56 },
+  warehouse: {
+    label: 'Data warehouse',
+    code: 'DWH',
+    summary: 'Analítica sobre grandes volúmenes de datos',
+    height: 0.56,
+  },
   storage: { label: 'Almacenamiento', code: 'OBJ', summary: 'Objetos, archivos o blobs', height: 0.3 },
   document: { label: 'Documento', code: 'DOC', summary: 'Fichero, corpus o contenido de referencia', height: 0.58 },
   registry: { label: 'Registro', code: 'REG', summary: 'Imágenes y artefactos versionados', height: 0.56 },

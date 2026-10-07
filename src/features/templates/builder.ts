@@ -10,10 +10,9 @@ import { defaultPorts } from '../../domain/commands';
 import { GROUP_PADDING, unionRects } from '../../domain/geometry';
 import { deriveNarrative } from '../../domain/narrative';
 import {
+  type AppearanceSettings,
   DEFAULT_APPEARANCE,
   DEFAULT_NODE_SIZE,
-  SCHEMA_VERSION,
-  type AppearanceSettings,
   type DiagramDocument,
   type DiagramEdge,
   type DiagramGroup,
@@ -25,6 +24,7 @@ import {
   type PortSide,
   type Rect,
   type RelationKind,
+  SCHEMA_VERSION,
   type StyleId,
 } from '../../domain/types';
 
@@ -118,7 +118,8 @@ export class DiagramBuilder {
     const dx = b.x + b.width / 2 - (a.x + a.width / 2);
     const dy = b.y + b.height / 2 - (a.y + a.height / 2);
     const horizontal = Math.abs(dx) >= Math.abs(dy) * 1.1;
-    const fromSide: PortSide = options.fromSide ?? (horizontal ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top');
+    const fromSide: PortSide =
+      options.fromSide ?? (horizontal ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top');
     const toSide: PortSide = options.toSide ?? OPPOSITE[fromSide];
     let id = `e-${from}-${to}`;
     let suffix = 2;
@@ -164,7 +165,8 @@ export class DiagramBuilder {
       });
     }
 
-    const originOf = (groupId: string | null) => (groupId ? (groupRects.get(groupId) ?? { x: 0, y: 0 }) : { x: 0, y: 0 });
+    const originOf = (groupId: string | null) =>
+      groupId ? (groupRects.get(groupId) ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
     const layout: DiagramDocument['layout'] = { nodes: {}, groups: {}, annotations: {} };
     for (const group of this.groups) {
       const rect = groupRects.get(group.id);

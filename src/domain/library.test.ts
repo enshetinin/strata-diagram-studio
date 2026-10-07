@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LIBRARY_CATEGORIES, LIBRARY_PRESETS, findPreset, presetSeed, searchPresets } from './library';
+import { findPreset, LIBRARY_CATEGORIES, LIBRARY_PRESETS, presetSeed, searchPresets } from './library';
 import { NODE_KINDS } from './types';
 
 describe('component library', () => {
@@ -9,8 +9,11 @@ describe('component library', () => {
   });
 
   it('fills every category and keeps one essential per kind', () => {
-    for (const category of LIBRARY_CATEGORIES) expect(LIBRARY_PRESETS.some((preset) => preset.category === category.id)).toBe(true);
-    const essentials = LIBRARY_PRESETS.filter((preset) => preset.category === 'essentials').map((preset) => preset.kind);
+    for (const category of LIBRARY_CATEGORIES)
+      expect(LIBRARY_PRESETS.some((preset) => preset.category === category.id)).toBe(true);
+    const essentials = LIBRARY_PRESETS.filter((preset) => preset.category === 'essentials').map(
+      (preset) => preset.kind,
+    );
     expect(essentials).toEqual([...NODE_KINDS]);
   });
 
@@ -26,7 +29,12 @@ describe('component library', () => {
 
   it('seeds provider presets with the generic-icon note', () => {
     const sqs = findPreset('sqs');
-    expect(sqs && presetSeed(sqs)).toEqual({ kind: 'queue', label: 'SQS', provider: 'AWS', description: 'Icono genérico; no es un logo oficial' });
+    expect(sqs && presetSeed(sqs)).toEqual({
+      kind: 'queue',
+      label: 'SQS',
+      provider: 'AWS',
+      description: 'Icono genérico; no es un logo oficial',
+    });
     const postgres = findPreset('postgres');
     expect(postgres && presetSeed(postgres)).toEqual({ kind: 'database', label: 'PostgreSQL' });
   });

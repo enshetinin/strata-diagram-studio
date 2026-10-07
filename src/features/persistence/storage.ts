@@ -4,7 +4,7 @@
  * replaced by a half-parsed document.
  */
 import { parseDocument, serializeDocument } from '../../domain/parse';
-import { SCHEMA_VERSION, type DiagramDocument } from '../../domain/types';
+import { type DiagramDocument, SCHEMA_VERSION } from '../../domain/types';
 
 export const STORAGE_KEY = 'strata:document';
 const BACKUP_PREFIX = 'strata:recovered:';
@@ -59,7 +59,9 @@ export function loadSaved(): LoadResult {
   return { status: 'ok', document: result.document, savedAt: envelope.savedAt };
 }
 
-export type SaveResult = { ok: true; savedAt: string } | { ok: false; reason: 'quota' | 'unavailable' | 'unknown'; message: string };
+export type SaveResult =
+  | { ok: true; savedAt: string }
+  | { ok: false; reason: 'quota' | 'unavailable' | 'unknown'; message: string };
 
 export function saveDocument(doc: DiagramDocument): SaveResult {
   const store = storage();
@@ -72,8 +74,16 @@ export function saveDocument(doc: DiagramDocument): SaveResult {
   } catch (error) {
     const quota = error instanceof DOMException && error.name === 'QuotaExceededError';
     return quota
-      ? { ok: false, reason: 'quota', message: 'Sin espacio en el almacenamiento local. Exporta el JSON para no perder cambios.' }
-      : { ok: false, reason: 'unknown', message: `No se pudo guardar: ${error instanceof Error ? error.message : String(error)}` };
+      ? {
+          ok: false,
+          reason: 'quota',
+          message: 'Sin espacio en el almacenamiento local. Exporta el JSON para no perder cambios.',
+        }
+      : {
+          ok: false,
+          reason: 'unknown',
+          message: `No se pudo guardar: ${error instanceof Error ? error.message : String(error)}`,
+        };
   }
 }
 

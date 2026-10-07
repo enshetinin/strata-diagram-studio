@@ -3,11 +3,11 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { memo, useMemo } from 'react';
 import { useUiStore } from '../../state/uiStore';
 import type { SceneGroup } from '../layout/sceneModel';
+import { viewDirection } from './cameraFit';
+import { placeGroupTitles, titleSize } from './labelPlacement';
 import { dimColor } from './materials';
 import { unitGeometry } from './nodeShapes';
 import { DIM_AMOUNT, FONT_BOLD, FONT_REGULAR, LABEL_MATERIAL, useScene } from './sceneContext';
-import { viewDirection } from './cameraFit';
-import { placeGroupTitles, titleSize } from './labelPlacement';
 import { accentColor } from './themes';
 
 function selectGroup(event: ThreeEvent<MouseEvent>, id: string) {
@@ -24,10 +24,41 @@ function Dimension({ group, color }: { group: SceneGroup; color: string }) {
   const tick = 0.08;
   return (
     <group>
-      <Line points={[[left, y, z], [right, y, z]]} color={color} lineWidth={1} transparent opacity={0.8} />
-      <Line points={[[left, y, z - tick], [left, y, z + tick]]} color={color} lineWidth={1} />
-      <Line points={[[right, y, z - tick], [right, y, z + tick]]} color={color} lineWidth={1} />
-      <Text font={FONT_REGULAR} fontSize={0.09} color={color} position={[group.x, y, z + 0.12]} rotation={[-Math.PI / 2, 0, 0]} anchorX="center" anchorY="middle">
+      <Line
+        points={[
+          [left, y, z],
+          [right, y, z],
+        ]}
+        color={color}
+        lineWidth={1}
+        transparent
+        opacity={0.8}
+      />
+      <Line
+        points={[
+          [left, y, z - tick],
+          [left, y, z + tick],
+        ]}
+        color={color}
+        lineWidth={1}
+      />
+      <Line
+        points={[
+          [right, y, z - tick],
+          [right, y, z + tick],
+        ]}
+        color={color}
+        lineWidth={1}
+      />
+      <Text
+        font={FONT_REGULAR}
+        fontSize={0.09}
+        color={color}
+        position={[group.x, y, z + 0.12]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        anchorX="center"
+        anchorY="middle"
+      >
         {`${Math.round(group.sizeX * 100)} px`}
       </Text>
     </group>
@@ -39,7 +70,8 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
   const emphasis = highlight.group(group.id);
   const dim = DIM_AMOUNT[emphasis];
   const treatment = theme.platform.treatment;
-  const surface = theme.platform.colors[group.depth % theme.platform.colors.length] ?? theme.platform.colors[0] ?? '#cccccc';
+  const surface =
+    theme.platform.colors[group.depth % theme.platform.colors.length] ?? theme.platform.colors[0] ?? '#cccccc';
   const accent = accentColor(theme, group.accent);
   const color = dimColor(surface, theme.background, dim);
   const edge = dimColor(emphasis === 'selected' ? theme.selection : theme.platform.edge, theme.background, dim);
@@ -60,7 +92,9 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
         receiveShadow={shadows && treatment !== 'glass'}
         onClick={(event) => selectGroup(event, group.id)}
       >
-        {showEdges || emphasis === 'selected' ? <Edges threshold={15} color={edge} transparent opacity={theme.platform.edgeOpacity} /> : null}
+        {showEdges || emphasis === 'selected' ? (
+          <Edges threshold={15} color={edge} transparent opacity={theme.platform.edgeOpacity} />
+        ) : null}
       </mesh>
       {treatment === 'island' && group.depth === 0 ? (
         // Tapered underside makes top-level groups read as floating islands.
@@ -73,7 +107,12 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
       ) : null}
       {treatment === 'slab' || treatment === 'deck' || treatment === 'island' || treatment === 'plate' ? (
         // Domain accent stripe along the title edge.
-        <mesh geometry={unitGeometry('box')} material={materials.flat(dimColor(accent, theme.background, dim))} position={[group.x, group.top + 0.002, minZ + 0.03]} scale={[group.sizeX - 0.16, 0.004, 0.06]} />
+        <mesh
+          geometry={unitGeometry('box')}
+          material={materials.flat(dimColor(accent, theme.background, dim))}
+          position={[group.x, group.top + 0.002, minZ + 0.03]}
+          scale={[group.sizeX - 0.16, 0.004, 0.06]}
+        />
       ) : null}
       <Billboard position={titleAt}>
         <Text
@@ -100,13 +139,31 @@ const Platform = memo(function Platform({ group, titleAt }: { group: SceneGroup;
 export function ScenePlatforms() {
   const { model, theme, labelSize } = useScene();
   const titles = useMemo(
-    () => placeGroupTitles(model.groups, model.nodes, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), labelSize, (group) => titleSize(labelSize, group), model.edges),
+    () =>
+      placeGroupTitles(
+        model.groups,
+        model.nodes,
+        viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg),
+        labelSize,
+        (group) => titleSize(labelSize, group),
+        model.edges,
+      ),
     [model.groups, model.nodes, model.edges, theme.camera.azimuthDeg, theme.camera.elevationDeg, labelSize],
   );
   return (
     <group name="platforms">
       {model.groups.map((group) => (
-        <Platform key={group.id} group={group} titleAt={titles.get(group.id)?.position ?? [group.x - group.sizeX / 2 + 0.28, group.top + 0.02, group.z - group.sizeZ / 2 + 0.3]} />
+        <Platform
+          key={group.id}
+          group={group}
+          titleAt={
+            titles.get(group.id)?.position ?? [
+              group.x - group.sizeX / 2 + 0.28,
+              group.top + 0.02,
+              group.z - group.sizeZ / 2 + 0.3,
+            ]
+          }
+        />
       ))}
     </group>
   );

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { TEMPLATES } from '../features/templates';
 import * as cmd from './commands';
 import { resolveAbsoluteLayout } from './geometry';
 import { checkConnection, validateInvariants } from './invariants';
 import { parseDocument, parseDocumentText, serializeDocument } from './parse';
 import type { DiagramDocument } from './types';
-import { TEMPLATES } from '../features/templates';
 
 const aws = () => TEMPLATES[0]!.create();
 
@@ -38,8 +38,12 @@ describe('schema and invariants', () => {
   it('rejects edges to missing nodes and ports', () => {
     const doc = aws();
     const edge = doc.edges[0]!;
-    expect(validateInvariants({ ...doc, edges: [{ ...edge, target: { nodeId: 'ghost', portId: 'p-left' } }] }).length).toBeGreaterThan(0);
-    expect(validateInvariants({ ...doc, edges: [{ ...edge, target: { ...edge.target, portId: 'nope' } }] }).length).toBeGreaterThan(0);
+    expect(
+      validateInvariants({ ...doc, edges: [{ ...edge, target: { nodeId: 'ghost', portId: 'p-left' } }] }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      validateInvariants({ ...doc, edges: [{ ...edge, target: { ...edge.target, portId: 'nope' } }] }).length,
+    ).toBeGreaterThan(0);
   });
 
   it('rejects incompatible ports', () => {
@@ -63,11 +67,16 @@ describe('schema and invariants', () => {
 
   it('rejects group membership cycles but allows edge cycles', () => {
     const doc = aws();
-    const cyclic = { ...doc, groups: doc.groups.map((group) => (group.id === 'g-region' ? { ...group, parentGroupId: 'g-cluster' } : group)) };
+    const cyclic = {
+      ...doc,
+      groups: doc.groups.map((group) => (group.id === 'g-region' ? { ...group, parentGroupId: 'g-cluster' } : group)),
+    };
     expect(validateInvariants(cyclic).some((issue) => issue.message.includes('Ciclo'))).toBe(true);
     const multi = TEMPLATES.find((template) => template.id === 'multi-agent')!.create();
     expect(validateInvariants(multi)).toEqual([]);
-    expect(multi.edges.some((edge) => edge.source.nodeId === 'n-reviewer' && edge.target.nodeId === 'n-coder')).toBe(true);
+    expect(multi.edges.some((edge) => edge.source.nodeId === 'n-reviewer' && edge.target.nodeId === 'n-coder')).toBe(
+      true,
+    );
   });
 
   it('refuses unknown schema versions explicitly', () => {
@@ -105,7 +114,9 @@ describe('commands', () => {
     const doc = aws();
     const next = cmd.deleteElements(doc, [{ type: 'node', id: 'n-runner' }]);
     expect(next.nodes.some((node) => node.id === 'n-runner')).toBe(false);
-    expect(next.edges.some((edge) => edge.source.nodeId === 'n-runner' || edge.target.nodeId === 'n-runner')).toBe(false);
+    expect(next.edges.some((edge) => edge.source.nodeId === 'n-runner' || edge.target.nodeId === 'n-runner')).toBe(
+      false,
+    );
     expect(validateInvariants(next)).toEqual([]);
   });
 
@@ -135,7 +146,9 @@ describe('commands', () => {
     expect(resolveAbsoluteLayout(grouped).nodes.get('n-runner')).toEqual(before.nodes.get('n-runner'));
     const ungrouped = cmd.ungroup(grouped, 'g-new');
     expect(resolveAbsoluteLayout(ungrouped).nodes.get('n-runner')).toEqual(before.nodes.get('n-runner'));
-    expect(() => cmd.groupElements(doc, { id: 'g-x', label: 'x', nodeIds: ['n-qa', 'n-runner'] })).toThrow(cmd.CommandError);
+    expect(() => cmd.groupElements(doc, { id: 'g-x', label: 'x', nodeIds: ['n-qa', 'n-runner'] })).toThrow(
+      cmd.CommandError,
+    );
   });
 
   it('rejects reparenting that would create a membership cycle', () => {
@@ -146,14 +159,20 @@ describe('commands', () => {
     const doc = aws();
     const { doc: next, ids } = cmd.duplicateNodes(doc, ['n-launcher', 'n-runner']);
     expect(ids).toHaveLength(2);
-    expect(next.edges.filter((edge) => ids.includes(edge.source.nodeId) && ids.includes(edge.target.nodeId))).toHaveLength(1);
+    expect(
+      next.edges.filter((edge) => ids.includes(edge.source.nodeId) && ids.includes(edge.target.nodeId)),
+    ).toHaveLength(1);
     expect(validateInvariants(next)).toEqual([]);
   });
 
   it('removing a port drops the edges that used it', () => {
     const doc = aws();
     const node = doc.nodes.find((candidate) => candidate.id === 'n-api')!;
-    const next = cmd.setNodePorts(doc, 'n-api', node.ports.filter((port) => port.id !== 'p-right'));
+    const next = cmd.setNodePorts(
+      doc,
+      'n-api',
+      node.ports.filter((port) => port.id !== 'p-right'),
+    );
     expect(next.edges.some((edge) => edge.source.nodeId === 'n-api' && edge.source.portId === 'p-right')).toBe(false);
     expect(validateInvariants(next)).toEqual([]);
   });

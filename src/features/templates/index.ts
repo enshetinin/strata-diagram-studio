@@ -83,7 +83,12 @@ export function findTemplate(id: string): TemplateInfo | undefined {
 
 /** An empty diagram to start from scratch; a fresh id so it never matches a template. */
 export function blankDocument(): DiagramDocument {
-  return new DiagramBuilder({ id: `doc-${Date.now().toString(36)}`, name: 'Diagrama sin título', description: '', styleId: 'porcelain' }).build();
+  return new DiagramBuilder({
+    id: `doc-${Date.now().toString(36)}`,
+    name: 'Diagrama sin título',
+    description: '',
+    styleId: 'porcelain',
+  }).build();
 }
 
 export function defaultDocument(): DiagramDocument {

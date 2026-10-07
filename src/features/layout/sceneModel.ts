@@ -10,7 +10,15 @@
  * `toWorld` transform, so nested groups are never offset twice.
  */
 import { KIND_INFO } from '../../domain/catalog';
-import { documentBounds, leaderLine, portOffset, rectsOverlap, resolveAbsoluteLayout, SIDE_NORMAL, type Point } from '../../domain/geometry';
+import {
+  documentBounds,
+  leaderLine,
+  type Point,
+  portOffset,
+  rectsOverlap,
+  resolveAbsoluteLayout,
+  SIDE_NORMAL,
+} from '../../domain/geometry';
 import type { DiagramDocument, DiagramEdge, NodeKind, Rect, RelationKind } from '../../domain/types';
 
 export const WORLD_SCALE = 0.01;
@@ -109,7 +117,14 @@ export interface SceneOptions {
 
 function rectToBox(rect: Rect, transform: WorldTransform, bottom: number, top: number): WorldBox {
   const center = transform.toWorld({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
-  return { x: center.x, z: center.z, sizeX: rect.width * transform.scale, sizeZ: rect.height * transform.scale, bottom, top };
+  return {
+    x: center.x,
+    z: center.z,
+    sizeX: rect.width * transform.scale,
+    sizeZ: rect.height * transform.scale,
+    bottom,
+    top,
+  };
 }
 
 function hashString(value: string): number {
@@ -135,7 +150,13 @@ function dedupe(points: Vec3[]): Vec3[] {
   const result: Vec3[] = [];
   for (const point of points) {
     const last = result[result.length - 1];
-    if (last && Math.abs(last.x - point.x) < 1e-6 && Math.abs(last.y - point.y) < 1e-6 && Math.abs(last.z - point.z) < 1e-6) continue;
+    if (
+      last &&
+      Math.abs(last.x - point.x) < 1e-6 &&
+      Math.abs(last.y - point.y) < 1e-6 &&
+      Math.abs(last.z - point.z) < 1e-6
+    )
+      continue;
     result.push(point);
   }
   // Remove collinear interior points so tubes get clean corners.
@@ -194,7 +215,9 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
   const layer = options.layerHeight;
 
   const topLevelIndex = new Map<string, number>();
-  doc.groups.filter((group) => group.parentGroupId === null).forEach((group, index) => topLevelIndex.set(group.id, index));
+  doc.groups
+    .filter((group) => group.parentGroupId === null)
+    .forEach((group, index) => topLevelIndex.set(group.id, index));
   const groupsById = new Map(doc.groups.map((group) => [group.id, group]));
   const accentOf = (groupId: string | null): number => {
     let current = groupId;
@@ -216,7 +239,16 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
     if (!rect) return [];
     const depth = abs.groupDepth.get(group.id) ?? 0;
     const top = platformTop(depth);
-    return [{ ...rectToBox(rect, transform, top - PLATFORM_THICKNESS, top), id: group.id, label: group.label, depth, accent: accentOf(group.id), parentGroupId: group.parentGroupId }];
+    return [
+      {
+        ...rectToBox(rect, transform, top - PLATFORM_THICKNESS, top),
+        id: group.id,
+        label: group.label,
+        depth,
+        accent: accentOf(group.id),
+        parentGroupId: group.parentGroupId,
+      },
+    ];
   });
   const groupBox = new Map(groups.map((group) => [group.id, group]));
 
@@ -225,7 +257,16 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
     if (!rect) return [];
     const base = node.groupId ? (groupBox.get(node.groupId)?.top ?? 0) : 0;
     const height = KIND_INFO[node.kind].height * options.heightScale;
-    return [{ ...rectToBox(rect, transform, base, base + height), id: node.id, kind: node.kind, label: node.label, groupId: node.groupId, accent: accentOf(node.groupId) }];
+    return [
+      {
+        ...rectToBox(rect, transform, base, base + height),
+        id: node.id,
+        kind: node.kind,
+        label: node.label,
+        groupId: node.groupId,
+        accent: accentOf(node.groupId),
+      },
+    ];
   });
   const nodeBox = new Map(nodes.map((node) => [node.id, node]));
 
@@ -275,7 +316,10 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
     const source = portWorld(edge.source.nodeId, edge.source.portId);
     const target = portWorld(edge.target.nodeId, edge.target.portId);
     if (!source || !target) return;
-    for (const [end, info] of [[edge.source, source], [edge.target, target]] as const) {
+    for (const [end, info] of [
+      [edge.source, source],
+      [edge.target, target],
+    ] as const) {
       const key = `${end.nodeId}::${end.portId}`;
       if (!usedPorts.has(key)) {
         usedPorts.add(key);
@@ -350,7 +394,14 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
             { ...transform.toWorld(line.to), y: target.bottom + (target.top - target.bottom) * 0.5 },
           ]
         : null;
-    return [{ ...rectToBox(rect, transform, base, base + NOTE_CARD_HEIGHT), id: annotation.id, text: annotation.text, leader }];
+    return [
+      {
+        ...rectToBox(rect, transform, base, base + NOTE_CARD_HEIGHT),
+        id: annotation.id,
+        text: annotation.text,
+        leader,
+      },
+    ];
   });
 
   const all = [...nodes, ...groups, ...annotations];

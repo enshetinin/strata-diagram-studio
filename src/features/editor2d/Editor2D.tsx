@@ -1,24 +1,25 @@
 import '@xyflow/react/dist/style.css';
 import {
+  applyNodeChanges,
   Background,
   BackgroundVariant,
+  type Connection,
   ConnectionMode,
   Controls,
-  MiniMap,
-  ReactFlow,
-  ReactFlowProvider,
-  SelectionMode,
-  applyNodeChanges,
-  useReactFlow,
-  type Connection,
   type EdgeChange,
   type EdgeTypes,
   type IsValidConnection,
+  MiniMap,
   type NodeChange,
   type NodeTypes,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useReactFlow,
 } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
-import { moveElements, type Move } from '../../domain/commands';
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
+import { type Move, moveElements } from '../../domain/commands';
 import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
 import { checkConnection } from '../../domain/invariants';
 import { findPreset, presetSeed } from '../../domain/library';
@@ -27,17 +28,16 @@ import { addNodeAt, connect, reconnect } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
-import { refForFlowNode, toFlowEdges, toFlowNodes, type FlowEdge, type FlowNode } from './adapter';
+import { type FlowEdge, type FlowNode, refForFlowNode, toFlowEdges, toFlowNodes } from './adapter';
+import { LIBRARY_MIME } from './dnd';
+import { EditorToolbar } from './EditorToolbar';
 import { GroupNode } from './GroupNode';
 import { NoteNode } from './NoteNode';
 import { registerPasteAnchor } from './pasteAnchor';
 import { EdgeMarkers, StrataEdge } from './StrataEdge';
 import { StrataNode } from './StrataNode';
-import { accent2d } from './visual';
-import { EditorToolbar } from './EditorToolbar';
 import { initialViewport } from './viewport';
-import { LIBRARY_MIME } from './dnd';
-import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
+import { accent2d } from './visual';
 
 // Stable references outside render, as React Flow requires.
 const nodeTypes: NodeTypes = { strata: StrataNode, group: GroupNode, note: NoteNode };
@@ -75,7 +75,9 @@ function applySelectChanges(changes: { ref: ElementRef; selected: boolean }[]) {
     if (selected && !present) next.push(ref);
     if (!selected && present) next = next.filter((item) => !(item.type === ref.type && item.id === ref.id));
   }
-  const same = next.length === ui.selection.length && next.every((ref, index) => ui.selection[index]?.id === ref.id && ui.selection[index]?.type === ref.type);
+  const same =
+    next.length === ui.selection.length &&
+    next.every((ref, index) => ui.selection[index]?.id === ref.id && ui.selection[index]?.type === ref.type);
   if (!same) ui.select(next);
 }
 
@@ -132,11 +134,19 @@ function Canvas2D() {
     const transient = changes.filter((change) => change.type === 'position' || change.type === 'dimensions');
     if (transient.length > 0) setNodes((current) => applyNodeChanges(transient, current));
     const doc = useDocumentStore.getState().doc;
-    applySelectChanges(changes.flatMap((change) => (change.type === 'select' ? [{ ref: refForFlowNode(doc, change.id), selected: change.selected }] : [])));
+    applySelectChanges(
+      changes.flatMap((change) =>
+        change.type === 'select' ? [{ ref: refForFlowNode(doc, change.id), selected: change.selected }] : [],
+      ),
+    );
   }, []);
 
   const onEdgesChange = useCallback((changes: EdgeChange<FlowEdge>[]) => {
-    applySelectChanges(changes.flatMap((change) => (change.type === 'select' ? [{ ref: { type: 'edge' as const, id: change.id }, selected: change.selected }] : [])));
+    applySelectChanges(
+      changes.flatMap((change) =>
+        change.type === 'select' ? [{ ref: { type: 'edge' as const, id: change.id }, selected: change.selected }] : [],
+      ),
+    );
   }, []);
 
   // Shift + marquee adds to the current selection instead of replacing it (Figma).
@@ -149,7 +159,10 @@ function Canvas2D() {
     marqueeBase.current = null;
     if (!base) return;
     const ui = useUiStore.getState();
-    const merged = [...base, ...ui.selection.filter((ref) => !base.some((item) => item.type === ref.type && item.id === ref.id))];
+    const merged = [
+      ...base,
+      ...ui.selection.filter((ref) => !base.some((item) => item.type === ref.type && item.id === ref.id)),
+    ];
     if (merged.length !== ui.selection.length) ui.select(merged);
   }, []);
 
@@ -157,13 +170,22 @@ function Canvas2D() {
     const current = useDocumentStore.getState().doc;
     const bucket = { node: current.layout.nodes, group: current.layout.groups, annotation: current.layout.annotations };
     const moves: Move[] = dragged
-      .map((node): Move => ({ type: node.type === 'group' ? 'group' : node.type === 'note' ? 'annotation' : 'node', id: node.id, x: node.position.x, y: node.position.y }))
+      .map(
+        (node): Move => ({
+          type: node.type === 'group' ? 'group' : node.type === 'note' ? 'annotation' : 'node',
+          id: node.id,
+          x: node.position.x,
+          y: node.position.y,
+        }),
+      )
       .filter((move) => {
         const rect = bucket[move.type][move.id];
         return rect && (Math.round(rect.x) !== Math.round(move.x) || Math.round(rect.y) !== Math.round(move.y));
       });
     if (moves.length === 0) return;
-    const result = useDocumentStore.getState().execute(moves.length === 1 ? 'Mover' : `Mover ${moves.length} elementos`, (d) => moveElements(d, moves));
+    const result = useDocumentStore
+      .getState()
+      .execute(moves.length === 1 ? 'Mover' : `Mover ${moves.length} elementos`, (d) => moveElements(d, moves));
     if (!result.ok) {
       useUiStore.getState().notify('error', result.error);
       setNodes(toFlowNodes(current, useUiStore.getState().selection, useUiStore.getState().isolatedGroupId));
@@ -226,7 +248,10 @@ function Canvas2D() {
     const element = wrapper.current;
     if (!element) return;
     const abs = resolveAbsoluteLayout(useDocumentStore.getState().doc);
-    const view = initialViewport([...abs.nodes.values(), ...abs.groups.values(), ...abs.annotations.values()], { width: element.clientWidth, height: element.clientHeight });
+    const view = initialViewport([...abs.nodes.values(), ...abs.groups.values(), ...abs.annotations.values()], {
+      width: element.clientWidth,
+      height: element.clientHeight,
+    });
     if (view) void setViewport(view);
   }, [setViewport]);
   // A replaced document (template, import, undo of it) opens the same way.
@@ -245,7 +270,12 @@ function Canvas2D() {
     mounted.current = true;
     if (!ref || ref.type === 'edge') return;
     const frame = requestAnimationFrame(() => {
-      void fitView({ nodes: [{ id: ref.id }], duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300, maxZoom: 1.2, padding: 0.6 });
+      void fitView({
+        nodes: [{ id: ref.id }],
+        duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300,
+        maxZoom: 1.2,
+        padding: 0.6,
+      });
     });
     return () => cancelAnimationFrame(frame);
   }, [focusRequest, fitView]);

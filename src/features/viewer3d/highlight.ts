@@ -18,7 +18,12 @@ export interface HighlightState {
  * Derives emphasis from selection, isolation and the narrated step.
  * Pure: the scene only reads it.
  */
-export function computeHighlight(doc: DiagramDocument, selection: ElementRef[], isolatedGroupId: string | null, presentationStep: number | null): HighlightState {
+export function computeHighlight(
+  doc: DiagramDocument,
+  selection: ElementRef[],
+  isolatedGroupId: string | null,
+  presentationStep: number | null,
+): HighlightState {
   // While narrating, the step (not the editing selection) drives emphasis.
   const effective = presentationStep === null ? selection : [];
   const selectedNodes = new Set(effective.filter((ref) => ref.type === 'node').map((ref) => ref.id));
@@ -55,7 +60,13 @@ export function computeHighlight(doc: DiagramDocument, selection: ElementRef[], 
   }
   for (const node of doc.nodes) if (node.groupId && focusGroups.has(node.groupId)) related.add(node.id);
   // A selected note points at its node; a free note focuses nothing.
-  const noteTargets = effective.flatMap((ref) => (ref.type === 'annotation' ? [doc.annotations.find((annotation) => annotation.id === ref.id)?.targetNodeId ?? null] : [])).filter((id): id is string => id !== null);
+  const noteTargets = effective
+    .flatMap((ref) =>
+      ref.type === 'annotation'
+        ? [doc.annotations.find((annotation) => annotation.id === ref.id)?.targetNodeId ?? null]
+        : [],
+    )
+    .filter((id): id is string => id !== null);
   noteTargets.forEach((id) => related.add(id));
 
   const isolated = new Set<string>();
@@ -66,7 +77,8 @@ export function computeHighlight(doc: DiagramDocument, selection: ElementRef[], 
   const nodeGroup = new Map(doc.nodes.map((node) => [node.id, node.groupId]));
   const inIsolation = (nodeId: string) => !isolatedGroupId || isolated.has(nodeGroup.get(nodeId) ?? '');
 
-  const anyFocus = effective.some((ref) => ref.type !== 'annotation') || noteTargets.length > 0 || presentationStep !== null;
+  const anyFocus =
+    effective.some((ref) => ref.type !== 'annotation') || noteTargets.length > 0 || presentationStep !== null;
 
   return {
     node(id) {

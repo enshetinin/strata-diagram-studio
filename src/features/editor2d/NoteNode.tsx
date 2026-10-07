@@ -1,4 +1,4 @@
-import { NodeResizer, useInternalNode, type NodeProps } from '@xyflow/react';
+import { type NodeProps, NodeResizer, useInternalNode } from '@xyflow/react';
 import { memo, useState } from 'react';
 import { resizeElement } from '../../domain/commands';
 import { leaderLine } from '../../domain/geometry';
@@ -11,10 +11,27 @@ import type { NoteFlowNode } from './adapter';
  * Live leader from the note to its node. Both ends follow in-flight drags:
  * the note through its own props, the target through React Flow internals.
  */
-function Leader({ targetId, x, y, width, height }: { targetId: string; x: number; y: number; width: number; height: number }) {
+function Leader({
+  targetId,
+  x,
+  y,
+  width,
+  height,
+}: {
+  targetId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}) {
   const target = useInternalNode(targetId);
   if (!target) return null;
-  const rect = { x: target.internals.positionAbsolute.x, y: target.internals.positionAbsolute.y, width: target.measured.width ?? target.width ?? 0, height: target.measured.height ?? target.height ?? 0 };
+  const rect = {
+    x: target.internals.positionAbsolute.x,
+    y: target.internals.positionAbsolute.y,
+    width: target.measured.width ?? target.width ?? 0,
+    height: target.measured.height ?? target.height ?? 0,
+  };
   const line = leaderLine({ x, y, width, height }, rect);
   if (!line) return null;
   return (
@@ -25,7 +42,15 @@ function Leader({ targetId, x, y, width, height }: { targetId: string; x: number
   );
 }
 
-export const NoteNode = memo(function NoteNode({ id, data, selected, positionAbsoluteX, positionAbsoluteY, width, height }: NodeProps<NoteFlowNode>) {
+export const NoteNode = memo(function NoteNode({
+  id,
+  data,
+  selected,
+  positionAbsoluteX,
+  positionAbsoluteY,
+  width,
+  height,
+}: NodeProps<NoteFlowNode>) {
   const { annotation } = data;
   const readOnly = useDocumentStore((state) => state.readOnly !== null);
   const [draft, setDraft] = useState<string | null>(null);
@@ -34,7 +59,10 @@ export const NoteNode = memo(function NoteNode({ id, data, selected, positionAbs
     setDraft(null);
   };
   return (
-    <div className={`strata-note${selected ? ' is-selected' : ''}`} onDoubleClick={() => !readOnly && setDraft(annotation.text)}>
+    <div
+      className={`strata-note${selected ? ' is-selected' : ''}`}
+      onDoubleClick={() => !readOnly && setDraft(annotation.text)}
+    >
       <NodeResizer
         isVisible={selected && !readOnly}
         minWidth={120}
@@ -42,11 +70,21 @@ export const NoteNode = memo(function NoteNode({ id, data, selected, positionAbs
         lineClassName="strata-group__resize-line"
         handleClassName="strata-group__resize-handle"
         onResizeEnd={(_event, params) => {
-          const result = useDocumentStore.getState().execute('Redimensionar nota', (doc) => resizeElement(doc, { type: 'annotation', id }, params));
+          const result = useDocumentStore
+            .getState()
+            .execute('Redimensionar nota', (doc) => resizeElement(doc, { type: 'annotation', id }, params));
           if (!result.ok) useUiStore.getState().notify('error', result.error);
         }}
       />
-      {annotation.targetNodeId ? <Leader targetId={annotation.targetNodeId} x={positionAbsoluteX} y={positionAbsoluteY} width={width ?? 0} height={height ?? 0} /> : null}
+      {annotation.targetNodeId ? (
+        <Leader
+          targetId={annotation.targetNodeId}
+          x={positionAbsoluteX}
+          y={positionAbsoluteY}
+          width={width ?? 0}
+          height={height ?? 0}
+        />
+      ) : null}
       <span className="strata-note__eyebrow">Nota</span>
       {draft !== null ? (
         <textarea

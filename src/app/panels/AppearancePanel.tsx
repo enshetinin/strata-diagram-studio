@@ -1,12 +1,12 @@
-import { setPresentation, type PresentationPatch } from '../../domain/commands';
-import { LABEL_MODES, STYLE_IDS, type CameraProjection, type LabelMode } from '../../domain/types';
 import { useState } from 'react';
+import { CheckboxField, RangeField, SelectField } from '../../components/ui/fields';
+import { type PresentationPatch, setPresentation } from '../../domain/commands';
+import { type CameraProjection, LABEL_MODES, type LabelMode, STYLE_IDS } from '../../domain/types';
+import { THEMES } from '../../features/viewer3d/themes';
 import { newAppearance, setStyle } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
-import { usePreferences, type Quality } from '../../state/preferencesStore';
+import { type Quality, usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
-import { CheckboxField, RangeField, SelectField } from '../../components/ui/fields';
-import { THEMES } from '../../features/viewer3d/themes';
 import { SeedInput } from './GeneratePanel';
 
 function update(label: string, patch: PresentationPatch) {
@@ -23,7 +23,9 @@ function AppearanceShuffle() {
       <h3 id="appearance-shuffle" className="panel-heading">
         Probar otra apariencia
       </h3>
-      <p className="panel-intro">Combina estilo, altura de capas, espaciado y dirección al azar. Conserva componentes, grupos y relaciones.</p>
+      <p className="panel-intro">
+        Combina estilo, altura de capas, espaciado y dirección al azar. Conserva componentes, grupos y relaciones.
+      </p>
       <SeedInput label="Variante nº" value={seed} onChange={setSeed} />
       <CheckboxField label="Reordenar también el diagrama" checked={relayout} onChange={setRelayout} />
       <button type="button" className="button button--block" onClick={() => void newAppearance(seed, relayout)}>
@@ -33,7 +35,11 @@ function AppearanceShuffle() {
   );
 }
 
-const LABEL_MODE_TEXT: Record<LabelMode, string> = { all: 'Todas', auto: 'Automático según densidad', selection: 'Solo selección y grupos' };
+const LABEL_MODE_TEXT: Record<LabelMode, string> = {
+  all: 'Todas',
+  auto: 'Automático según densidad',
+  selection: 'Solo selección y grupos',
+};
 
 export function AppearancePanel() {
   const presentation = useDocumentStore((state) => state.doc.presentation);
@@ -52,7 +58,14 @@ export function AppearancePanel() {
             const theme = THEMES[id];
             const active = presentation.styleId === id;
             return (
-              <button key={id} type="button" role="radio" aria-checked={active} className={`style-option${active ? ' is-active' : ''}`} onClick={() => setStyle(id)}>
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                className={`style-option${active ? ' is-active' : ''}`}
+                onClick={() => setStyle(id)}
+              >
                 <span className="style-option__swatch" aria-hidden="true" style={{ background: theme.background }}>
                   <i style={{ background: theme.node.body, borderColor: theme.node.edgeColor }} />
                   <i style={{ background: theme.accents[0] }} />
@@ -88,12 +101,20 @@ export function AppearancePanel() {
         hint="Separación visual de grupos anidados; no cambia la pertenencia."
         onCommit={(layerHeight) => update('Cambiar altura de capas', { appearance: { layerHeight } })}
       />
-      <SelectField label="Etiquetas" value={appearance.labelMode} options={LABEL_MODES.map((mode) => ({ value: mode, label: LABEL_MODE_TEXT[mode] }))} onChange={(labelMode) => update('Cambiar etiquetas', { appearance: { labelMode } })} />
+      <SelectField
+        label="Etiquetas"
+        value={appearance.labelMode}
+        options={LABEL_MODES.map((mode) => ({ value: mode, label: LABEL_MODE_TEXT[mode] }))}
+        onChange={(labelMode) => update('Cambiar etiquetas', { appearance: { labelMode } })}
+      />
       <SelectField
         label="Cámara"
         value={presentation.camera.projection}
         options={[
-          { value: 'style', label: `Según estilo (${THEMES[presentation.styleId].camera.projection === 'orthographic' ? 'isométrica' : 'perspectiva'})` },
+          {
+            value: 'style',
+            label: `Según estilo (${THEMES[presentation.styleId].camera.projection === 'orthographic' ? 'isométrica' : 'perspectiva'})`,
+          },
           { value: 'orthographic', label: 'Isométrica ortográfica' },
           { value: 'perspective', label: 'Perspectiva moderada' },
         ]}
@@ -113,7 +134,11 @@ export function AppearancePanel() {
           { value: 'medium', label: 'Media · con sombras' },
           { value: 'high', label: 'Alta · máxima nitidez' },
         ]}
-        hint={autoDegraded ? 'Se bajó sola porque el equipo iba lento.' : 'Solo para este dispositivo; no se guarda en el diagrama.'}
+        hint={
+          autoDegraded
+            ? 'Se bajó sola porque el equipo iba lento.'
+            : 'Solo para este dispositivo; no se guarda en el diagrama.'
+        }
         onChange={(value) => setQuality(value)}
       />
     </div>

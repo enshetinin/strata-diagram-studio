@@ -39,7 +39,11 @@ function font(weight: number, size: number): string {
 
 async function loadFonts(u: number): Promise<void> {
   if (!document.fonts) return;
-  await Promise.all([document.fonts.load(font(400, 20 * u)), document.fonts.load(font(500, 72 * u)), document.fonts.load(font(600, 16 * u))]);
+  await Promise.all([
+    document.fonts.load(font(400, 20 * u)),
+    document.fonts.load(font(500, 72 * u)),
+    document.fonts.load(font(600, 16 * u)),
+  ]);
 }
 
 /** Greedy word wrap; the last allowed line ends with an ellipsis when text remains. */
@@ -72,7 +76,8 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, width: number, maxLin
 
 /** Spaced caps: canvas letterSpacing where available. */
 function setTracking(ctx: CanvasRenderingContext2D, em: number, size: number) {
-  if ('letterSpacing' in ctx) (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${em * size}px`;
+  if ('letterSpacing' in ctx)
+    (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${em * size}px`;
 }
 
 function eyebrow(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, u: number, color: string): number {
@@ -91,7 +96,15 @@ interface TitleLayout {
 }
 
 /** Eyebrow, oversized caps title with the signal cursor, optional description. */
-function layoutTitle(ctx: CanvasRenderingContext2D, doc: DiagramDocument, styleName: string, width: number, u: number, palette: Palette, limits: { titleLines: number; titleSize: number; descriptionLines: number }): TitleLayout {
+function layoutTitle(
+  ctx: CanvasRenderingContext2D,
+  doc: DiagramDocument,
+  styleName: string,
+  width: number,
+  u: number,
+  palette: Palette,
+  limits: { titleLines: number; titleSize: number; descriptionLines: number },
+): TitleLayout {
   // Shrink the title until no single word overflows the measure.
   let size = limits.titleSize * u;
   const name = doc.name.toUpperCase();
@@ -105,13 +118,17 @@ function layoutTitle(ctx: CanvasRenderingContext2D, doc: DiagramDocument, styleN
 
   const descriptionSize = 20 * u;
   ctx.font = font(400, descriptionSize);
-  const description = limits.descriptionLines > 0 && doc.description.trim() ? wrap(ctx, doc.description.trim(), width, limits.descriptionLines) : [];
+  const description =
+    limits.descriptionLines > 0 && doc.description.trim()
+      ? wrap(ctx, doc.description.trim(), width, limits.descriptionLines)
+      : [];
 
   const eyebrowHeight = 15 * u * 1.3;
   const titleTop = eyebrowHeight + 20 * u;
   const titleHeight = titleLines.length * size;
   const descriptionTop = titleTop + titleHeight + 28 * u;
-  const height = description.length > 0 ? descriptionTop + description.length * descriptionSize * 1.45 : titleTop + titleHeight;
+  const height =
+    description.length > 0 ? descriptionTop + description.length * descriptionSize * 1.45 : titleTop + titleHeight;
 
   return {
     height,
@@ -128,7 +145,9 @@ function layoutTitle(ctx: CanvasRenderingContext2D, doc: DiagramDocument, styleN
       setTracking(context, 0, size);
       context.font = font(400, descriptionSize);
       context.fillStyle = palette.muted;
-      description.forEach((line, index) => context.fillText(line, x, y + descriptionTop + descriptionSize + index * descriptionSize * 1.45));
+      description.forEach((line, index) =>
+        context.fillText(line, x, y + descriptionTop + descriptionSize + index * descriptionSize * 1.45),
+      );
     },
   };
 }
@@ -139,7 +158,11 @@ interface LegendItem {
   iconWidth: number;
 }
 
-function legendItems(doc: DiagramDocument, u: number, palette: Palette): { kinds: LegendItem[]; relations: LegendItem[] } {
+function legendItems(
+  doc: DiagramDocument,
+  u: number,
+  palette: Palette,
+): { kinds: LegendItem[]; relations: LegendItem[] } {
   const kinds = [...new Set(doc.nodes.map((node) => node.kind))] as NodeKind[];
   const relations = [...new Set(doc.edges.map((edge) => edge.relation))] as RelationKind[];
   const glyph = 22 * u;
@@ -193,7 +216,14 @@ interface LegendLayout {
  * Legend under a hairline rule. `columns` > 0 sets a fixed grid (side
  * column); 0 flows items in rows across the width (stacked layouts).
  */
-function layoutLegend(ctx: CanvasRenderingContext2D, doc: DiagramDocument, width: number, u: number, palette: Palette, columns: number): LegendLayout {
+function layoutLegend(
+  ctx: CanvasRenderingContext2D,
+  doc: DiagramDocument,
+  width: number,
+  u: number,
+  palette: Palette,
+  columns: number,
+): LegendLayout {
   const { kinds, relations } = legendItems(doc, u, palette);
   const size = 17 * u;
   const row = 32 * u;
@@ -205,7 +235,9 @@ function layoutLegend(ctx: CanvasRenderingContext2D, doc: DiagramDocument, width
     const positions: { item: LegendItem; x: number; row: number }[] = [];
     if (columns > 0) {
       const columnWidth = width / columns;
-      items.forEach((item, index) => positions.push({ item, x: (index % columns) * columnWidth, row: Math.floor(index / columns) }));
+      items.forEach((item, index) =>
+        positions.push({ item, x: (index % columns) * columnWidth, row: Math.floor(index / columns) }),
+      );
     } else {
       let x = 0;
       let line = 0;
@@ -253,7 +285,12 @@ function layoutLegend(ctx: CanvasRenderingContext2D, doc: DiagramDocument, width
 }
 
 /** Builds the final PNG for `doc` using `renderScene` for the 3D frame. */
-export async function composePng(doc: DiagramDocument, options: PngComposeOptions, renderScene: SceneRenderer, size: { width: number; height: number } = PNG_FORMATS[options.format]): Promise<HTMLCanvasElement> {
+export async function composePng(
+  doc: DiagramDocument,
+  options: PngComposeOptions,
+  renderScene: SceneRenderer,
+  size: { width: number; height: number } = PNG_FORMATS[options.format],
+): Promise<HTMLCanvasElement> {
   const { width, height } = size;
   const u = Math.min(width, height) / 1080;
   const theme = THEMES[doc.presentation.styleId];
@@ -281,8 +318,13 @@ export async function composePng(doc: DiagramDocument, options: PngComposeOption
     const column = Math.round(width * 0.27);
     const legend = hasLegend ? layoutLegend(ctx, doc, column, u, palette, 2) : null;
     const available = height - 2 * margin - (legend ? legend.height + 48 * u : 0);
-    const descriptionLines = Math.max(0, Math.min(8, Math.floor((available - 15 * u * 1.3 - 20 * u - 3 * 72 * u - 28 * u) / (20 * u * 1.45))));
-    const title = options.title ? layoutTitle(ctx, doc, theme.name, column, u, palette, { titleLines: 3, titleSize: 72, descriptionLines }) : null;
+    const descriptionLines = Math.max(
+      0,
+      Math.min(8, Math.floor((available - 15 * u * 1.3 - 20 * u - 3 * 72 * u - 28 * u) / (20 * u * 1.45))),
+    );
+    const title = options.title
+      ? layoutTitle(ctx, doc, theme.name, column, u, palette, { titleLines: 3, titleSize: 72, descriptionLines })
+      : null;
     if (title) overlays.push(() => title.draw(ctx, margin, margin));
     if (legend) overlays.push(() => legend.draw(ctx, margin, height - margin - legend.height));
     const ruleX = margin + column + 48 * u;
@@ -295,7 +337,9 @@ export async function composePng(doc: DiagramDocument, options: PngComposeOption
     scene = { x: sceneX, y: 0, width: width - sceneX - margin / 2, height };
   } else if (hasPanel) {
     const inner = width - 2 * margin;
-    const title = options.title ? layoutTitle(ctx, doc, theme.name, inner, u, palette, { titleLines: 2, titleSize: 64, descriptionLines: 2 }) : null;
+    const title = options.title
+      ? layoutTitle(ctx, doc, theme.name, inner, u, palette, { titleLines: 2, titleSize: 64, descriptionLines: 2 })
+      : null;
     const legend = hasLegend ? layoutLegend(ctx, doc, inner, u, palette, 0) : null;
     const top = title ? margin + title.height + 24 * u : 0;
     const bottom = legend ? height - margin - legend.height - 24 * u : height;
@@ -304,12 +348,19 @@ export async function composePng(doc: DiagramDocument, options: PngComposeOption
     scene = { x: margin / 2, y: top, width: width - margin, height: Math.max(height * 0.35, bottom - top) };
   }
 
-  const frame = await renderScene({ width: Math.round(scene.width), height: Math.round(scene.height), transparent: true, scale: u });
+  const frame = await renderScene({
+    width: Math.round(scene.width),
+    height: Math.round(scene.height),
+    transparent: true,
+    scale: u,
+  });
   ctx.drawImage(frame, Math.round(scene.x), Math.round(scene.y));
   overlays.forEach((draw) => draw());
   return canvas;
 }
 
 export function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('El navegador no generó el PNG.'))), 'image/png'));
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('El navegador no generó el PNG.'))), 'image/png'),
+  );
 }

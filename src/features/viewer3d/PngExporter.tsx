@@ -6,9 +6,9 @@
  */
 import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
-import { Color, Vector2, WebGLRenderer, type Material } from 'three';
+import { Color, type Material, Vector2, WebGLRenderer } from 'three';
 import { preloadFont } from 'troika-three-text';
-import { registerPngExporter, type PngExportOptions } from '../export/pngRegistry';
+import { type PngExportOptions, registerPngExporter } from '../export/pngRegistry';
 import { exportCamera, viewDirection } from './cameraFit';
 import { FONT_BOLD, FONT_REGULAR, useScene } from './sceneContext';
 
@@ -63,7 +63,13 @@ export function PngExporter({ projection }: { projection: 'orthographic' | 'pers
             }
           }
         });
-        const camera = exportCamera(model, projection, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), theme.camera.fov, width / height);
+        const camera = exportCamera(
+          model,
+          projection,
+          viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg),
+          theme.camera.fov,
+          width / height,
+        );
         renderer.render(scene, camera);
         // Copy the frame before the WebGL context is released.
         const frame = document.createElement('canvas');

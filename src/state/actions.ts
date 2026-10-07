@@ -4,12 +4,24 @@
  * mutating state directly.
  */
 import * as cmd from '../domain/commands';
-import { deepestGroupAt, documentBounds, findFreeSpot, resolveAbsoluteLayout, type Point } from '../domain/geometry';
-import { extractFragment, parseClipboardText, pasteFragment, type DiagramFragment, type PastePlacement } from '../domain/fragment';
-import { DEFAULT_ANNOTATION_SIZE, type DiagramDocument, type EdgeEndpoint, type ElementRef, type StyleId } from '../domain/types';
-import { STYLE_IDS } from '../domain/types';
+import {
+  type DiagramFragment,
+  extractFragment,
+  type PastePlacement,
+  parseClipboardText,
+  pasteFragment,
+} from '../domain/fragment';
+import { deepestGroupAt, documentBounds, findFreeSpot, type Point, resolveAbsoluteLayout } from '../domain/geometry';
 import type { NodeSeed } from '../domain/library';
 import { effectiveNarrative } from '../domain/narrative';
+import {
+  DEFAULT_ANNOTATION_SIZE,
+  type DiagramDocument,
+  type EdgeEndpoint,
+  type ElementRef,
+  STYLE_IDS,
+  type StyleId,
+} from '../domain/types';
 import { pasteAnchor } from '../features/editor2d/pasteAnchor';
 import { computeAutoLayout, type LayoutDirection } from '../features/layout/elkLayout';
 import { createRng } from '../features/templates/random';
@@ -50,7 +62,11 @@ useDocumentStore.subscribe((state, previous) => {
   if (isolatedGroupId && !state.doc.groups.some((group) => group.id === isolatedGroupId)) ui().isolateGroup(null);
 });
 
-export function addNodeAt(seed: NodeSeed, position: { x: number; y: number }, groupId: string | null = null): string | null {
+export function addNodeAt(
+  seed: NodeSeed,
+  position: { x: number; y: number },
+  groupId: string | null = null,
+): string | null {
   const id = cmd.nextId(doc(), 'n');
   const ok = run(`Añadir ${seed.label}`, (d) => cmd.addNode(d, { ...seed, id, position, groupId }));
   if (!ok) return null;
@@ -85,7 +101,9 @@ export function addAnnotationAt(position: Point): string | null {
   const target = selected.length === 1 ? (selected[0]?.id ?? null) : null;
   const abs = resolveAbsoluteLayout(current);
   const targetRect = target ? abs.nodes.get(target) : undefined;
-  const preferred = targetRect ? { x: targetRect.x + targetRect.width + 48, y: targetRect.y - DEFAULT_ANNOTATION_SIZE.height - 32 } : position;
+  const preferred = targetRect
+    ? { x: targetRect.x + targetRect.width + 48, y: targetRect.y - DEFAULT_ANNOTATION_SIZE.height - 32 }
+    : position;
   // Keep clear of components and other notes so the text stays legible in 3D too.
   const at = findFreeSpot(preferred, DEFAULT_ANNOTATION_SIZE, [...abs.nodes.values(), ...abs.annotations.values()]);
   const id = cmd.nextId(current, 'a');
@@ -96,7 +114,9 @@ export function addAnnotationAt(position: Point): string | null {
 }
 
 export function updateAnnotation(id: string, patch: cmd.AnnotationPatch): boolean {
-  return run(patch.text !== undefined ? 'Editar nota' : 'Cambiar destino de la nota', (d) => cmd.updateAnnotation(d, id, patch));
+  return run(patch.text !== undefined ? 'Editar nota' : 'Cambiar destino de la nota', (d) =>
+    cmd.updateAnnotation(d, id, patch),
+  );
 }
 
 export function connect(source: EdgeEndpoint, target: EdgeEndpoint): boolean {
@@ -120,7 +140,8 @@ export function deleteSelection(): void {
     return;
   }
   const count = selection.length;
-  if (run(count === 1 ? 'Borrar elemento' : `Borrar ${count} elementos`, (d) => cmd.deleteElements(d, selection))) ui().clearSelection();
+  if (run(count === 1 ? 'Borrar elemento' : `Borrar ${count} elementos`, (d) => cmd.deleteElements(d, selection)))
+    ui().clearSelection();
 }
 
 export function confirmGroupDeletion(mode: 'keep' | 'delete'): void {
@@ -142,7 +163,8 @@ export function groupSelection(): void {
     return;
   }
   const id = cmd.nextId(doc(), 'g');
-  if (run('Agrupar', (d) => cmd.groupElements(d, { id, label: 'Nuevo grupo', nodeIds, groupIds }))) ui().select([{ type: 'group', id }]);
+  if (run('Agrupar', (d) => cmd.groupElements(d, { id, label: 'Nuevo grupo', nodeIds, groupIds })))
+    ui().select([{ type: 'group', id }]);
 }
 
 export function ungroupSelection(): void {
@@ -155,7 +177,9 @@ export function ungroupSelection(): void {
 }
 
 export function duplicateSelection(): void {
-  const nodeIds = ui().selection.filter((ref) => ref.type === 'node').map((ref) => ref.id);
+  const nodeIds = ui()
+    .selection.filter((ref) => ref.type === 'node')
+    .map((ref) => ref.id);
   if (nodeIds.length === 0) {
     ui().notify('warning', 'Selecciona nodos para duplicar.');
     return;
@@ -182,14 +206,17 @@ export function previewStep(stepId: string | null): void {
 /** New step after the open one (or at the end) with the selected relations. */
 export function addStepFromSelection(): void {
   const current = doc();
-  const edgeIds = ui().selection.filter((ref) => ref.type === 'edge').map((ref) => ref.id);
+  const edgeIds = ui()
+    .selection.filter((ref) => ref.type === 'edge')
+    .map((ref) => ref.id);
   const steps = effectiveNarrative(current);
   const open = steps.findIndex((step) => step.id === ui().narrativeStepId);
   const first = current.edges.find((edge) => edge.id === edgeIds[0]);
   const id = cmd.nextStepId(current);
   const title = first?.label ?? `Paso ${(open < 0 ? steps.length : open + 1) + 1}`;
   const label = edgeIds.length > 0 ? 'Nuevo paso con la selección' : 'Nuevo paso';
-  if (run(label, (d) => cmd.addStep(d, { id, title, edgeIds, index: open < 0 ? undefined : open + 1 }))) ui().setNarrativeStep(id);
+  if (run(label, (d) => cmd.addStep(d, { id, title, edgeIds, index: open < 0 ? undefined : open + 1 })))
+    ui().setNarrativeStep(id);
 }
 
 /** Opens the presentation at a given step. */
@@ -244,12 +271,14 @@ function placementFor(current: DiagramDocument, fragment: DiagramFragment, repea
   }
   const { documentId, containerId } = fragment.origin;
   if (documentId === current.id) {
-    const container = containerId !== null && current.groups.some((group) => group.id === containerId) ? containerId : null;
+    const container =
+      containerId !== null && current.groups.some((group) => group.id === containerId) ? containerId : null;
     const step = (repeat + 1) * PASTE_STEP;
     return { containerId: container, offset: { x: step, y: step } };
   }
   // Coordinates from another document mean nothing here: place it beside the content.
-  const bounds = current.nodes.length + current.groups.length > 0 ? documentBounds(current) : { x: 0, y: 0, width: 0, height: 0 };
+  const bounds =
+    current.nodes.length + current.groups.length > 0 ? documentBounds(current) : { x: 0, y: 0, width: 0, height: 0 };
   return { containerId: null, at: { x: bounds.x + bounds.width + 96, y: bounds.y + repeat * PASTE_STEP } };
 }
 
@@ -292,7 +321,10 @@ export function replaceDocument(next: DiagramDocument, label: string, message?: 
     ui().clearSelection();
     ui().isolateGroup(null);
     ui().resetCamera();
-    ui().notify('success', `${message ?? `«${next.name}» abierto.`} Reemplaza a «${previous}».`, { label: 'Deshacer', run: () => useDocumentStore.getState().undo() });
+    ui().notify('success', `${message ?? `«${next.name}» abierto.`} Reemplaza a «${previous}».`, {
+      label: 'Deshacer',
+      run: () => useDocumentStore.getState().undo(),
+    });
   }
   return ok;
 }
@@ -331,7 +363,10 @@ export async function autoLayout(direction: LayoutDirection = 'RIGHT', label = '
  * "Nueva apariencia": changes style, spacing, layer height and layout direction
  * from a seed. Nodes, groups, edges and IDs are untouched.
  */
-export function appearanceVariant(current: DiagramDocument, seed: number): { styleId: StyleId; spacing: number; layerHeight: number; direction: LayoutDirection } {
+export function appearanceVariant(
+  current: DiagramDocument,
+  seed: number,
+): { styleId: StyleId; spacing: number; layerHeight: number; direction: LayoutDirection } {
   const rng = createRng(seed);
   const styles = STYLE_IDS.filter((style) => style !== current.presentation.styleId);
   return {
@@ -344,6 +379,11 @@ export function appearanceVariant(current: DiagramDocument, seed: number): { sty
 
 export async function newAppearance(seed: number, relayout: boolean): Promise<void> {
   const variant = appearanceVariant(doc(), seed);
-  const ok = run('Nueva apariencia', (d) => cmd.setPresentation(d, { styleId: variant.styleId, appearance: { spacing: variant.spacing, layerHeight: variant.layerHeight } }));
+  const ok = run('Nueva apariencia', (d) =>
+    cmd.setPresentation(d, {
+      styleId: variant.styleId,
+      appearance: { spacing: variant.spacing, layerHeight: variant.layerHeight },
+    }),
+  );
   if (ok && relayout) await autoLayout(variant.direction, 'Nueva apariencia · ordenar');
 }

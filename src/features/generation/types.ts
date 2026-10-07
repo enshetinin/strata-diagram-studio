@@ -1,5 +1,5 @@
-import type { DiagramDocument } from '../../domain/types';
 import type { ValidationIssue } from '../../domain/invariants';
+import type { DiagramDocument } from '../../domain/types';
 import type { TemplateCategory } from '../templates';
 import type { Complexity } from '../templates/variations';
 
@@ -20,7 +20,15 @@ export interface GenerationResult {
   notes: string[];
 }
 
-export type GenerationErrorCode = 'cancelled' | 'unsupported' | 'provider-unavailable' | 'network' | 'http' | 'invalid-output' | 'limits' | 'timeout';
+export type GenerationErrorCode =
+  | 'cancelled'
+  | 'unsupported'
+  | 'provider-unavailable'
+  | 'network'
+  | 'http'
+  | 'invalid-output'
+  | 'limits'
+  | 'timeout';
 
 export class GenerationError extends Error {
   constructor(
@@ -40,4 +48,10 @@ export interface DiagramGenerator {
   generate(request: GenerationRequest, signal: AbortSignal): Promise<GenerationResult>;
 }
 
-export const GENERATION_LIMITS = { maxPromptChars: 2_000, maxNodes: 80, maxEdges: 160, maxGroups: 24, timeoutMs: 60_000 } as const;
+export const GENERATION_LIMITS = {
+  maxPromptChars: 2_000,
+  maxNodes: 80,
+  maxEdges: 160,
+  maxGroups: 24,
+  timeoutMs: 60_000,
+} as const;

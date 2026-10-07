@@ -1,7 +1,18 @@
 import { Line } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { memo, useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, ConeGeometry, CurvePath, type InstancedMesh, LineCurve3, Matrix4, Object3D, QuadraticBezierCurve3, TubeGeometry, Vector3 } from 'three';
+import {
+  Color,
+  ConeGeometry,
+  CurvePath,
+  type InstancedMesh,
+  LineCurve3,
+  Matrix4,
+  Object3D,
+  QuadraticBezierCurve3,
+  TubeGeometry,
+  Vector3,
+} from 'three';
 import { RELATION_INFO } from '../../domain/catalog';
 import { useUiStore } from '../../state/uiStore';
 import type { SceneEdge, Vec3 } from '../layout/sceneModel';
@@ -72,12 +83,28 @@ const Connector = memo(function Connector({ edge }: { edge: SceneEdge }) {
   const trimmed = useMemo(() => trimForArrows(edge.points, edge.bidirectional), [edge]);
   const curve = useMemo(() => buildCurve(trimmed), [trimmed]);
   const radius = theme.connector.radius * (emphasis === 'selected' ? 1.6 : 1);
-  const tube = useMemo(() => (theme.connector.render === 'tube' && !dashed ? new TubeGeometry(curve, Math.max(24, trimmed.length * 10), radius, 6, false) : null), [curve, dashed, radius, theme.connector.render, trimmed.length]);
+  const tube = useMemo(
+    () =>
+      theme.connector.render === 'tube' && !dashed
+        ? new TubeGeometry(curve, Math.max(24, trimmed.length * 10), radius, 6, false)
+        : null,
+    [curve, dashed, radius, theme.connector.render, trimmed.length],
+  );
   useLayoutEffect(() => () => tube?.dispose(), [tube]);
-  const linePoints = useMemo(() => (tube ? null : curve.getSpacedPoints(Math.max(16, trimmed.length * 8))), [curve, tube, trimmed.length]);
+  const linePoints = useMemo(
+    () => (tube ? null : curve.getSpacedPoints(Math.max(16, trimmed.length * 8))),
+    [curve, tube, trimmed.length],
+  );
 
   if (tube) {
-    return <mesh geometry={tube} material={materials.tube(color, theme.connector.opacity)} onClick={(event) => selectEdge(event, edge.id)} userData={{ strataEdgeId: edge.id }} />;
+    return (
+      <mesh
+        geometry={tube}
+        material={materials.tube(color, theme.connector.opacity)}
+        onClick={(event) => selectEdge(event, edge.id)}
+        userData={{ strataEdgeId: edge.id }}
+      />
+    );
   }
   return (
     <Line
@@ -102,7 +129,10 @@ function Arrowheads() {
   const { model, theme, materials, highlight } = useScene();
   const ref = useRef<InstancedMesh>(null);
   const geometry = useMemo(() => {
-    const cone = theme.connector.arrow === 'chevron' ? new ConeGeometry(0.065, ARROW_LENGTH, 3) : new ConeGeometry(0.06, ARROW_LENGTH, 16);
+    const cone =
+      theme.connector.arrow === 'chevron'
+        ? new ConeGeometry(0.065, ARROW_LENGTH, 3)
+        : new ConeGeometry(0.06, ARROW_LENGTH, 16);
     if (theme.connector.arrow === 'chevron') cone.scale(1.3, 1, 0.45);
     return cone;
   }, [theme.connector.arrow]);
@@ -126,20 +156,31 @@ function Arrowheads() {
     const color = new Color();
     arrows.forEach(({ tip, from, edge }, index) => {
       forward.set(tip.x - from.x, tip.y - from.y, tip.z - from.z).normalize();
-      temp.position.set(tip.x - forward.x * ARROW_LENGTH * 0.5, tip.y - forward.y * ARROW_LENGTH * 0.5, tip.z - forward.z * ARROW_LENGTH * 0.5);
+      temp.position.set(
+        tip.x - forward.x * ARROW_LENGTH * 0.5,
+        tip.y - forward.y * ARROW_LENGTH * 0.5,
+        tip.z - forward.z * ARROW_LENGTH * 0.5,
+      );
       temp.quaternion.setFromUnitVectors(UP, forward);
       if (theme.connector.arrow === 'chevron') {
         // Keep the flat chevron lying parallel to the ground when possible.
         const side = new Vector3().crossVectors(forward, UP);
         if (side.lengthSq() > 1e-6) {
-          const m = new Matrix4().makeBasis(side.normalize(), forward, new Vector3().crossVectors(side, forward).normalize());
+          const m = new Matrix4().makeBasis(
+            side.normalize(),
+            forward,
+            new Vector3().crossVectors(side, forward).normalize(),
+          );
           temp.quaternion.setFromRotationMatrix(m);
         }
       }
       temp.updateMatrix();
       mesh.setMatrixAt(index, temp.matrix);
       const emphasis = highlight.edge(edge.id);
-      const base = emphasis === 'selected' ? theme.selection : (theme.connector.arrowColor ?? connectorColor(theme, edge.relation));
+      const base =
+        emphasis === 'selected'
+          ? theme.selection
+          : (theme.connector.arrowColor ?? connectorColor(theme, edge.relation));
       mesh.setColorAt(index, color.set(dimColor(base, theme.background, DIM_AMOUNT[emphasis])));
     });
     mesh.count = arrows.length;
@@ -149,7 +190,9 @@ function Arrowheads() {
   }, [arrows, highlight, theme]);
 
   if (arrows.length === 0) return null;
-  return <instancedMesh key={arrows.length} ref={ref} args={[geometry, material, arrows.length]} frustumCulled={false} />;
+  return (
+    <instancedMesh key={arrows.length} ref={ref} args={[geometry, material, arrows.length]} frustumCulled={false} />
+  );
 }
 
 /** Small studs at every used port, instanced. */
@@ -173,7 +216,14 @@ function PortStuds() {
     mesh.computeBoundingSphere();
   }, [model.ports]);
   if (model.ports.length === 0) return null;
-  return <instancedMesh key={model.ports.length} ref={ref} args={[geometry, materials.flat(theme.connector.colors.default, 0.9), model.ports.length]} frustumCulled={false} />;
+  return (
+    <instancedMesh
+      key={model.ports.length}
+      ref={ref}
+      args={[geometry, materials.flat(theme.connector.colors.default, 0.9), model.ports.length]}
+      frustumCulled={false}
+    />
+  );
 }
 
 export function SceneConnectors() {

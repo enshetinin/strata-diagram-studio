@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useId, useState } from 'react';
 
 /** Text input that commits on blur / Enter, so typing is not one history entry per key. */
 export function TextField({
@@ -26,7 +26,14 @@ export function TextField({
     <div className="field">
       <label htmlFor={id}>{label}</label>
       {multiline ? (
-        <textarea id={id} value={draft} rows={3} placeholder={placeholder} onChange={(event) => setDraft(event.target.value)} onBlur={commit} />
+        <textarea
+          id={id}
+          value={draft}
+          rows={3}
+          placeholder={placeholder}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commit}
+        />
       ) : (
         <input
           id={id}
@@ -45,7 +52,19 @@ export function TextField({
   );
 }
 
-export function SelectField<T extends string>({ label, value, options, onChange, hint }: { label: string; value: T; options: { value: T; label: string }[]; onChange: (value: T) => void; hint?: string }) {
+export function SelectField<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  hint?: string;
+}) {
   const id = useId();
   return (
     <div className="field">
@@ -63,7 +82,25 @@ export function SelectField<T extends string>({ label, value, options, onChange,
 }
 
 /** Range input that commits once when released (one history entry per adjustment). */
-export function RangeField({ label, value, min, max, step, format, onCommit, hint }: { label: string; value: number; min: number; max: number; step: number; format: (value: number) => string; onCommit: (value: number) => void; hint?: string }) {
+export function RangeField({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onCommit,
+  hint,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  format: (value: number) => string;
+  onCommit: (value: number) => void;
+  hint?: string;
+}) {
   const id = useId();
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
@@ -75,13 +112,34 @@ export function RangeField({ label, value, min, max, step, format, onCommit, hin
       <label htmlFor={id}>
         {label} <output htmlFor={id}>{format(draft)}</output>
       </label>
-      <input id={id} type="range" min={min} max={max} step={step} value={draft} onChange={(event) => setDraft(Number(event.target.value))} onPointerUp={commit} onKeyUp={commit} onBlur={commit} />
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={draft}
+        onChange={(event) => setDraft(Number(event.target.value))}
+        onPointerUp={commit}
+        onKeyUp={commit}
+        onBlur={commit}
+      />
       {hint ? <p className="field__hint">{hint}</p> : null}
     </div>
   );
 }
 
-export function CheckboxField({ label, checked, onChange, hint }: { label: string; checked: boolean; onChange: (value: boolean) => void; hint?: ReactNode }) {
+export function CheckboxField({
+  label,
+  checked,
+  onChange,
+  hint,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  hint?: ReactNode;
+}) {
   const id = useId();
   return (
     <div className="field field--check">

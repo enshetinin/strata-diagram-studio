@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TEMPLATES } from '../templates';
-import { loadSaved, saveDocument, STORAGE_KEY } from './storage';
+import { loadSaved, STORAGE_KEY, saveDocument } from './storage';
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -55,7 +55,10 @@ describe('local persistence', () => {
   });
 
   it('refuses unknown schema versions explicitly', () => {
-    storage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 2, savedAt: 'x', document: { ...TEMPLATES[0]!.create(), schemaVersion: 2 } }));
+    storage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ schemaVersion: 2, savedAt: 'x', document: { ...TEMPLATES[0]!.create(), schemaVersion: 2 } }),
+    );
     const loaded = loadSaved();
     expect(loaded.status).toBe('invalid');
     if (loaded.status === 'invalid') expect(loaded.message).toContain('no es compatible');

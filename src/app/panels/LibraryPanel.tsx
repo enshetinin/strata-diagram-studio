@@ -1,10 +1,16 @@
 import { Plus } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
-import { LIBRARY_CATEGORIES, presetSeed, searchPresets, type LibraryCategoryId, type LibraryPreset } from '../../domain/library';
-import { addNodeNearContent } from '../../state/actions';
-import { useUiStore } from '../../state/uiStore';
+import {
+  LIBRARY_CATEGORIES,
+  type LibraryCategoryId,
+  type LibraryPreset,
+  presetSeed,
+  searchPresets,
+} from '../../domain/library';
 import { LIBRARY_MIME } from '../../features/editor2d/dnd';
 import { KIND_GLYPH } from '../../features/editor2d/visual';
+import { addNodeNearContent } from '../../state/actions';
+import { useUiStore } from '../../state/uiStore';
 
 const OPEN_BY_DEFAULT: LibraryCategoryId = 'essentials';
 
@@ -15,7 +21,10 @@ export function LibraryPanel() {
   const isSearching = query.trim() !== '';
   const sections = useMemo(() => {
     const matches = searchPresets(query);
-    return LIBRARY_CATEGORIES.map((category) => ({ ...category, presets: matches.filter((preset) => preset.category === category.id) })).filter((section) => section.presets.length > 0);
+    return LIBRARY_CATEGORIES.map((category) => ({
+      ...category,
+      presets: matches.filter((preset) => preset.category === category.id),
+    })).filter((section) => section.presets.length > 0);
   }, [query]);
   const total = sections.reduce((sum, section) => sum + section.presets.length, 0);
 
@@ -23,9 +32,20 @@ export function LibraryPanel() {
     <div className="panel-section">
       <div className="field">
         <label htmlFor={searchId}>Buscar componentes</label>
-        <input id={searchId} type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="postgres, kafka, agente, cdn…" />
+        <input
+          id={searchId}
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="postgres, kafka, agente, cdn…"
+        />
       </div>
-      <p className="panel-intro">{mode === '2d' ? 'Arrastra al lienzo (sobre un grupo para anidarlo) o pulsa «Añadir».' : 'Pulsa «Añadir»; la posición se ajusta después en 2D.'} Los iconos son genéricos, no logos de proveedores.</p>
+      <p className="panel-intro">
+        {mode === '2d'
+          ? 'Arrastra al lienzo (sobre un grupo para anidarlo) o pulsa «Añadir».'
+          : 'Pulsa «Añadir»; la posición se ajusta después en 2D.'}{' '}
+        Los iconos son genéricos, no logos de proveedores.
+      </p>
       {isSearching ? (
         <>
           <p className="library-count" aria-live="polite">
@@ -80,7 +100,13 @@ function PresetList({ presets }: { presets: LibraryPreset[] }) {
               {preset.summary}
             </span>
           </span>
-          <button type="button" className="icon-button" aria-label={`Añadir ${preset.label}`} title={`Añadir ${preset.label}`} onClick={() => addNodeNearContent(presetSeed(preset))}>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={`Añadir ${preset.label}`}
+            title={`Añadir ${preset.label}`}
+            onClick={() => addNodeNearContent(presetSeed(preset))}
+          >
             <Plus size={16} aria-hidden="true" />
           </button>
         </li>

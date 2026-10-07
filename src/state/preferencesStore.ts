@@ -28,7 +28,9 @@ function readPng(raw: unknown): PngComposeOptions | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const value = raw as Record<string, unknown>;
   return {
-    format: PNG_FORMAT_IDS.includes(value.format as PngComposeOptions['format']) ? (value.format as PngComposeOptions['format']) : DEFAULT_PNG_OPTIONS.format,
+    format: PNG_FORMAT_IDS.includes(value.format as PngComposeOptions['format'])
+      ? (value.format as PngComposeOptions['format'])
+      : DEFAULT_PNG_OPTIONS.format,
     title: typeof value.title === 'boolean' ? value.title : DEFAULT_PNG_OPTIONS.title,
     legend: typeof value.legend === 'boolean' ? value.legend : DEFAULT_PNG_OPTIONS.legend,
     transparent: typeof value.transparent === 'boolean' ? value.transparent : DEFAULT_PNG_OPTIONS.transparent,
@@ -43,7 +45,9 @@ function read(): Partial<Stored> {
     if (typeof parsed !== 'object' || parsed === null) return {};
     const value = parsed as Record<string, unknown>;
     return {
-      ...(value.quality === 'low' || value.quality === 'medium' || value.quality === 'high' ? { quality: value.quality } : {}),
+      ...(value.quality === 'low' || value.quality === 'medium' || value.quality === 'high'
+        ? { quality: value.quality }
+        : {}),
       ...(typeof value.snapToGrid === 'boolean' ? { snapToGrid: value.snapToGrid } : {}),
       ...(value.theme === 'light' || value.theme === 'dark' ? { theme: value.theme } : {}),
       ...(readPng(value.png) ? { png: readPng(value.png)! } : {}),

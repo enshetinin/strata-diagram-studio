@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import {
+  type DiagramDocument,
   EDGE_DIRECTIONS,
   GROUP_KINDS,
+  type JsonValue,
   LABEL_MODES,
   NODE_KINDS,
   PORT_DATA_TYPES,
@@ -10,8 +12,6 @@ import {
   RELATION_KINDS,
   SCHEMA_VERSION,
   STYLE_IDS,
-  type DiagramDocument,
-  type JsonValue,
 } from './types';
 
 /** Hard limits for anything that enters from outside (import, storage, generation). */
@@ -40,7 +40,14 @@ const text = z.string().max(LIMITS.maxText);
 const finite = z.number(); // Zod 4 rejects Infinity and NaN by default.
 
 const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
-  z.union([z.string().max(LIMITS.maxText), finite, z.boolean(), z.null(), z.array(jsonValue).max(100), z.record(z.string().max(80), jsonValue)]),
+  z.union([
+    z.string().max(LIMITS.maxText),
+    finite,
+    z.boolean(),
+    z.null(),
+    z.array(jsonValue).max(100),
+    z.record(z.string().max(80), jsonValue),
+  ]),
 );
 
 const metadata = z

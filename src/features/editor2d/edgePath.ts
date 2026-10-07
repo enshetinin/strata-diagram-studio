@@ -32,6 +32,11 @@ export function strataEdgePath(ends: EdgeEnds, bend?: DiagramEdge['bend']): [str
   const axis = bend ? bendAxis(ends) : null;
   const centerX = (ends.sourceX + ends.targetX) / 2 + (axis === 'x' && bend ? bend.x : 0);
   const centerY = (ends.sourceY + ends.targetY) / 2 + (axis === 'y' && bend ? bend.y : 0);
-  const [path, labelX, labelY] = getSmoothStepPath({ ...ends, borderRadius: 10, offset: 20, ...(axis ? { centerX, centerY } : {}) });
+  const [path, labelX, labelY] = getSmoothStepPath({
+    ...ends,
+    borderRadius: 10,
+    offset: 20,
+    ...(axis ? { centerX, centerY } : {}),
+  });
   return [path, labelX, labelY];
 }

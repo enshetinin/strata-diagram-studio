@@ -38,10 +38,19 @@ export function multiAgent() {
     .edge('n-coder', 'n-sandbox', 'request', 'Ejecuta tests', { order: 8 })
     .edge('n-coder', 'n-repo', 'request', 'Propone cambio', { order: 8, fromSide: 'right', toSide: 'left' })
     .edge('n-coder', 'n-reviewer', 'request', 'Revisión', { order: 9, fromSide: 'bottom', toSide: 'right' })
-    .edge('n-reviewer', 'n-coder', 'control', 'Cambios solicitados', { order: 10, fromSide: 'top', toSide: 'left', explanation: 'Ciclo de revisión: válido en el grafo.' })
+    .edge('n-reviewer', 'n-coder', 'control', 'Cambios solicitados', {
+      order: 10,
+      fromSide: 'top',
+      toSide: 'left',
+      explanation: 'Ciclo de revisión: válido en el grafo.',
+    })
     .edge('n-reviewer', 'n-coordinator', 'response', 'Aprobado', { order: 11, fromSide: 'left', toSide: 'left' })
     .edge('n-researcher', 'n-vector', 'data', 'Hallazgos')
-    .edge('n-coordinator', 'n-episodes', 'data', 'Contexto', { direction: 'bidirectional', fromSide: 'left', toSide: 'right' })
+    .edge('n-coordinator', 'n-episodes', 'data', 'Contexto', {
+      direction: 'bidirectional',
+      fromSide: 'left',
+      toSide: 'right',
+    })
     .edge('n-reviewer', 'n-llm', 'dependency', 'Inferencia')
     .edge('n-coder', 'n-llm', 'dependency', undefined, { fromSide: 'bottom', toSide: 'top' })
     .build();

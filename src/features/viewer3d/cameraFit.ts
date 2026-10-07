@@ -21,14 +21,18 @@ function boxCorners(box: WorldBox, labelHeight: number): Vector3[] {
   const corners: Vector3[] = [];
   for (const dx of [-0.5, 0.5]) {
     for (const dz of [-0.5, 0.5]) {
-      for (const y of [box.bottom - 0.1, box.top + labelHeight]) corners.push(new Vector3(box.x + dx * box.sizeX, y, box.z + dz * box.sizeZ));
+      for (const y of [box.bottom - 0.1, box.top + labelHeight])
+        corners.push(new Vector3(box.x + dx * box.sizeX, y, box.z + dz * box.sizeZ));
     }
   }
   return corners;
 }
 
 function scenePoints(model: SceneModel): Vector3[] {
-  const points = [...model.groups.flatMap((group) => boxCorners(group, 0.1)), ...model.nodes.flatMap((node) => boxCorners(node, 0.45))];
+  const points = [
+    ...model.groups.flatMap((group) => boxCorners(group, 0.1)),
+    ...model.nodes.flatMap((node) => boxCorners(node, 0.45)),
+  ];
   for (const edge of model.edges) for (const point of edge.points) points.push(new Vector3(point.x, point.y, point.z));
   if (points.length === 0) {
     const box = sceneBox(model);
@@ -87,7 +91,13 @@ export function fitPerspectiveDistance(framing: Framing, fovDeg: number, aspect:
 }
 
 /** Stand-alone camera for an off-screen render at a given aspect ratio. */
-export function exportCamera(model: SceneModel, projection: 'orthographic' | 'perspective', direction: Vector3, fov: number, aspect: number) {
+export function exportCamera(
+  model: SceneModel,
+  projection: 'orthographic' | 'perspective',
+  direction: Vector3,
+  fov: number,
+  aspect: number,
+) {
   const framing = frameScene(model, direction);
   if (projection === 'orthographic') {
     const margin = 1.06;
@@ -134,7 +144,11 @@ export function computeDefaultView(
 ): DefaultView {
   const framing = frameScene(model, direction);
   const narrow = size.width < 700;
-  const insets = presenting ? { top: 24, bottom: 170, left: 24, right: 24 } : narrow ? { top: 118, bottom: 70, left: 12, right: 12 } : { top: 200, bottom: 128, left: 32, right: 32 };
+  const insets = presenting
+    ? { top: 24, bottom: 170, left: 24, right: 24 }
+    : narrow
+      ? { top: 118, bottom: 70, left: 12, right: 12 }
+      : { top: 200, bottom: 128, left: 32, right: 32 };
   if (measured && !presenting) {
     // Never let the overlay squeeze the scene below ~40% of the stage height.
     const room = Math.max(0, size.height * 0.6);
@@ -143,19 +157,32 @@ export function computeDefaultView(
     insets.top = measured.top * k;
     insets.bottom = measured.bottom * k;
   }
-  const usable = { width: Math.max(120, size.width - insets.left - insets.right), height: Math.max(120, size.height - insets.top - insets.bottom) };
+  const usable = {
+    width: Math.max(120, size.width - insets.left - insets.right),
+    height: Math.max(120, size.height - insets.top - insets.bottom),
+  };
   const right = new Vector3().crossVectors(new Vector3(0, 1, 0), direction).normalize();
   const up = new Vector3().crossVectors(direction, right).normalize();
   const shiftX = (insets.left - insets.right) / 2;
   const shiftY = (insets.top - insets.bottom) / 2;
   if (projection === 'orthographic') {
     const zoom = fitOrthoZoom(framing, usable, 1.04);
-    const center = framing.center.clone().addScaledVector(right, -shiftX / zoom).addScaledVector(up, shiftY / zoom);
+    const center = framing.center
+      .clone()
+      .addScaledVector(right, -shiftX / zoom)
+      .addScaledVector(up, shiftY / zoom);
     return { center, zoom, distance: 60, worldPerPixel: 1 / zoom };
   }
-  const scaled = { ...framing, width: (framing.width * size.width) / usable.width, height: (framing.height * size.height) / usable.height };
+  const scaled = {
+    ...framing,
+    width: (framing.width * size.width) / usable.width,
+    height: (framing.height * size.height) / usable.height,
+  };
   const distance = fitPerspectiveDistance(scaled, fov, size.width / Math.max(1, size.height));
   const worldPerPixel = (2 * distance * Math.tan((fov * Math.PI) / 360)) / Math.max(1, size.height);
-  const center = framing.center.clone().addScaledVector(right, -shiftX * worldPerPixel).addScaledVector(up, shiftY * worldPerPixel);
+  const center = framing.center
+    .clone()
+    .addScaledVector(right, -shiftX * worldPerPixel)
+    .addScaledVector(up, shiftY * worldPerPixel);
   return { center, zoom: 1, distance, worldPerPixel };
 }

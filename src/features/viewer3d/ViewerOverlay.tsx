@@ -5,13 +5,13 @@
  */
 import { ChevronLeft, ChevronRight, Crosshair, PencilRuler, RotateCcw, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
+import { IconButton } from '../../components/ui/IconButton';
 import { KIND_INFO, RELATION_INFO } from '../../domain/catalog';
 import { effectiveNarrative } from '../../domain/narrative';
 import type { NodeKind, RelationKind } from '../../domain/types';
 import { useDocumentStore } from '../../state/documentStore';
 import { selectPrimary, useUiStore } from '../../state/uiStore';
-import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
-import { IconButton } from '../../components/ui/IconButton';
 import { KIND_GLYPH, RELATION_STROKE } from '../editor2d/visual';
 import { THEMES } from './themes';
 
@@ -69,7 +69,11 @@ function Presentation() {
           <p className="presentation__count">
             Paso {step + 1} de {steps.length}
           </p>
-          <span className="presentation__progress" aria-hidden="true" style={{ '--progress': steps.length ? (step + 1) / steps.length : 0 } as React.CSSProperties} />
+          <span
+            className="presentation__progress"
+            aria-hidden="true"
+            style={{ '--progress': steps.length ? (step + 1) / steps.length : 0 } as React.CSSProperties}
+          />
           <h2>{current.title}</h2>
           {current.caption ? <p>{current.caption}</p> : null}
         </div>
@@ -80,8 +84,18 @@ function Presentation() {
         </div>
       )}
       <div className="presentation__controls">
-        <IconButton label="Paso anterior (←)" icon={ChevronLeft} onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} />
-        <IconButton label="Paso siguiente (→)" icon={ChevronRight} onClick={() => setStep(Math.min(steps.length - 1, step + 1))} disabled={step >= steps.length - 1} />
+        <IconButton
+          label="Paso anterior (←)"
+          icon={ChevronLeft}
+          onClick={() => setStep(Math.max(0, step - 1))}
+          disabled={step === 0}
+        />
+        <IconButton
+          label="Paso siguiente (→)"
+          icon={ChevronRight}
+          onClick={() => setStep(Math.min(steps.length - 1, step + 1))}
+          disabled={step >= steps.length - 1}
+        />
         <IconButton label="Salir de presentación (Esc)" icon={X} onClick={() => setPresenting(false)} />
       </div>
     </div>
@@ -141,7 +155,8 @@ export function ViewerOverlay() {
   const theme = THEMES[doc.presentation.styleId];
   const kinds = useMemo(() => [...new Set(doc.nodes.map((node) => node.kind))], [doc.nodes]);
   const relations = useMemo(() => [...new Set(doc.edges.map((edge) => edge.relation))], [doc.edges]);
-  const particlesVisible = doc.presentation.appearance.flowParticles && (presenting || selection.some((ref) => ref.type === 'edge'));
+  const particlesVisible =
+    doc.presentation.appearance.flowParticles && (presenting || selection.some((ref) => ref.type === 'edge'));
   const isolatedLabel = isolated ? doc.groups.find((group) => group.id === isolated)?.label : null;
   const root = useRef<HTMLDivElement>(null);
   useOverlayInsets(root, !presenting, doc.id);
@@ -175,7 +190,12 @@ export function ViewerOverlay() {
             </span>
           </button>
           <IconButton label="Restablecer cámara" icon={RotateCcw} onClick={() => useUiStore.getState().resetCamera()} />
-          <IconButton label="Enfocar selección" icon={Crosshair} onClick={() => primary && primary.type !== 'edge' && useUiStore.getState().focus(primary)} disabled={!primary || primary.type === 'edge'} />
+          <IconButton
+            label="Enfocar selección"
+            icon={Crosshair}
+            onClick={() => primary && primary.type !== 'edge' && useUiStore.getState().focus(primary)}
+            disabled={!primary || primary.type === 'edge'}
+          />
         </div>
       ) : null}
 
@@ -208,7 +228,9 @@ export function ViewerOverlay() {
           <Legend kinds={kinds} relations={relations} />
         </footer>
       ) : null}
-      {particlesVisible ? <p className="viewer-note">Los puntos en movimiento son ilustrativos: no representan tráfico real.</p> : null}
+      {particlesVisible ? (
+        <p className="viewer-note">Los puntos en movimiento son ilustrativos: no representan tráfico real.</p>
+      ) : null}
       {presenting ? <Presentation /> : null}
     </div>
   );

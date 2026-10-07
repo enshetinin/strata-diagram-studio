@@ -1,4 +1,4 @@
-import { NodeResizer, type NodeProps } from '@xyflow/react';
+import { type NodeProps, NodeResizer } from '@xyflow/react';
 import { memo } from 'react';
 import { GROUP_KIND_LABEL } from '../../domain/catalog';
 import { resizeElement } from '../../domain/commands';
@@ -10,7 +10,12 @@ import { accent2d } from './visual';
 export const GroupNode = memo(function GroupNode({ id, data, selected }: NodeProps<GroupFlowNode>) {
   const { group, accent, depth } = data;
   return (
-    <div className={`strata-group${selected ? ' is-selected' : ''}`} data-depth={depth} data-kind={group.kind} style={{ '--accent': accent2d(accent) } as React.CSSProperties}>
+    <div
+      className={`strata-group${selected ? ' is-selected' : ''}`}
+      data-depth={depth}
+      data-kind={group.kind}
+      style={{ '--accent': accent2d(accent) } as React.CSSProperties}
+    >
       <NodeResizer
         isVisible={selected}
         minWidth={160}
@@ -18,7 +23,9 @@ export const GroupNode = memo(function GroupNode({ id, data, selected }: NodePro
         lineClassName="strata-group__resize-line"
         handleClassName="strata-group__resize-handle"
         onResizeEnd={(_event, params) => {
-          const result = useDocumentStore.getState().execute('Redimensionar grupo', (doc) => resizeElement(doc, { type: 'group', id }, params));
+          const result = useDocumentStore
+            .getState()
+            .execute('Redimensionar grupo', (doc) => resizeElement(doc, { type: 'group', id }, params));
           if (!result.ok) useUiStore.getState().notify('error', result.error);
         }}
       />

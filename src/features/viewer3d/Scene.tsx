@@ -11,12 +11,12 @@ import { computeHighlight } from './highlight';
 import { MaterialLibrary } from './materials';
 import { PngExporter } from './PngExporter';
 import { SceneConnectors } from './SceneConnectors';
-import { SceneContext, useScene, type SceneContextValue } from './sceneContext';
 import { SceneEnvironment } from './SceneEnvironment';
 import { SceneLabels } from './SceneLabels';
 import { SceneNodes } from './SceneNodes';
 import { SceneNotes } from './SceneNotes';
 import { ScenePlatforms } from './ScenePlatforms';
+import { SceneContext, type SceneContextValue, useScene } from './sceneContext';
 import { THEMES } from './themes';
 
 /** Publishes what the scene graph actually contains, for tests and assistive summaries. */
@@ -37,7 +37,15 @@ function SceneProbe({ onStats }: { onStats: (stats: { nodes: number; edges: numb
   return null;
 }
 
-export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; reducedMotion: boolean; onStats: (stats: { nodes: number; edges: number; groups: number }) => void }) {
+export function Scene({
+  quality,
+  reducedMotion,
+  onStats,
+}: {
+  quality: Quality;
+  reducedMotion: boolean;
+  onStats: (stats: { nodes: number; edges: number; groups: number }) => void;
+}) {
   const doc = useDocumentStore((state) => state.doc);
   const selection = useUiStore((state) => state.selection);
   const isolated = useUiStore((state) => state.isolatedGroupId);
@@ -49,25 +57,54 @@ export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; r
 
   const theme = THEMES[doc.presentation.styleId];
   const appearance = doc.presentation.appearance;
-  const projection = doc.presentation.camera.projection === 'style' ? theme.camera.projection : doc.presentation.camera.projection;
+  const projection =
+    doc.presentation.camera.projection === 'style' ? theme.camera.projection : doc.presentation.camera.projection;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only geometry-relevant parts of the document rebuild the model.
   const model = useMemo(
-    () => buildSceneModel(doc, { layerHeight: appearance.layerHeight, heightScale: theme.node.heightScale, routeStyle: theme.connector.route }),
-    [doc.nodes, doc.groups, doc.edges, doc.annotations, doc.layout, appearance.layerHeight, theme.node.heightScale, theme.connector.route],
+    () =>
+      buildSceneModel(doc, {
+        layerHeight: appearance.layerHeight,
+        heightScale: theme.node.heightScale,
+        routeStyle: theme.connector.route,
+      }),
+    [
+      doc.nodes,
+      doc.groups,
+      doc.edges,
+      doc.annotations,
+      doc.layout,
+      appearance.layerHeight,
+      theme.node.heightScale,
+      theme.connector.route,
+    ],
   );
-  const highlight = useMemo(() => computeHighlight(doc, selection, isolated, presenting ? step : null), [doc, selection, isolated, presenting, step]);
+  const highlight = useMemo(
+    () => computeHighlight(doc, selection, isolated, presenting ? step : null),
+    [doc, selection, isolated, presenting, step],
+  );
   const materials = useMemo(() => new MaterialLibrary(theme, quality), [theme, quality]);
   useLayoutEffect(() => () => materials.dispose(), [materials]);
   const shadows = quality !== 'low' && theme.light.shadows;
 
   const { labelSize, crowded } = useMemo(() => {
-    const view = computeDefaultView(model, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), projection, theme.camera.fov, size, presenting, insets);
+    const view = computeDefaultView(
+      model,
+      viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg),
+      projection,
+      theme.camera.fov,
+      size,
+      presenting,
+      insets,
+    );
     const ideal = 12 * view.worldPerPixel;
     return { labelSize: Math.min(0.6, Math.max(0.12, ideal)) * (theme.label.size / 0.15), crowded: ideal > 0.42 };
   }, [model, projection, size, presenting, theme, insets]);
 
-  const value = useMemo<SceneContextValue>(() => ({ theme, materials, model, highlight, shadows, reducedMotion, labelSize, crowded }), [theme, materials, model, highlight, shadows, reducedMotion, labelSize, crowded]);
+  const value = useMemo<SceneContextValue>(
+    () => ({ theme, materials, model, highlight, shadows, reducedMotion, labelSize, crowded }),
+    [theme, materials, model, highlight, shadows, reducedMotion, labelSize, crowded],
+  );
 
   // Demand rendering: draw once whenever the inputs change.
   useEffect(() => invalidate(), [value, invalidate]);

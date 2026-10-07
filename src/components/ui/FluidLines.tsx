@@ -20,7 +20,13 @@ const RIBBON = Array.from({ length: SLATS }, (_, index) => {
 
 export function FluidLines({ className = '' }: { className?: string }) {
   return (
-    <svg className={`fluid-lines ${className}`} viewBox="0 0 1000 660" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <svg
+      className={`fluid-lines ${className}`}
+      viewBox="0 0 1000 660"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+      focusable="false"
+    >
       {RIBBON.map((d, index) => (
         <path key={index} d={d} style={{ '--i': index } as React.CSSProperties} />
       ))}
