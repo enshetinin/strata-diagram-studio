@@ -4,7 +4,7 @@ Editor de diagramas de sistemas con un único documento semántico y dos vistas:
 (React Flow) y una escena 3D real (Three.js / React Three Fiber) con estilos isométricos.
 Funciona sin claves ni backend.
 
-![AWS Load Testing en Porcelain Isometric](docs/qa/template-aws-load-testing.png)
+![Strata Diagram Studio: vista 3D, estilos, editor 2D y modo presentación](docs/demo.gif)
 
 ## Puesta en marcha
 
