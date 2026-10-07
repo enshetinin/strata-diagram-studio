@@ -20,6 +20,8 @@ export const LIMITS = {
   maxNodes: 400,
   maxEdges: 800,
   maxGroups: 120,
+  maxAnnotations: 200,
+  maxNote: 600,
   maxPortsPerNode: 24,
   maxLabel: 120,
   maxText: 2_000,
@@ -86,6 +88,12 @@ export const edgeSchema = z.object({
   bend: z.object({ x: finite.min(-1e5).max(1e5), y: finite.min(-1e5).max(1e5) }).optional(),
 });
 
+export const annotationSchema = z.object({
+  id,
+  text: z.string().trim().min(1).max(LIMITS.maxNote),
+  targetNodeId: id.nullable(),
+});
+
 export const rectSchema = z.object({
   x: finite.min(-1e6).max(1e6),
   y: finite.min(-1e6).max(1e6),
@@ -101,9 +109,12 @@ export const documentSchema = z.object({
   nodes: z.array(nodeSchema).max(LIMITS.maxNodes),
   groups: z.array(groupSchema).max(LIMITS.maxGroups),
   edges: z.array(edgeSchema).max(LIMITS.maxEdges),
+  // Added after the first release: documents without notes still parse as v1.
+  annotations: z.array(annotationSchema).max(LIMITS.maxAnnotations).default([]),
   layout: z.object({
     nodes: z.record(id, rectSchema),
     groups: z.record(id, rectSchema),
+    annotations: z.record(id, rectSchema).default({}),
   }),
   presentation: z.object({
     styleId: z.enum(STYLE_IDS),

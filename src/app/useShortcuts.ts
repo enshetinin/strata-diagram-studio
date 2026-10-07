@@ -24,7 +24,7 @@ function nudge(dx: number, dy: number) {
   const doc = useDocumentStore.getState().doc;
   const moves: Move[] = selection.flatMap((ref): Move[] => {
     if (ref.type === 'edge') return [];
-    const rect = ref.type === 'node' ? doc.layout.nodes[ref.id] : doc.layout.groups[ref.id];
+    const rect = ref.type === 'node' ? doc.layout.nodes[ref.id] : ref.type === 'group' ? doc.layout.groups[ref.id] : doc.layout.annotations[ref.id];
     return rect ? [{ type: ref.type, id: ref.id, x: rect.x + dx, y: rect.y + dy }] : [];
   });
   if (moves.length === 0) return;

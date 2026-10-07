@@ -10,25 +10,39 @@ export const SCHEMA_VERSION = 1 as const;
 
 export const NODE_KINDS = [
   'client',
+  'human',
   'device',
   'frontend',
+  'mobile',
   'api',
   'service',
+  'container',
+  'vm',
   'function',
+  'scheduler',
   'workflow',
   'database',
   'vector',
+  'search',
   'warehouse',
   'storage',
   'document',
+  'registry',
+  'repo',
   'queue',
   'stream',
+  'notification',
   'cache',
   'agent',
   'model',
+  'guardrail',
   'tool',
+  'notebook',
   'gateway',
   'balancer',
+  'cdn',
+  'dns',
+  'firewall',
   'identity',
   'secret',
   'observability',
@@ -103,6 +117,18 @@ export interface DiagramGroup {
   parentGroupId: string | null;
 }
 
+/**
+ * Free text placed on the canvas: not a component, so it never counts as one,
+ * never appears in the legend and never carries relations. It may point at a
+ * node with a leader line.
+ */
+export interface DiagramAnnotation {
+  id: string;
+  text: string;
+  /** Node the leader line points at; `null` leaves the note free-standing. */
+  targetNodeId: string | null;
+}
+
 export interface EdgeEndpoint {
   nodeId: string;
   portId: string;
@@ -136,6 +162,8 @@ export interface Rect {
 export interface DiagramLayout {
   nodes: Record<string, Rect>;
   groups: Record<string, Rect>;
+  /** Notes never belong to a group, so their rectangles are absolute. */
+  annotations: Record<string, Rect>;
 }
 
 export const STYLE_IDS = ['porcelain', 'midnight', 'glass', 'blueprint', 'monochrome', 'orbit'] as const;
@@ -186,12 +214,13 @@ export interface DiagramDocument {
   nodes: DiagramNode[];
   groups: DiagramGroup[];
   edges: DiagramEdge[];
+  annotations: DiagramAnnotation[];
   layout: DiagramLayout;
   presentation: Presentation;
   narrative: Narrative;
 }
 
-export type ElementType = 'node' | 'edge' | 'group';
+export type ElementType = 'node' | 'edge' | 'group' | 'annotation';
 
 export interface ElementRef {
   type: ElementType;
@@ -199,6 +228,7 @@ export interface ElementRef {
 }
 
 export const DEFAULT_NODE_SIZE = { width: 176, height: 80 } as const;
+export const DEFAULT_ANNOTATION_SIZE = { width: 208, height: 96 } as const;
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
   spacing: 1,

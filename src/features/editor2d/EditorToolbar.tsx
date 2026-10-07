@@ -1,11 +1,11 @@
 import { useReactFlow } from '@xyflow/react';
-import { CircleHelp, Copy, Group, Grid3x3, Maximize, Plus, Trash2, Ungroup } from 'lucide-react';
+import { CircleHelp, Copy, Group, Grid3x3, Maximize, Plus, StickyNote, Trash2, Ungroup } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { KIND_INFO } from '../../domain/catalog';
 import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
 import { kindSeed } from '../../domain/library';
-import { DEFAULT_NODE_SIZE, NODE_KINDS, type NodeKind } from '../../domain/types';
-import { addNodeAt, deleteSelection, duplicateSelection, groupSelection, ungroupSelection } from '../../state/actions';
+import { DEFAULT_ANNOTATION_SIZE, DEFAULT_NODE_SIZE, NODE_KINDS, type NodeKind } from '../../domain/types';
+import { addAnnotationAt, addNodeAt, deleteSelection, duplicateSelection, groupSelection, ungroupSelection } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
@@ -20,6 +20,7 @@ const HELP: [string, string][] = [
   ['Moverse', 'Espacio + arrastrar, botón central o scroll del trackpad.'],
   ['Zoom', 'Pellizco o Ctrl/⌘ + rueda.'],
   ['Agrupar', 'Selecciona varios y pulsa Ctrl/⌘ + G.'],
+  ['Notas', 'Botón de nota; con un componente seleccionado, la nota lo señala. Doble clic para editar el texto.'],
 ];
 
 /** Gesture cheat sheet: the canvas hides most of them (handles only show on hover). */
@@ -68,18 +69,19 @@ export function EditorToolbar() {
   const { fitView, screenToFlowPosition } = useReactFlow();
   const hasNodes = selection.some((ref) => ref.type === 'node');
   const hasGroup = selection.some((ref) => ref.type === 'group');
-  const groupable = selection.some((ref) => ref.type !== 'edge');
+  const groupable = selection.some((ref) => ref.type === 'node' || ref.type === 'group');
   // Shared links are read-only: keep only the view tools.
   const readOnly = useDocumentStore((state) => state.readOnly !== null);
 
   /** New components land in the middle of what is on screen, inside the group there. */
-  const addAtCentre = (kind: NodeKind) => {
+  const paneCentre = () => {
     const pane = document.querySelector('.editor2d .react-flow')?.getBoundingClientRect();
-    if (!pane) return;
-    const centre = screenToFlowPosition({
-      x: pane.left + pane.width / 2,
-      y: pane.top + pane.height / 2,
-    });
+    return pane ? screenToFlowPosition({ x: pane.left + pane.width / 2, y: pane.top + pane.height / 2 }) : null;
+  };
+
+  const addAtCentre = (kind: NodeKind) => {
+    const centre = paneCentre();
+    if (!centre) return;
     const layout = resolveAbsoluteLayout(useDocumentStore.getState().doc);
     // Step right past any component already there, so new ones never overlap.
     const position = {
@@ -113,6 +115,14 @@ export function EditorToolbar() {
               ),
               onSelect: () => addAtCentre(kind),
             }))}
+          />
+          <ToolButton
+            label="Añadir nota"
+            icon={StickyNote}
+            onClick={() => {
+              const centre = paneCentre();
+              if (centre) addAnnotationAt({ x: centre.x - DEFAULT_ANNOTATION_SIZE.width / 2, y: centre.y - DEFAULT_ANNOTATION_SIZE.height / 2 });
+            }}
           />
           <span className="editor-toolbar__sep" aria-hidden="true" />
           <ToolButton label="Agrupar selección (Ctrl+G)" icon={Group} onClick={groupSelection} disabled={!groupable} />

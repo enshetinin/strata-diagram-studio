@@ -13,6 +13,7 @@ export interface AbsoluteLayout {
   groups: Map<string, Rect>;
   /** Nesting depth of each group (top-level = 0). */
   groupDepth: Map<string, number>;
+  annotations: Map<string, Rect>;
 }
 
 /**
@@ -55,7 +56,13 @@ export function resolveAbsoluteLayout(doc: DiagramDocument): AbsoluteLayout {
     nodes.set(node.id, { x: origin.x + rect.x, y: origin.y + rect.y, width: rect.width, height: rect.height });
   }
 
-  return { nodes, groups, groupDepth };
+  const annotations = new Map<string, Rect>();
+  for (const annotation of doc.annotations) {
+    const rect = doc.layout.annotations[annotation.id];
+    if (rect) annotations.set(annotation.id, { ...rect });
+  }
+
+  return { nodes, groups, groupDepth, annotations };
 }
 
 /** Absolute origin (top-left) of a container; `null` is the canvas. */
@@ -100,9 +107,55 @@ export function rectsOverlap(a: Rect, b: Rect, gap = 0): boolean {
   return a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap;
 }
 
+/**
+ * First position for a `size` rectangle that clears every obstacle by `gap`,
+ * starting at `preferred` and trying rings of neighbouring slots outwards
+ * (nearest first, upwards before downwards). Falls back to `preferred`.
+ */
+export function findFreeSpot(preferred: Point, size: { width: number; height: number }, obstacles: readonly Rect[], gap = 24): Point {
+  const fits = (point: Point) => !obstacles.some((obstacle) => rectsOverlap({ ...point, ...size }, obstacle, gap));
+  if (fits(preferred)) return preferred;
+  const stepX = size.width + gap;
+  const stepY = size.height + gap;
+  for (let ring = 1; ring <= 6; ring += 1) {
+    const slots: [number, number][] = [];
+    for (let i = -ring; i <= ring; i += 1) for (let j = -ring; j <= ring; j += 1) if (Math.max(Math.abs(i), Math.abs(j)) === ring) slots.push([i, j]);
+    slots.sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1]) || a[1] - b[1]);
+    for (const [i, j] of slots) {
+      const candidate = { x: preferred.x + i * stepX, y: preferred.y + j * stepY };
+      if (fits(candidate)) return candidate;
+    }
+  }
+  return preferred;
+}
+
 export function documentBounds(doc: DiagramDocument, abs?: AbsoluteLayout): Rect {
   const layout = abs ?? resolveAbsoluteLayout(doc);
-  return unionRects([...layout.nodes.values(), ...layout.groups.values()]) ?? { x: 0, y: 0, width: 800, height: 600 };
+  return unionRects([...layout.nodes.values(), ...layout.groups.values(), ...layout.annotations.values()]) ?? { x: 0, y: 0, width: 800, height: 600 };
+}
+
+/** Where the segment from the centre of `rect` towards `toward` leaves the rectangle. */
+function exitPoint(rect: Rect, toward: Point): Point {
+  const cx = rect.x + rect.width / 2;
+  const cy = rect.y + rect.height / 2;
+  const dx = toward.x - cx;
+  const dy = toward.y - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const scale = Math.min(dx === 0 ? Infinity : rect.width / 2 / Math.abs(dx), dy === 0 ? Infinity : rect.height / 2 / Math.abs(dy));
+  return { x: cx + dx * Math.min(1, scale), y: cy + dy * Math.min(1, scale) };
+}
+
+/**
+ * Leader line from a note to the node it points at: a straight segment
+ * between the two rectangle borders along the line joining their centres.
+ * `null` when the rectangles overlap (nothing sensible to draw).
+ * Shared by the 2D editor, the SVG export and the 3D scene.
+ */
+export function leaderLine(note: Rect, target: Rect): { from: Point; to: Point } | null {
+  if (rectsOverlap(note, target)) return null;
+  const noteCentre = { x: note.x + note.width / 2, y: note.y + note.height / 2 };
+  const targetCentre = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
+  return { from: exitPoint(note, targetCentre), to: exitPoint(target, noteCentre) };
 }
 
 /**

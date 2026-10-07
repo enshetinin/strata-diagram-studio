@@ -7,7 +7,9 @@ import { deriveNarrative, syncEdgeOrder } from './narrative';
 import { LIMITS } from './schema';
 import { GROUP_PADDING, resolveAbsoluteLayout, unionRects, type Point } from './geometry';
 import {
+  DEFAULT_ANNOTATION_SIZE,
   DEFAULT_NODE_SIZE,
+  type DiagramAnnotation,
   type DiagramDocument,
   type DiagramEdge,
   type DiagramGroup,
@@ -40,7 +42,7 @@ export function defaultPorts(): Port[] {
 
 /** Deterministic, collision-free ID: `${prefix}-${n}` with the lowest free n. */
 export function nextId(doc: DiagramDocument, prefix: string, reserved: ReadonlySet<string> = new Set()): string {
-  const used = new Set<string>([...doc.nodes.map((n) => n.id), ...doc.groups.map((g) => g.id), ...doc.edges.map((e) => e.id), ...reserved]);
+  const used = new Set<string>([...doc.nodes.map((n) => n.id), ...doc.groups.map((g) => g.id), ...doc.edges.map((e) => e.id), ...doc.annotations.map((a) => a.id), ...reserved]);
   let index = 1;
   while (used.has(`${prefix}-${index}`)) index += 1;
   return `${prefix}-${index}`;
@@ -64,11 +66,29 @@ function requireEdge(doc: DiagramDocument, id: string): DiagramEdge {
   return edge;
 }
 
+function requireAnnotation(doc: DiagramDocument, id: string): DiagramAnnotation {
+  const annotation = doc.annotations.find((candidate) => candidate.id === id);
+  if (!annotation) throw new CommandError(`La nota «${id}» no existe.`);
+  return annotation;
+}
+
+function cloneRects(rects: Record<string, Rect>): Record<string, Rect> {
+  return Object.fromEntries(Object.entries(rects).map(([id, rect]) => [id, { ...rect }]));
+}
+
 function cloneLayout(layout: DiagramLayout): DiagramLayout {
-  return {
-    nodes: Object.fromEntries(Object.entries(layout.nodes).map(([id, rect]) => [id, { ...rect }])),
-    groups: Object.fromEntries(Object.entries(layout.groups).map(([id, rect]) => [id, { ...rect }])),
-  };
+  return { nodes: cloneRects(layout.nodes), groups: cloneRects(layout.groups), annotations: cloneRects(layout.annotations) };
+}
+
+type LayoutBucket = 'nodes' | 'groups' | 'annotations';
+const BUCKET: Record<'node' | 'group' | 'annotation', LayoutBucket> = { node: 'nodes', group: 'groups', annotation: 'annotations' };
+
+/** Container whose padding must follow an element's move; notes live on the canvas. */
+function containerOf(doc: DiagramDocument, type: 'node' | 'group' | 'annotation', id: string): string | null {
+  if (type === 'node') return requireNode(doc, id).groupId;
+  if (type === 'group') return requireGroup(doc, id).parentGroupId;
+  requireAnnotation(doc, id);
+  return null;
 }
 
 /**
@@ -212,7 +232,7 @@ export function setNodePorts(doc: DiagramDocument, id: string, ports: Port[]): D
 }
 
 export interface Move {
-  type: 'node' | 'group';
+  type: 'node' | 'group' | 'annotation';
   id: string;
   /** New position local to the element's container. */
   x: number;
@@ -223,30 +243,36 @@ export function moveElements(doc: DiagramDocument, moves: Move[]): DiagramDocume
   const layout = cloneLayout(doc.layout);
   const touched = new Set<string | null>();
   for (const move of moves) {
-    const bucket = move.type === 'node' ? layout.nodes : layout.groups;
-    const rect = bucket[move.id];
+    const rect = layout[BUCKET[move.type]][move.id];
     if (!rect) throw new CommandError(`No hay layout para «${move.id}».`);
     rect.x = Math.round(move.x);
     rect.y = Math.round(move.y);
-    touched.add(move.type === 'node' ? requireNode(doc, move.id).groupId : requireGroup(doc, move.id).parentGroupId);
+    touched.add(containerOf(doc, move.type, move.id));
   }
   let next: DiagramDocument = { ...doc, layout };
   for (const groupId of touched) next = growGroupsToContain(next, groupId);
   return next;
 }
 
-export function resizeElement(doc: DiagramDocument, ref: { type: 'node' | 'group'; id: string }, rect: Rect): DiagramDocument {
+const MIN_SIZE: Record<'node' | 'group' | 'annotation', { width: number; height: number }> = {
+  node: { width: 96, height: 48 },
+  group: { width: 160, height: 120 },
+  annotation: { width: 120, height: 48 },
+};
+
+export function resizeElement(doc: DiagramDocument, ref: { type: 'node' | 'group' | 'annotation'; id: string }, rect: Rect): DiagramDocument {
   const layout = cloneLayout(doc.layout);
-  const bucket = ref.type === 'node' ? layout.nodes : layout.groups;
+  const bucket = layout[BUCKET[ref.type]];
   if (!bucket[ref.id]) throw new CommandError(`No hay layout para «${ref.id}».`);
+  const min = MIN_SIZE[ref.type];
   bucket[ref.id] = {
     x: Math.round(rect.x),
     y: Math.round(rect.y),
-    width: Math.max(ref.type === 'node' ? 96 : 160, Math.round(rect.width)),
-    height: Math.max(ref.type === 'node' ? 48 : 120, Math.round(rect.height)),
+    width: Math.max(min.width, Math.round(rect.width)),
+    height: Math.max(min.height, Math.round(rect.height)),
   };
   const next = { ...doc, layout };
-  const containerId = ref.type === 'node' ? requireNode(doc, ref.id).groupId : requireGroup(doc, ref.id).parentGroupId;
+  const containerId = containerOf(doc, ref.type, ref.id);
   return growGroupsToContain(growGroupsToContain(next, ref.type === 'group' ? ref.id : null), containerId);
 }
 
@@ -410,6 +436,7 @@ export function deleteElements(doc: DiagramDocument, refs: ElementRef[], options
   const groupIds = refs.filter((ref) => ref.type === 'group').map((ref) => ref.id);
   const nodeIds = new Set(refs.filter((ref) => ref.type === 'node').map((ref) => ref.id));
   const edgeIds = new Set(refs.filter((ref) => ref.type === 'edge').map((ref) => ref.id));
+  const annotationIds = new Set(refs.filter((ref) => ref.type === 'annotation').map((ref) => ref.id));
 
   if (mode === 'delete') {
     const allGroups = new Set<string>();
@@ -440,9 +467,63 @@ export function deleteElements(doc: DiagramDocument, refs: ElementRef[], options
   if (nodeIds.size > 0) {
     const layout = cloneLayout(next.layout);
     nodeIds.forEach((id) => delete layout.nodes[id]);
-    next = { ...next, nodes: next.nodes.filter((node) => !nodeIds.has(node.id)), layout };
+    // Notes outlive the node they pointed at: they only lose the leader line.
+    const annotations = next.annotations.map((annotation) => (annotation.targetNodeId !== null && nodeIds.has(annotation.targetNodeId) ? { ...annotation, targetNodeId: null } : annotation));
+    next = { ...next, nodes: next.nodes.filter((node) => !nodeIds.has(node.id)), annotations, layout };
+  }
+  if (annotationIds.size > 0) {
+    const layout = cloneLayout(next.layout);
+    annotationIds.forEach((id) => delete layout.annotations[id]);
+    next = { ...next, annotations: next.annotations.filter((annotation) => !annotationIds.has(annotation.id)), layout };
   }
   return withoutEdges(next, (edge) => edgeIds.has(edge.id) || nodeIds.has(edge.source.nodeId) || nodeIds.has(edge.target.nodeId));
+}
+
+// ─── Annotations ────────────────────────────────────────────────────────────
+
+export interface AddAnnotationInput {
+  id: string;
+  text: string;
+  /** Absolute canvas position of the note's top-left corner. */
+  position: Point;
+  targetNodeId?: string | null;
+}
+
+function requireNoteText(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed === '') throw new CommandError('La nota no puede estar vacía.');
+  if (trimmed.length > LIMITS.maxNote) throw new CommandError(`La nota supera ${LIMITS.maxNote} caracteres.`);
+  return trimmed;
+}
+
+export function addAnnotation(doc: DiagramDocument, input: AddAnnotationInput): DiagramDocument {
+  if ([...doc.nodes, ...doc.groups, ...doc.edges, ...doc.annotations].some((element) => element.id === input.id)) throw new CommandError(`ID duplicado «${input.id}».`);
+  if (doc.annotations.length >= LIMITS.maxAnnotations) throw new CommandError(`Máximo ${LIMITS.maxAnnotations} notas por documento.`);
+  const targetNodeId = input.targetNodeId ?? null;
+  if (targetNodeId !== null) requireNode(doc, targetNodeId);
+  const annotation: DiagramAnnotation = { id: input.id, text: requireNoteText(input.text), targetNodeId };
+  return {
+    ...doc,
+    annotations: [...doc.annotations, annotation],
+    layout: {
+      ...doc.layout,
+      annotations: { ...doc.layout.annotations, [annotation.id]: { x: Math.round(input.position.x), y: Math.round(input.position.y), ...DEFAULT_ANNOTATION_SIZE } },
+    },
+  };
+}
+
+export type AnnotationPatch = Partial<Pick<DiagramAnnotation, 'text' | 'targetNodeId'>>;
+
+export function updateAnnotation(doc: DiagramDocument, id: string, patch: AnnotationPatch): DiagramDocument {
+  requireAnnotation(doc, id);
+  const text = patch.text === undefined ? undefined : requireNoteText(patch.text);
+  if (patch.targetNodeId) requireNode(doc, patch.targetNodeId);
+  return {
+    ...doc,
+    annotations: doc.annotations.map((annotation) =>
+      annotation.id === id ? { ...annotation, ...(text !== undefined ? { text } : {}), ...(patch.targetNodeId !== undefined ? { targetNodeId: patch.targetNodeId } : {}) } : annotation,
+    ),
+  };
 }
 
 // ─── Edges ──────────────────────────────────────────────────────────────────
@@ -642,6 +723,7 @@ export function setEdgeStep(doc: DiagramDocument, edgeId: string, stepId: string
 /**
  * Applies a computed layout to elements that still exist; unknown ids are
  * ignored. Manual edge bends are dropped: they were tuned for the old layout.
+ * Notes pointing at a node travel with it; free notes stay where they are.
  */
 export function applyLayout(doc: DiagramDocument, layout: DiagramLayout): DiagramDocument {
   const next = cloneLayout(doc.layout);
@@ -654,7 +736,19 @@ export function applyLayout(doc: DiagramDocument, layout: DiagramLayout): Diagra
     if (rect) next.groups[group.id] = { ...rect };
   }
   const edges = doc.edges.some((edge) => edge.bend) ? doc.edges.map(({ bend: _bend, ...edge }) => edge) : doc.edges;
-  return { ...doc, edges, layout: next };
+  const laidOut: DiagramDocument = { ...doc, edges, layout: next };
+  if (doc.annotations.every((annotation) => annotation.targetNodeId === null)) return laidOut;
+  const before = resolveAbsoluteLayout(doc).nodes;
+  const after = resolveAbsoluteLayout(laidOut).nodes;
+  for (const annotation of doc.annotations) {
+    const rect = next.annotations[annotation.id];
+    const from = annotation.targetNodeId ? before.get(annotation.targetNodeId) : undefined;
+    const to = annotation.targetNodeId ? after.get(annotation.targetNodeId) : undefined;
+    if (!rect || !from || !to) continue;
+    rect.x += to.x - from.x;
+    rect.y += to.y - from.y;
+  }
+  return laidOut;
 }
 
 export interface PresentationPatch {

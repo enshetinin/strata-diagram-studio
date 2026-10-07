@@ -79,7 +79,7 @@ export function buildElkGraph(doc: DiagramDocument, options: AutoLayoutOptions):
 /** Converts ELK output (already parent-relative) into the canonical layout. */
 export function readElkResult(doc: DiagramDocument, root: ElkNode): DiagramLayout {
   const groupIds = new Set(doc.groups.map((group) => group.id));
-  const layout: DiagramLayout = { nodes: {}, groups: {} };
+  const layout: DiagramLayout = { nodes: {}, groups: {}, annotations: {} };
   const visit = (elkNode: ElkNode) => {
     for (const child of elkNode.children ?? []) {
       const rect = { x: Math.round(child.x ?? 0), y: Math.round(child.y ?? 0), width: Math.round(child.width ?? 0), height: Math.round(child.height ?? 0) };

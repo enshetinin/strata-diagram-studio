@@ -271,6 +271,38 @@ function page(width: number, height: number, fold: number): Shape {
   ]);
 }
 
+/** Turned human figure, `s` tall (head included), standing on `base`. */
+function figure(kit: Kit, x: number, base: number, z: number, s: number) {
+  kit.lathe(
+    'body',
+    [
+      [0, 0],
+      [0.2 * s, 0],
+      [0.21 * s, 0.03 * s],
+      [0.17 * s, 0.08 * s],
+      [0.13 * s, 0.34 * s],
+      [0.15 * s, 0.46 * s],
+      [0.14 * s, 0.52 * s],
+      [0.09 * s, 0.56 * s],
+      [0.05 * s, 0.6 * s],
+      [0, 0.6 * s],
+    ],
+    x,
+    base,
+    z,
+    32,
+  );
+  kit.sphere('accent', 0.15 * s, x, base + 0.78 * s, z);
+}
+
+/** Bar from (x1, z1) to (x2, z2) in plan, `width` wide and `height` tall, resting on `y`. */
+function planBar(kit: Kit, role: ModelRole, x1: number, z1: number, x2: number, z2: number, width: number, height: number, y: number) {
+  const length = Math.hypot(x2 - x1, z2 - z1);
+  if (length < 1e-3) return;
+  // rotateY(θ) maps +X to (cos θ, −sin θ) in X/Z.
+  kit.flat(role, rect(length, width), height, (x1 + x2) / 2, y, (z1 + z2) / 2, Math.atan2(-(z2 - z1), x2 - x1));
+}
+
 // ── Models by kind ───────────────────────────────────────────────────────
 
 type Builder = (kit: Kit, w: number, d: number, h: number) => void;
@@ -673,37 +705,316 @@ const MODELS: Record<NodeKind, Builder> = {
     kit.pad(w, d);
     const base = PLINTH + 0.022;
     const fh = h - base;
-    const figure = (x: number, z: number, scale: number) => {
-      const s = fh * scale;
-      kit.lathe(
-        'body',
-        [
-          [0, 0],
-          [0.2 * s, 0],
-          [0.21 * s, 0.03 * s],
-          [0.17 * s, 0.08 * s],
-          [0.13 * s, 0.34 * s],
-          [0.15 * s, 0.46 * s],
-          [0.14 * s, 0.52 * s],
-          [0.09 * s, 0.56 * s],
-          [0.05 * s, 0.6 * s],
-          [0, 0.6 * s],
-        ],
-        x,
-        base,
-        z,
-        32,
-      );
-      kit.sphere('accent', 0.15 * s, x, base + 0.78 * s, z);
-    };
     if (w > d * 1.5) {
       const step = Math.min(w * 0.26, fh * 0.55);
-      figure(-step, -d * 0.08, 0.82);
-      figure(step, -d * 0.08, 0.82);
-      figure(0, d * 0.1, 1);
+      figure(kit, -step, base, -d * 0.08, fh * 0.82);
+      figure(kit, step, base, -d * 0.08, fh * 0.82);
+      figure(kit, 0, base, d * 0.1, fh);
     } else {
-      figure(0, 0, 1);
+      figure(kit, 0, base, 0, fh);
     }
+  },
+
+  /** Human in the loop: a figure beside a glass sheet carrying an accent tick. */
+  human(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.pad(w, d);
+    const base = PLINTH + 0.022;
+    const fh = h - base;
+    figure(kit, -Math.min(w * 0.16, 0.2), base, d * 0.04, fh);
+    const pw = Math.min(w * 0.3, fh * 0.55);
+    const ph = fh * 0.6;
+    const px = Math.min(w * 0.2, 0.26);
+    kit.block('glass', pw, ph, 0.02, px, base, -d * 0.06, 0.006);
+    const c = pw * 0.36;
+    kit.upright(
+      'accent',
+      polygon([
+        [-0.5 * c, 0.05 * c],
+        [-0.15 * c, -0.3 * c],
+        [0.55 * c, 0.42 * c],
+        [0.42 * c, 0.55 * c],
+        [-0.15 * c, -0.04 * c],
+        [-0.37 * c, 0.18 * c],
+      ]),
+      0.014,
+      px,
+      base + ph * 0.5,
+      -d * 0.06 + 0.017,
+    );
+  },
+
+  /** Phone standing on a dock: glass screen with a lit tile and list lines. */
+  mobile(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.block('body', Math.min(w * 0.36, 0.4), 0.03, d * 0.4, 0, PLINTH, -d * 0.04, 0.01);
+    const ph = h - PLINTH - 0.03;
+    const pw = Math.min(ph * 0.52, w * 0.4);
+    const z = -d * 0.06;
+    const y = PLINTH + 0.03;
+    kit.block('body', pw, ph, 0.045, 0, y, z, 0.03);
+    const face = z + 0.0225;
+    kit.block('glass', pw * 0.86, ph * 0.8, 0.012, 0, y + ph * 0.1, face);
+    kit.block('accent', pw * 0.62, ph * 0.16, 0.01, 0, y + ph * 0.66, face + 0.01, 0.006);
+    for (let i = 0; i < 3; i += 1) kit.block('detail', pw * (i === 2 ? 0.4 : 0.62), 0.012, 0.008, 0, y + ph * (0.5 - i * 0.1), face + 0.01, 0.004);
+    kit.block('detail', pw * 0.24, 0.012, 0.008, 0, y + ph * 0.04, face, 0.004);
+  },
+
+  /** Shipping container: ribbed body, door bars in accent, glass roof. */
+  container(kit, w, d, h) {
+    kit.plinth(w, d);
+    const bw = w * 0.86;
+    const bd = d * 0.62;
+    const bh = (h - PLINTH) * 0.72;
+    kit.block('body', bw, bh, bd, 0, PLINTH, 0, 0.015);
+    const ribs = Math.max(4, Math.floor((bw * 0.8) / 0.09));
+    for (let i = 0; i < ribs; i += 1) {
+      const x = -bw * 0.42 + (i * bw * 0.72) / (ribs - 1);
+      kit.block('glass', 0.014, bh * 0.8, 0.01, x, PLINTH + bh * 0.1, bd / 2 + 0.004);
+    }
+    for (const offset of [0.03, 0.07]) kit.block('accent', 0.014, bh * 0.8, 0.012, bw / 2 - offset, PLINTH + bh * 0.1, bd / 2 + 0.005, 0.004);
+    kit.block('glass', bw, (h - PLINTH) * 0.2, bd, 0, PLINTH + bh + GAP, 0, 0.012);
+  },
+
+  /** Virtual machines: three rack units with status LEDs under a glass cap. */
+  vm(kit, w, d, h) {
+    kit.plinth(w, d);
+    const bw = w * 0.84;
+    const bd = d * 0.72;
+    const gap = 0.02;
+    const unit = ((h - PLINTH) * 0.84 - gap * 2) / 3;
+    for (let i = 0; i < 3; i += 1) {
+      const y = PLINTH + i * (unit + gap);
+      kit.block('body', bw, unit, bd, 0, y, 0, 0.012);
+      kit.block('detail', bw * 0.46, 0.012, 0.01, -bw * 0.16, y + unit * 0.45, bd / 2, 0.004);
+      kit.block('accent', 0.03, 0.03, 0.012, bw * 0.36, y + unit * 0.35, bd / 2, 0.006);
+    }
+    kit.block('glass', bw, (h - PLINTH) * 0.1, bd, 0, PLINTH + 3 * unit + 2 * gap + GAP, 0, 0.01);
+  },
+
+  /** Scheduler: an upright clock dial with ink hands and an accent pivot. */
+  scheduler(kit, w, d, h) {
+    kit.plinth(w, d);
+    const r = Math.min(d * 0.36, w * 0.3);
+    kit.lathe('body', discProfile(r, 0.05, 0.02), 0, PLINTH);
+    const dial = Math.min((h - PLINTH - 0.05) / 2 - 0.005, w * 0.36);
+    const cy = PLINTH + 0.05 + dial;
+    kit.upright('body', circle(dial), 0.06, 0, cy, 0);
+    kit.upright('glass', circle(dial * 0.86), 0.012, 0, cy, 0.036);
+    kit.block('detail', 0.016, dial * 0.62, 0.01, 0, cy, 0.047, 0.004);
+    kit.block('detail', dial * 0.45, 0.016, 0.01, dial * 0.225, cy - 0.008, 0.047, 0.004);
+    kit.upright('accent', circle(0.026), 0.02, 0, cy, 0.05);
+  },
+
+  /** Search: a magnifying lens leaning over an index block. */
+  search(kit, w, d, h) {
+    kit.plinth(w, d);
+    const bh = (h - PLINTH) * 0.22;
+    kit.block('body', w * 0.72, bh, d * 0.6, 0, PLINTH);
+    for (let i = 0; i < 3; i += 1) kit.block('detail', w * (0.4 - i * 0.08), 0.012, 0.01, -w * 0.12, PLINTH + bh * (0.3 + i * 0.22), d * 0.3, 0.004);
+    const top = PLINTH + bh;
+    const tube = 0.03;
+    const ring = Math.min((h - top) * 0.34, w * 0.2);
+    const lx = -w * 0.06;
+    const ly = h - ring - tube;
+    kit.torus('body', ring, tube, lx, ly, 0, 0);
+    kit.upright('glass', circle(ring * 0.96), 0.014, lx, ly, 0);
+    const dir = Math.SQRT1_2;
+    const sx = lx + (ring + tube) * dir;
+    const sy = ly - (ring + tube) * dir;
+    const length = Math.max(0.04, Math.min((sy - top) / dir, ring * 1.2));
+    const ex = sx + length * dir;
+    const ey = sy - length * dir;
+    const t = 0.028;
+    kit.upright(
+      'accent',
+      polygon([
+        [sx - t * dir, sy - t * dir],
+        [ex - t * dir, ey - t * dir],
+        [ex + t * dir, ey + t * dir],
+        [sx + t * dir, sy + t * dir],
+      ]),
+      0.04,
+      0,
+      0,
+      0,
+    );
+  },
+
+  /** Registry: a shelf frame holding versioned boxes, one lit. */
+  registry(kit, w, d, h) {
+    kit.plinth(w, d);
+    const sw = w * 0.8;
+    const sd = d * 0.6;
+    const sh = h - PLINTH;
+    const t = 0.03;
+    for (const side of [-1, 1]) kit.block('body', t, sh, sd, side * (sw / 2 - t / 2), PLINTH, 0, 0.008);
+    const middle = PLINTH + sh * 0.46;
+    for (const y of [PLINTH, middle, h - t]) kit.block('body', sw, t, sd, 0, y, 0, 0.008);
+    const box = Math.min(sd * 0.62, (sh * 0.46 - t) * 0.78, (h - t - middle - t) * 0.78);
+    const inner = sw - t * 2;
+    [-0.3, 0, 0.3].forEach((f, i) => kit.block(i === 2 ? 'accent' : 'glass', box, box, box, f * inner, PLINTH + t, 0, 0.01));
+    [-0.22, 0.12].forEach((f) => kit.block('glass', box, box * 0.8, box, f * inner, middle + t, 0, 0.01));
+  },
+
+  /** Repository: a commit graph — main line and a lit branch — over a slab. */
+  repo(kit, w, d, h) {
+    kit.plinth(w, d);
+    const sh = (h - PLINTH) * 0.32;
+    kit.block('body', w * 0.84, sh, d * 0.7, 0, PLINTH);
+    const top = PLINTH + sh;
+    const r = Math.min(0.05, (h - top) * 0.32);
+    const y = h - r;
+    const zMain = d * 0.12;
+    const zBranch = -d * 0.18;
+    const xs = [-w * 0.3, 0, w * 0.3];
+    kit.block('detail', w * 0.6, 0.02, 0.02, 0, y - 0.01, zMain);
+    kit.block('detail', 0.02, 0.02, zMain - zBranch, 0, y - 0.01, (zMain + zBranch) / 2);
+    kit.block('detail', w * 0.15, 0.02, 0.02, w * 0.075, y - 0.01, zBranch);
+    for (const x of xs) {
+      kit.sphere('body', r, x, y, zMain);
+      kit.cylinder('glass', 0.012, 0.012, y - top, x, top, zMain, 10);
+    }
+    kit.sphere('accent', r, w * 0.15, y, zBranch);
+    kit.cylinder('glass', 0.012, 0.012, y - top, w * 0.15, top, zBranch, 10);
+  },
+
+  /** Notification: an upright envelope with a glass flap and an accent badge. */
+  notification(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.block('body', w * 0.5, 0.03, d * 0.4, 0, PLINTH, 0, 0.01);
+    const y = PLINTH + 0.03;
+    const badge = Math.min(0.06, w * 0.08);
+    const eh = Math.min(h - y - badge * 1.6, w * 0.4);
+    const ew = Math.min(w * 0.62, eh * 1.6);
+    kit.block('body', ew, eh, 0.04, 0, y, 0, 0.012);
+    kit.upright(
+      'glass',
+      polygon([
+        [-ew / 2, eh],
+        [0, eh * 0.38],
+        [ew / 2, eh],
+      ]),
+      0.012,
+      0,
+      y,
+      0.026,
+    );
+    kit.sphere('accent', badge, ew / 2 - badge * 0.2, Math.min(y + eh + badge * 0.3, h - badge), 0.02);
+  },
+
+  /** Guardrail: posts and rails with a glass panel; the top rail lit. */
+  guardrail(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.block('body', w * 0.82, 0.03, d * 0.4, 0, PLINTH, 0, 0.01);
+    const y = PLINTH + 0.03;
+    const ph = h - y;
+    for (const f of [-0.36, 0, 0.36]) kit.cylinder('body', 0.026, 0.03, ph, f * w, y, 0, 16);
+    kit.block('accent', w * 0.78, 0.036, 0.034, 0, h - 0.06, 0, 0.01);
+    kit.block('detail', w * 0.74, 0.02, 0.02, 0, y + ph * 0.5, 0, 0.006);
+    kit.block('glass', w * 0.7, ph * 0.38, 0.012, 0, y + ph * 0.06, 0);
+  },
+
+  /** Notebook: an open book — two raised pages over a glass cover, ribbon in accent. */
+  notebook(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.block('body', w * 0.8, 0.03, d * 0.7, 0, PLINTH, 0, 0.01);
+    const y = PLINTH + 0.03;
+    const pw = w * 0.36;
+    const t = 0.024;
+    const rise = Math.min(pw * 0.5, h - y - t - 0.01);
+    const depth = d * 0.6;
+    const page = (side: number, extra: number, lift: number) =>
+      polygon(
+        side < 0
+          ? [
+              [0, lift],
+              [-(pw + extra), rise + lift],
+              [-(pw + extra), rise + lift + t],
+              [0, lift + t],
+            ]
+          : [
+              [0, lift],
+              [0, lift + t],
+              [pw + extra, rise + lift + t],
+              [pw + extra, rise + lift],
+            ],
+      );
+    for (const side of [-1, 1]) {
+      kit.upright('glass', page(side, 0.02, 0), depth * 1.04, 0, y, 0);
+      kit.upright('body', page(side, 0, t), depth, 0, y, 0);
+    }
+    kit.block('accent', 0.03, t * 2 + 0.01, 0.012, w * 0.06, y, depth / 2 + 0.01, 0.004);
+  },
+
+  /** CDN: a central hub linked to four edge pucks. */
+  cdn(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.pad(w, d);
+    const base = PLINTH + 0.022;
+    const r = Math.min(w, d) * 0.2;
+    const ch = (h - base) * 0.62;
+    kit.lathe('body', discProfile(r, ch, Math.min(0.04, ch / 3)), 0, base);
+    kit.cylinder('accent', r * 0.4, r * 0.4, h - base - ch, 0, base + ch, 0, 24);
+    const sat = Math.min(0.06, d * 0.1);
+    for (const [sx, sz] of [
+      [-0.36, -0.3],
+      [0.36, -0.3],
+      [-0.36, 0.3],
+      [0.36, 0.3],
+    ] as const) {
+      const x = sx * w;
+      const z = sz * d;
+      kit.cylinder('glass', sat, sat, (h - base) * 0.32, x, base, z, 20);
+      const dist = Math.hypot(x, z);
+      const ux = x / dist;
+      const uz = z / dist;
+      planBar(kit, 'detail', ux * r, uz * r, x - ux * sat, z - uz * sat, 0.016, 0.016, base + 0.03);
+    }
+  },
+
+  /** DNS: a signpost with two arrow boards pointing opposite ways. */
+  dns(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.block('body', 0.16, 0.04, 0.16, 0, PLINTH, 0, 0.012);
+    kit.cylinder('body', 0.02, 0.022, h - PLINTH - 0.04, 0, PLINTH + 0.04, 0, 16);
+    const bh = (h - PLINTH) * 0.18;
+    const length = Math.min(w * 0.4, 0.5);
+    const outline: [number, number][] = [
+      [0, -bh / 2],
+      [length - bh / 2, -bh / 2],
+      [length, 0],
+      [length - bh / 2, bh / 2],
+      [0, bh / 2],
+    ];
+    const arrow = (dir: number) => polygon(outline.map(([x, y]) => [x * dir, y]));
+    kit.upright('accent', arrow(1), 0.03, 0.025, h - bh * 0.7, 0.03);
+    kit.upright('glass', arrow(-1), 0.03, -0.025, h - bh * 2.1, 0.03);
+  },
+
+  /** Firewall: a brick wall with one lit brick (an open port) and a glass coping. */
+  firewall(kit, w, d, h) {
+    kit.plinth(w, d);
+    const lw = w * 0.86;
+    const t = d * 0.32;
+    const wh = (h - PLINTH) * 0.78;
+    const rows = 4;
+    const rh = wh / rows;
+    const count = Math.max(3, Math.round(lw / 0.18));
+    const bw = lw / count;
+    const mortar = 0.012;
+    for (let row = 0; row < rows; row += 1) {
+      const y = PLINTH + row * rh;
+      // Odd rows start half a brick in: running bond.
+      const edges = row % 2 === 0 ? Array.from({ length: count + 1 }, (_, i) => -lw / 2 + i * bw) : [-lw / 2, ...Array.from({ length: count }, (_, i) => -lw / 2 + bw / 2 + i * bw), lw / 2];
+      for (let i = 0; i < edges.length - 1; i += 1) {
+        const x0 = edges[i] ?? 0;
+        const x1 = edges[i + 1] ?? 0;
+        const lit = row === 1 && i === Math.floor(edges.length / 2);
+        kit.block(lit ? 'accent' : 'body', x1 - x0 - mortar, rh - mortar, t, (x0 + x1) / 2, y, 0, 0.008);
+      }
+    }
+    kit.block('glass', lw, (h - PLINTH) * 0.14, t * 1.1, 0, PLINTH + wh + GAP, 0, 0.01);
   },
 
   /** Third party: a sealed block behind a dashed fence of posts — outside your boundary. */

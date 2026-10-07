@@ -62,6 +62,11 @@ app/         shell, paneles, diálogos, atajos y arranque
     al descomprimir. El solo lectura se impone en un único punto: `documentStore.readOnly` hace que
     `execute` rechace cualquier cambio y que el autosave lo ignore, así que ninguna vista necesita
     saber que el documento es compartido.
+14. **Notas como entidad propia.** `annotations[]` vive fuera de nodos y relaciones: no cuenta como
+    componente, no sale en la leyenda ni en el contrato del generador, y no puede conectarse. Es un
+    campo añadido a la versión 1 con valor por defecto (`[]` y `layout.annotations = {}`), así que los
+    documentos anteriores siguen abriéndose. Una nota puede señalar un nodo (`targetNodeId`): si el
+    nodo se borra, la nota se queda sin guía; si el auto-layout lo mueve, la nota lo acompaña.
 
 ## Estilo de la interfaz
 

@@ -225,6 +225,32 @@ test('dragging a selected edge slides its middle segment; double click restores 
   await expect.poll(drift).toBeLessThan(1);
 });
 
+test('a note points at the selected component, edits inline and is not counted as one', async ({ page }) => {
+  await freshStart(page, '?template=aws-load-testing');
+  await page.getByRole('radio', { name: 'Editar 2D' }).click();
+  await page.locator('.react-flow__node[data-id="n-runner"]').click();
+  await page.getByRole('button', { name: 'Añadir nota' }).click();
+  const note = page.locator('.strata-note');
+  await expect(note).toHaveCount(1);
+  await expect(note.locator('.strata-note__leader line')).toHaveCount(1);
+  await expect(page.getByLabel('Señala a')).toHaveValue('n-runner');
+
+  await note.dblclick();
+  await page.getByLabel('Texto de la nota').fill('Reintenta tres veces');
+  await page.keyboard.press('Control+Enter');
+  await expect(note).toContainText('Reintenta tres veces');
+
+  await openLeftTab(page, 'Estructura');
+  await expect(page.getByText('16 componentes · 17 relaciones · 5 grupos')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Nota → Task runner\s+Reintenta tres veces/ })).toBeVisible();
+
+  // Deleting the component keeps the note without its leader.
+  await page.locator('.react-flow__node[data-id="n-runner"]').click();
+  await page.keyboard.press('Delete');
+  await expect(note.locator('.strata-note__leader')).toHaveCount(0);
+  await expect(note).toContainText('Reintenta tres veces');
+});
+
 /** Point halfway along an SVG path, relative to the edge's interaction element box. */
 async function midpoint(page: import('@playwright/test').Page, selector: string) {
   const point = await page.locator(selector).evaluate((element) => {

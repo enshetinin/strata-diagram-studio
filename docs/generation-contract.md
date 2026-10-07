@@ -52,7 +52,7 @@ las claves del modelo viven solo en el servidor. Nunca uses `VITE_*` para secret
   "schemaVersion": 1,
   "prompt": "pipeline de eventos con pagos e inventario",
   "limits": { "maxNodes": 80, "maxEdges": 160, "maxGroups": 24 },
-  "nodeKinds": ["client", "device", "frontend", "api", "service", "function", "workflow", "database", "vector", "warehouse", "storage", "document", "queue", "stream", "cache", "agent", "model", "tool", "gateway", "balancer", "identity", "secret", "observability", "external", "generic"],
+  "nodeKinds": ["client", "human", "device", "frontend", "mobile", "api", "service", "container", "vm", "function", "scheduler", "workflow", "database", "vector", "search", "warehouse", "storage", "document", "registry", "repo", "queue", "stream", "notification", "cache", "agent", "model", "guardrail", "tool", "notebook", "gateway", "balancer", "cdn", "dns", "firewall", "identity", "secret", "observability", "external", "generic"],
   "relationKinds": ["request", "response", "data", "event", "async", "dependency", "telemetry", "control", "auth", "stream", "replication", "sync", "backup", "deploy"]
 }
 ```

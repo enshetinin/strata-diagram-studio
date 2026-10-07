@@ -6,7 +6,7 @@
 import { Position } from '@xyflow/system';
 import { strataEdgePath } from '../editor2d/edgePath';
 import { GROUP_KIND_LABEL, KIND_INFO } from '../../domain/catalog';
-import { documentBounds, portOffset, resolveAbsoluteLayout } from '../../domain/geometry';
+import { documentBounds, leaderLine, portOffset, resolveAbsoluteLayout } from '../../domain/geometry';
 import type { DiagramDocument, PortSide } from '../../domain/types';
 import { groupDepths, topLevelAccents } from '../editor2d/adapter';
 import { accent2d, KIND_GLYPH, RELATION_STROKE } from '../editor2d/visual';
@@ -66,7 +66,7 @@ export function documentToSvg(doc: DiagramDocument, options: SvgOptions = {}): s
     out.push(`@font-face{font-family:'Figtree';font-weight:500;src:url(data:font/woff;base64,${options.fontData.regular}) format('woff');}`);
     out.push(`@font-face{font-family:'Figtree';font-weight:700;src:url(data:font/woff;base64,${options.fontData.bold}) format('woff');}`);
   }
-  out.push(`text{font-family:${FONT_STACK};fill:#0D1B2E}.kind{font-size:10px;letter-spacing:.06em;fill:#5C6675}.label{font-size:14px;font-weight:700}.meta{font-size:11px;fill:#5C6675}.group{font-size:12px;font-weight:700;letter-spacing:.04em}.edge-label{font-size:11px}.title{font-size:20px;font-weight:700}`);
+  out.push(`text{font-family:${FONT_STACK};fill:#0D1B2E}.kind{font-size:10px;letter-spacing:.06em;fill:#5C6675}.label{font-size:14px;font-weight:700}.meta{font-size:11px;fill:#5C6675}.group{font-size:12px;font-weight:700;letter-spacing:.04em}.edge-label{font-size:11px}.title{font-size:20px;font-weight:700}.note{font-size:12px}`);
   out.push('</style>');
   for (const [relation, stroke] of Object.entries(RELATION_STROKE)) {
     out.push(`<marker id="arrow-${relation}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="${stroke.color}"/></marker>`);
@@ -143,6 +143,27 @@ export function documentToSvg(doc: DiagramDocument, options: SvgOptions = {}): s
     out.push(`<text class="kind" x="${x + 44}" y="${y + 22}">${escapeXml(KIND_INFO[node.kind].label.toUpperCase())}</text>`);
     lines.forEach((line, index) => out.push(`<text class="label" x="${x + 44}" y="${y + 40 + index * 16}">${escapeXml(line)}</text>`));
     if (node.provider && lines.length === 1) out.push(`<text class="meta" x="${x + 44}" y="${y + 60}">${escapeXml(fit(node.provider, maxChars + 4))}</text>`);
+    out.push('</g>');
+  }
+
+  // Notes last: marginalia above everything, like the editor.
+  for (const annotation of doc.annotations) {
+    const rect = abs.annotations.get(annotation.id);
+    if (!rect) continue;
+    const x = rect.x + ox;
+    const y = rect.y + oy;
+    out.push(`<g data-annotation="${escapeXml(annotation.id)}">`);
+    const targetRect = annotation.targetNodeId ? abs.nodes.get(annotation.targetNodeId) : undefined;
+    const line = targetRect ? leaderLine(rect, targetRect) : null;
+    if (line) {
+      out.push(`<line x1="${line.from.x + ox}" y1="${line.from.y + oy}" x2="${line.to.x + ox}" y2="${line.to.y + oy}" stroke="#5C6675" stroke-width="1" stroke-dasharray="3 3"/>`);
+      out.push(`<circle cx="${line.to.x + ox}" cy="${line.to.y + oy}" r="2.5" fill="#0D1B2E"/>`);
+    }
+    out.push(`<rect x="${x}" y="${y}" width="${rect.width}" height="${rect.height}" fill="#FFFFFF"/>`);
+    out.push(`<line x1="${x}" y1="${y}" x2="${x + rect.width}" y2="${y}" stroke="#0D1B2E" stroke-width="1"/>`);
+    out.push(`<text class="kind" x="${x + 10}" y="${y + 18}">NOTA</text>`);
+    const maxLines = Math.max(1, Math.floor((rect.height - 30) / 16));
+    wrapText(annotation.text, Math.max(8, Math.floor((rect.width - 20) / 6.4)), maxLines).forEach((text, index) => out.push(`<text class="note" x="${x + 10}" y="${y + 36 + index * 16}">${escapeXml(text)}</text>`));
     out.push('</g>');
   }
 

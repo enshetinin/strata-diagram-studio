@@ -165,7 +165,7 @@ export class DiagramBuilder {
     }
 
     const originOf = (groupId: string | null) => (groupId ? (groupRects.get(groupId) ?? { x: 0, y: 0 }) : { x: 0, y: 0 });
-    const layout: DiagramDocument['layout'] = { nodes: {}, groups: {} };
+    const layout: DiagramDocument['layout'] = { nodes: {}, groups: {}, annotations: {} };
     for (const group of this.groups) {
       const rect = groupRects.get(group.id);
       if (!rect) continue;
@@ -188,6 +188,7 @@ export class DiagramBuilder {
       groups: [...this.groups].sort((a, b) => depth(a) - depth(b)),
       nodes: this.nodes,
       edges: this.edges,
+      annotations: [],
       layout,
       presentation: {
         styleId: this.meta.styleId,

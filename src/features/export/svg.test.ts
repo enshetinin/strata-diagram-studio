@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { addAnnotation } from '../../domain/commands';
 import { parseDocumentText, serializeDocument } from '../../domain/parse';
 import { DiagramBuilder } from '../templates/builder';
 import { documentToSvg } from './svg';
@@ -31,5 +32,14 @@ describe('new group and relation kinds', () => {
     expect(frames.find((frame) => frame.id === 'g-prod')?.attrs).not.toContain('stroke-dasharray');
     expect(svg).toContain('ENTORNO');
     expect(svg).toContain('url(#arrow-auth)');
+  });
+
+  it('exports notes with their leader line above the components', () => {
+    const doc = addAnnotation(boundaryDocument(), { id: 'a-1', text: 'Solo con MFA', position: { x: 0, y: -200 }, targetNodeId: 'n-idp' });
+    const svg = documentToSvg(doc);
+    const note = svg.slice(svg.indexOf('<g data-annotation="a-1">'));
+    expect(svg.indexOf('<g data-annotation')).toBeGreaterThan(svg.lastIndexOf('<g data-node'));
+    expect(note).toContain('stroke-dasharray="3 3"');
+    expect(note).toContain('Solo con MFA');
   });
 });

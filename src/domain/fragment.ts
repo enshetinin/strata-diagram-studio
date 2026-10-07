@@ -10,8 +10,19 @@ import { z } from 'zod';
 import { CommandError, descendantGroups, growGroupsToContain, nextId } from './commands';
 import { containerOrigin, resolveAbsoluteLayout, unionRects, type Point } from './geometry';
 import { parseDocument } from './parse';
-import { edgeSchema, groupSchema, LIMITS, nodeSchema, rectSchema } from './schema';
-import { DEFAULT_NODE_SIZE, SCHEMA_VERSION, type DiagramDocument, type DiagramEdge, type DiagramGroup, type DiagramNode, type ElementRef, type Rect } from './types';
+import { annotationSchema, edgeSchema, groupSchema, LIMITS, nodeSchema, rectSchema } from './schema';
+import {
+  DEFAULT_ANNOTATION_SIZE,
+  DEFAULT_NODE_SIZE,
+  SCHEMA_VERSION,
+  type DiagramAnnotation,
+  type DiagramDocument,
+  type DiagramEdge,
+  type DiagramGroup,
+  type DiagramNode,
+  type ElementRef,
+  type Rect,
+} from './types';
 
 export const FRAGMENT_FORMAT = 'strata/fragment';
 
@@ -23,7 +34,9 @@ export interface DiagramFragment {
   nodes: DiagramNode[];
   groups: DiagramGroup[];
   edges: DiagramEdge[];
-  layout: { nodes: Record<string, Rect>; groups: Record<string, Rect> };
+  /** Notes are always roots; a target outside the fragment is dropped on paste. */
+  annotations: DiagramAnnotation[];
+  layout: { nodes: Record<string, Rect>; groups: Record<string, Rect>; annotations: Record<string, Rect> };
 }
 
 const fragmentSchema = z.object({
@@ -33,7 +46,8 @@ const fragmentSchema = z.object({
   nodes: z.array(nodeSchema).max(LIMITS.maxNodes),
   groups: z.array(groupSchema).max(LIMITS.maxGroups),
   edges: z.array(edgeSchema).max(LIMITS.maxEdges),
-  layout: z.object({ nodes: z.record(z.string(), rectSchema), groups: z.record(z.string(), rectSchema) }),
+  annotations: z.array(annotationSchema).max(LIMITS.maxAnnotations).default([]),
+  layout: z.object({ nodes: z.record(z.string(), rectSchema), groups: z.record(z.string(), rectSchema), annotations: z.record(z.string(), rectSchema).default({}) }),
 });
 
 /**
@@ -51,11 +65,17 @@ export function extractFragment(doc: DiagramDocument, refs: readonly ElementRef[
   const selectedNodes = new Set(refs.filter((ref) => ref.type === 'node').map((ref) => ref.id));
   const nodes = doc.nodes.filter((node) => selectedNodes.has(node.id) || (node.groupId !== null && groupIds.has(node.groupId)));
   const groups = doc.groups.filter((group) => groupIds.has(group.id));
-  if (nodes.length === 0 && groups.length === 0) return null;
+  const selectedAnnotations = new Set(refs.filter((ref) => ref.type === 'annotation').map((ref) => ref.id));
+  const annotations = doc.annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
+  if (nodes.length === 0 && groups.length === 0 && annotations.length === 0) return null;
 
   const nodeIds = new Set(nodes.map((node) => node.id));
   const abs = resolveAbsoluteLayout(doc);
-  const layout: DiagramFragment['layout'] = { nodes: {}, groups: {} };
+  const layout: DiagramFragment['layout'] = { nodes: {}, groups: {}, annotations: {} };
+  for (const annotation of annotations) {
+    const rect = doc.layout.annotations[annotation.id];
+    if (rect) layout.annotations[annotation.id] = { ...rect };
+  }
   const containers = new Set<string | null>();
 
   const fragmentGroups = groups.map((group): DiagramGroup => {
@@ -81,6 +101,7 @@ export function extractFragment(doc: DiagramDocument, refs: readonly ElementRef[
     nodes: fragmentNodes,
     groups: fragmentGroups,
     edges,
+    annotations: annotations.map((annotation) => structuredClone(annotation)),
     layout,
   };
 }
@@ -90,8 +111,12 @@ function fragmentFromDocument(doc: DiagramDocument): DiagramFragment {
   const fragment = extractFragment(doc, [
     ...doc.nodes.map((node) => ({ type: 'node' as const, id: node.id })),
     ...doc.groups.map((group) => ({ type: 'group' as const, id: group.id })),
+    ...doc.annotations.map((annotation) => ({ type: 'annotation' as const, id: annotation.id })),
   ]);
-  return { ...(fragment ?? { format: FRAGMENT_FORMAT, schemaVersion: SCHEMA_VERSION, nodes: [], groups: [], edges: [], layout: { nodes: {}, groups: {} } }), origin: { documentId: doc.id, containerId: null } };
+  return {
+    ...(fragment ?? { format: FRAGMENT_FORMAT, schemaVersion: SCHEMA_VERSION, nodes: [], groups: [], edges: [], annotations: [], layout: { nodes: {}, groups: {}, annotations: {} } }),
+    origin: { documentId: doc.id, containerId: null },
+  };
 }
 
 export type ClipboardParse = { status: 'none' } | { status: 'ok'; fragment: DiagramFragment } | { status: 'invalid'; message: string };
@@ -147,8 +172,13 @@ export interface PastePlacement {
 export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, placement: PastePlacement): { doc: DiagramDocument; roots: ElementRef[] } {
   const { containerId } = placement;
   if (containerId !== null && !doc.groups.some((group) => group.id === containerId)) throw new CommandError(`El grupo «${containerId}» no existe.`);
-  if (fragment.nodes.length === 0 && fragment.groups.length === 0) throw new CommandError('No hay nada que pegar.');
-  if (doc.nodes.length + fragment.nodes.length > LIMITS.maxNodes || doc.groups.length + fragment.groups.length > LIMITS.maxGroups || doc.edges.length + fragment.edges.length > LIMITS.maxEdges) {
+  if (fragment.nodes.length === 0 && fragment.groups.length === 0 && fragment.annotations.length === 0) throw new CommandError('No hay nada que pegar.');
+  if (
+    doc.nodes.length + fragment.nodes.length > LIMITS.maxNodes ||
+    doc.groups.length + fragment.groups.length > LIMITS.maxGroups ||
+    doc.edges.length + fragment.edges.length > LIMITS.maxEdges ||
+    doc.annotations.length + fragment.annotations.length > LIMITS.maxAnnotations
+  ) {
     throw new CommandError('Pegar superaría el tamaño máximo del documento.');
   }
 
@@ -167,13 +197,14 @@ export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, p
   const groupRect = (group: DiagramGroup) => fragment.layout.groups[group.id] ?? fallbackRect();
   const nodeRect = (node: DiagramNode) => fragment.layout.nodes[node.id] ?? fallbackRect();
 
-  const rootRects = [...fragment.groups.filter(isRootGroup).map(groupRect), ...fragment.nodes.filter(isRootNode).map(nodeRect)];
+  const annotationRect = (annotation: DiagramAnnotation) => fragment.layout.annotations[annotation.id] ?? { x: 0, y: 0, ...DEFAULT_ANNOTATION_SIZE };
+  const rootRects = [...fragment.groups.filter(isRootGroup).map(groupRect), ...fragment.nodes.filter(isRootNode).map(nodeRect), ...fragment.annotations.map(annotationRect)];
   const bounds = unionRects(rootRects) ?? { x: 0, y: 0, width: 0, height: 0 };
   const shift = placement.at ? { x: placement.at.x - bounds.x, y: placement.at.y - bounds.y } : (placement.offset ?? { x: 0, y: 0 });
   const origin = containerOrigin(doc, containerId);
   const place = (rect: Rect, root: boolean): Rect => (root ? { ...rect, x: Math.round(rect.x + shift.x - origin.x), y: Math.round(rect.y + shift.y - origin.y) } : { ...rect });
 
-  const layout = { nodes: { ...doc.layout.nodes }, groups: { ...doc.layout.groups } };
+  const layout = { nodes: { ...doc.layout.nodes }, groups: { ...doc.layout.groups }, annotations: { ...doc.layout.annotations } };
   const roots: ElementRef[] = [];
 
   const groups = fragment.groups.map((group): DiagramGroup => {
@@ -199,6 +230,22 @@ export function pasteFragment(doc: DiagramDocument, fragment: DiagramFragment, p
     return [copy];
   });
 
-  const next: DiagramDocument = { ...doc, nodes: [...doc.nodes, ...nodes], groups: [...doc.groups, ...groups], edges: [...doc.edges, ...edges], layout };
+  // Notes sit on the canvas, never in the paste container: shift only, in absolute coordinates.
+  const annotations = fragment.annotations.map((annotation): DiagramAnnotation => {
+    const id = fresh('a');
+    const rect = annotationRect(annotation);
+    layout.annotations[id] = { ...rect, x: Math.round(rect.x + shift.x), y: Math.round(rect.y + shift.y) };
+    roots.push({ type: 'annotation', id });
+    return { ...structuredClone(annotation), id, targetNodeId: annotation.targetNodeId ? (nodeMap.get(annotation.targetNodeId) ?? null) : null };
+  });
+
+  const next: DiagramDocument = {
+    ...doc,
+    nodes: [...doc.nodes, ...nodes],
+    groups: [...doc.groups, ...groups],
+    edges: [...doc.edges, ...edges],
+    annotations: [...doc.annotations, ...annotations],
+    layout,
+  };
   return { doc: growGroupsToContain(next, containerId), roots };
 }

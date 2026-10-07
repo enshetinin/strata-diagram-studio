@@ -90,7 +90,14 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
   useEffect(() => {
     if (!focusRequest) return;
     const { ref } = focusRequest;
-    const element = ref.type === 'node' ? model.nodes.find((node) => node.id === ref.id) : ref.type === 'group' ? model.groups.find((group) => group.id === ref.id) : null;
+    const element =
+      ref.type === 'node'
+        ? model.nodes.find((node) => node.id === ref.id)
+        : ref.type === 'group'
+          ? model.groups.find((group) => group.id === ref.id)
+          : ref.type === 'annotation'
+            ? model.annotations.find((annotation) => annotation.id === ref.id)
+            : null;
     if (!element) return;
     const target = new Vector3(element.x, element.top, element.z);
     const span = Math.max(element.sizeX, element.sizeZ, 1.5);

@@ -12,6 +12,10 @@
   añadir un hijo fuera del área hace crecer el grupo y sus ancestros sin mover posiciones absolutas.
 - Los puertos se reparten uniformemente en su lado (`portOffset`); React Flow (handles), el SVG y
   la escena 3D usan la misma función.
+- `layout.annotations[id]` (notas) es **absoluto**: las notas nunca pertenecen a un grupo. Su línea
+  guía sale de `leaderLine` (borde de la nota → borde del nodo, por la recta entre centros), que
+  usan el editor 2D, el SVG y la escena 3D. En 3D la nota es una tarjeta a ras de suelo y la guía
+  termina a media altura del cuerpo del nodo.
 
 ## React Flow
 
