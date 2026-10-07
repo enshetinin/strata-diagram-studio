@@ -80,6 +80,7 @@ export function validateInvariants(doc: DiagramDocument): ValidationIssue[] {
   doc.groups.forEach((group, index) => claim(group.id, `groups[${index}]`));
   doc.nodes.forEach((node, index) => claim(node.id, `nodes[${index}]`));
   doc.edges.forEach((edge, index) => claim(edge.id, `edges[${index}]`));
+  doc.annotations.forEach((annotation, index) => claim(annotation.id, `annotations[${index}]`));
 
   const groups = new Map(doc.groups.map((group) => [group.id, group]));
   const nodes = new Map<string, DiagramNode>(doc.nodes.map((node) => [node.id, node]));
@@ -142,6 +143,19 @@ export function validateInvariants(doc: DiagramDocument): ValidationIssue[] {
       }
     });
   });
+
+  const annotations = new Set(doc.annotations.map((annotation) => annotation.id));
+  doc.annotations.forEach((annotation, index) => {
+    if (annotation.targetNodeId !== null && !nodes.has(annotation.targetNodeId)) {
+      issues.push({ path: `annotations[${index}].targetNodeId`, message: `La nota «${annotation.id}» apunta a un nodo inexistente.` });
+    }
+    if (!doc.layout.annotations[annotation.id]) {
+      issues.push({ path: `layout.annotations.${annotation.id}`, message: `Falta el layout de la nota «${annotation.id}».` });
+    }
+  });
+  for (const key of Object.keys(doc.layout.annotations)) {
+    if (!annotations.has(key)) issues.push({ path: `layout.annotations.${key}`, message: `Layout huérfano «${key}».` });
+  }
 
   for (const key of Object.keys(doc.layout.nodes)) {
     if (!nodes.has(key)) issues.push({ path: `layout.nodes.${key}`, message: `Layout huérfano «${key}».` });

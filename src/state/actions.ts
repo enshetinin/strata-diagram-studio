@@ -4,11 +4,11 @@
  * mutating state directly.
  */
 import * as cmd from '../domain/commands';
-import { deepestGroupAt, documentBounds, resolveAbsoluteLayout, type Point } from '../domain/geometry';
+import { deepestGroupAt, documentBounds, findFreeSpot, resolveAbsoluteLayout, type Point } from '../domain/geometry';
 import { extractFragment, parseClipboardText, pasteFragment, type DiagramFragment, type PastePlacement } from '../domain/fragment';
-import type { DiagramDocument, EdgeEndpoint, ElementRef, NodeKind, StyleId } from '../domain/types';
+import { DEFAULT_ANNOTATION_SIZE, type DiagramDocument, type EdgeEndpoint, type ElementRef, type StyleId } from '../domain/types';
 import { STYLE_IDS } from '../domain/types';
-import { KIND_INFO } from '../domain/catalog';
+import type { NodeSeed } from '../domain/library';
 import { effectiveNarrative } from '../domain/narrative';
 import { pasteAnchor } from '../features/editor2d/pasteAnchor';
 import { computeAutoLayout, type LayoutDirection } from '../features/layout/elkLayout';
@@ -33,35 +33,70 @@ function run(label: string, command: (d: DiagramDocument) => DiagramDocument, su
 useDocumentStore.subscribe((state, previous) => {
   if (state.doc === previous.doc) return;
   const { selection, isolatedGroupId } = ui();
-  const exists = (ref: ElementRef) =>
-    ref.type === 'node' ? state.doc.nodes.some((n) => n.id === ref.id) : ref.type === 'edge' ? state.doc.edges.some((e) => e.id === ref.id) : state.doc.groups.some((g) => g.id === ref.id);
+  const exists = (ref: ElementRef) => {
+    switch (ref.type) {
+      case 'node':
+        return state.doc.nodes.some((n) => n.id === ref.id);
+      case 'edge':
+        return state.doc.edges.some((e) => e.id === ref.id);
+      case 'group':
+        return state.doc.groups.some((g) => g.id === ref.id);
+      case 'annotation':
+        return state.doc.annotations.some((a) => a.id === ref.id);
+    }
+  };
   const kept = selection.filter(exists);
   if (kept.length !== selection.length) ui().select(kept);
   if (isolatedGroupId && !state.doc.groups.some((group) => group.id === isolatedGroupId)) ui().isolateGroup(null);
 });
 
-export function addNodeAt(kind: NodeKind, position: { x: number; y: number }, groupId: string | null = null): string | null {
+export function addNodeAt(seed: NodeSeed, position: { x: number; y: number }, groupId: string | null = null): string | null {
   const id = cmd.nextId(doc(), 'n');
-  const ok = run(`Añadir ${KIND_INFO[kind].label.toLowerCase()}`, (d) => cmd.addNode(d, { id, kind, label: KIND_INFO[kind].label, position, groupId }));
+  const ok = run(`Añadir ${seed.label}`, (d) => cmd.addNode(d, { ...seed, id, position, groupId }));
   if (!ok) return null;
   ui().select([{ type: 'node', id }]);
   return id;
 }
 
 /** Adds a node to the right of the current content (used by keyboard / library buttons). */
-export function addNodeNearContent(kind: NodeKind): string | null {
+export function addNodeNearContent(seed: NodeSeed): string | null {
   const current = doc();
   const abs = resolveAbsoluteLayout(current);
   const primary = ui().selection.find((ref) => ref.type === 'node');
   const anchor = primary ? abs.nodes.get(primary.id) : undefined;
-  if (anchor) return addNodeAt(kind, { x: anchor.x, y: anchor.y + anchor.height + 64 });
+  if (anchor) return addNodeAt(seed, { x: anchor.x, y: anchor.y + anchor.height + 64 });
   let maxX = 0;
   let minY = Infinity;
   for (const rect of [...abs.nodes.values(), ...abs.groups.values()]) {
     maxX = Math.max(maxX, rect.x + rect.width);
     minY = Math.min(minY, rect.y);
   }
-  return addNodeAt(kind, { x: maxX + 96, y: Number.isFinite(minY) ? minY : 0 });
+  return addNodeAt(seed, { x: maxX + 96, y: Number.isFinite(minY) ? minY : 0 });
+}
+
+/**
+ * New note near `position`. With exactly one node selected the note points
+ * at it and sits above its right edge instead. Either way it moves to the
+ * nearest spot that does not cover a component or another note.
+ */
+export function addAnnotationAt(position: Point): string | null {
+  const current = doc();
+  const selected = ui().selection.filter((ref) => ref.type === 'node');
+  const target = selected.length === 1 ? (selected[0]?.id ?? null) : null;
+  const abs = resolveAbsoluteLayout(current);
+  const targetRect = target ? abs.nodes.get(target) : undefined;
+  const preferred = targetRect ? { x: targetRect.x + targetRect.width + 48, y: targetRect.y - DEFAULT_ANNOTATION_SIZE.height - 32 } : position;
+  // Keep clear of components and other notes so the text stays legible in 3D too.
+  const at = findFreeSpot(preferred, DEFAULT_ANNOTATION_SIZE, [...abs.nodes.values(), ...abs.annotations.values()]);
+  const id = cmd.nextId(current, 'a');
+  const ok = run('Añadir nota', (d) => cmd.addAnnotation(d, { id, text: 'Nota', position: at, targetNodeId: target }));
+  if (!ok) return null;
+  ui().select([{ type: 'annotation', id }]);
+  return id;
+}
+
+export function updateAnnotation(id: string, patch: cmd.AnnotationPatch): boolean {
+  return run(patch.text !== undefined ? 'Editar nota' : 'Cambiar destino de la nota', (d) => cmd.updateAnnotation(d, id, patch));
 }
 
 export function connect(source: EdgeEndpoint, target: EdgeEndpoint): boolean {
@@ -178,7 +213,7 @@ let lastCopied: { text: string; pastes: number } | null = null;
 export function copySelection(): string | null {
   const fragment = extractFragment(doc(), ui().selection);
   if (!fragment) {
-    ui().notify('warning', 'Selecciona nodos o grupos para copiar.');
+    ui().notify('warning', 'Selecciona nodos, grupos o notas para copiar.');
     return null;
   }
   const text = JSON.stringify(fragment);

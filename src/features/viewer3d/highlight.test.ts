@@ -27,4 +27,20 @@ describe('3D emphasis', () => {
     expect(state.node('n-qa')).toBe('related');
     expect(state.node('n-runner')).toBe('dimmed');
   });
+
+  it('a selected note emphasises the node it points at; a free note dims nothing', () => {
+    const withNotes = {
+      ...doc,
+      annotations: [
+        { id: 'a-1', text: 'Escala horizontal', targetNodeId: 'n-runner' },
+        { id: 'a-2', text: 'Libre', targetNodeId: null },
+      ],
+      layout: { ...doc.layout, annotations: { 'a-1': { x: 0, y: -200, width: 200, height: 96 }, 'a-2': { x: 300, y: -200, width: 200, height: 96 } } },
+    };
+    const pointed = computeHighlight(withNotes, [{ type: 'annotation', id: 'a-1' }], null, null);
+    expect(pointed.node('n-runner')).toBe('related');
+    expect(pointed.node('n-qa')).toBe('dimmed');
+    const free = computeHighlight(withNotes, [{ type: 'annotation', id: 'a-2' }], null, null);
+    expect(free.node('n-qa')).toBe('normal');
+  });
 });

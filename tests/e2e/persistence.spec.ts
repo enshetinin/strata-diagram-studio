@@ -12,7 +12,7 @@ test.describe('save, reload, import and export', () => {
     await freshStart(page, '?template=edge-iot');
     await expectSceneCounts(page, { nodes: 17, edges: 20 });
     await openLeftTab(page, 'Biblioteca');
-    await page.getByRole('button', { name: 'Añadir Caché' }).click();
+    await page.getByRole('button', { name: 'Añadir Caché', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: /^Guardado/ })).toBeVisible({ timeout: 10_000 });
     // Reload without URL parameters: the autosaved document must come back.
     await page.goto('/');

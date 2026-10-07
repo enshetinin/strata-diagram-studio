@@ -15,6 +15,7 @@ import { SceneContext, useScene, type SceneContextValue } from './sceneContext';
 import { SceneEnvironment } from './SceneEnvironment';
 import { SceneLabels } from './SceneLabels';
 import { SceneNodes } from './SceneNodes';
+import { SceneNotes } from './SceneNotes';
 import { ScenePlatforms } from './ScenePlatforms';
 import { THEMES } from './themes';
 
@@ -54,7 +55,7 @@ export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; r
     () => buildSceneModel(doc, { layerHeight: appearance.layerHeight, heightScale: theme.node.heightScale, routeStyle: theme.connector.route }),
     // Only geometry-relevant parts of the document rebuild the model.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [doc.nodes, doc.groups, doc.edges, doc.layout, appearance.layerHeight, theme.node.heightScale, theme.connector.route],
+    [doc.nodes, doc.groups, doc.edges, doc.annotations, doc.layout, appearance.layerHeight, theme.node.heightScale, theme.connector.route],
   );
   const highlight = useMemo(() => computeHighlight(doc, selection, isolated, presenting ? step : null), [doc, selection, isolated, presenting, step]);
   const materials = useMemo(() => new MaterialLibrary(theme, quality), [theme, quality]);
@@ -79,6 +80,7 @@ export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; r
       <ScenePlatforms />
       <SceneNodes />
       <SceneConnectors />
+      <SceneNotes />
       <SceneLabels mode={appearance.labelMode} />
       {appearance.flowParticles ? <FlowParticles /> : null}
       <PngExporter projection={projection} />

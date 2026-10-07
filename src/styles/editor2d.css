@@ -37,6 +37,85 @@
   font-family: var(--font-ui);
 }
 
+/* Notes: marginalia, not components — a top rule, mono eyebrow, no box. */
+.strata-note {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.25rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem 0.625rem;
+  background: var(--sheet-raised);
+  border-top: 1px solid var(--sheet-ink);
+  box-shadow: 0 1px 0 var(--sheet-rule);
+  text-align: left;
+  overflow: visible;
+}
+
+.strata-note.is-selected {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.strata-note__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sheet-muted);
+}
+
+.strata-note__text {
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--sheet-ink);
+}
+
+.strata-note__editor {
+  width: 100%;
+  height: 100%;
+  min-height: 2.5rem;
+  padding: 0.25rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--sheet-ink);
+  background: var(--sheet-raised);
+  border: 1px solid var(--signal);
+  border-radius: 0;
+  resize: none;
+}
+
+.strata-note__editor:focus-visible {
+  outline: none;
+}
+
+/* Leader: drawn from the note's own corner, so it may leave the note's box. */
+.strata-note__leader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.strata-note__leader line {
+  stroke: var(--sheet-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.strata-note__leader circle {
+  fill: var(--sheet-ink);
+}
+
 /* Nodes */
 .strata-node {
   position: relative;
@@ -177,6 +256,13 @@
   border-style: dashed;
 }
 
+/* Trust boundary: a line the flow crosses, not a container — no tint, ink dashes. */
+.strata-group[data-kind='boundary'] {
+  background: transparent;
+  border: 1.5px dashed var(--sheet-ink);
+  border-top: 3px solid var(--accent);
+}
+
 .strata-group.is-selected {
   outline: 2px solid var(--signal);
   outline-offset: 2px;
@@ -184,6 +270,8 @@
 
 .strata-group__handle {
   display: grid;
+  /* React Flow centres node text by default; long kind labels exposed it. */
+  text-align: left;
   padding: 0.5rem 0.875rem;
   cursor: grab;
   width: fit-content;

@@ -98,6 +98,20 @@ export function OutlinePanel() {
           </li>
         ))}
       </ul>
+      {doc.annotations.length > 0 ? (
+        <>
+          <h3 className="panel-heading">Notas</h3>
+          <ul className="outline-tree">
+            {doc.annotations.map((annotation) => (
+              <li key={annotation.id}>
+                <Entry refValue={{ type: 'annotation', id: annotation.id }}>
+                  <span className="outline-entry__kind">Nota{annotation.targetNodeId ? ` → ${label(annotation.targetNodeId)}` : ''}</span> {annotation.text}
+                </Entry>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   PORT_DIRECTIONS,
   PORT_SIDES,
   RELATION_KINDS,
+  type DiagramAnnotation,
   type DiagramDocument,
   type DiagramEdge,
   type DiagramGroup,
@@ -18,7 +19,7 @@ import {
   type JsonObject,
   type Port,
 } from '../../domain/types';
-import { deleteSelection, duplicateSelection, groupSelection, ungroupSelection } from '../../state/actions';
+import { deleteSelection, duplicateSelection, groupSelection, ungroupSelection, updateAnnotation } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { selectPrimary, useUiStore } from '../../state/uiStore';
 import { SelectField, TextField } from '../../components/ui/fields';
@@ -44,7 +45,7 @@ function groupOptions(doc: DiagramDocument, exclude: Set<string> = new Set()) {
   ];
 }
 
-function ElementActions({ type, id }: { type: 'node' | 'group'; id: string }) {
+function ElementActions({ type, id }: { type: 'node' | 'group' | 'annotation'; id: string }) {
   const mode = useUiStore((state) => state.mode);
   return (
     <div className="button-row">
@@ -328,6 +329,30 @@ function GroupInspector({ group, doc }: { group: DiagramGroup; doc: DiagramDocum
   );
 }
 
+function AnnotationInspector({ annotation, doc }: { annotation: DiagramAnnotation; doc: DiagramDocument }) {
+  const targets = [{ value: '__none__', label: 'Ninguno (nota libre)' }, ...[...doc.nodes].sort((a, b) => a.label.localeCompare(b.label, 'es')).map((node) => ({ value: node.id, label: node.label }))];
+  return (
+    <>
+      <p className="inspector__kind">Nota</p>
+      <TextField label="Texto" value={annotation.text} multiline hint="También con doble clic sobre la nota en 2D." onCommit={(text) => updateAnnotation(annotation.id, { text })} />
+      <SelectField
+        label="Señala a"
+        value={annotation.targetNodeId ?? '__none__'}
+        options={targets}
+        hint="Dibuja una línea guía hasta el componente; la nota lo acompaña al reordenar."
+        onChange={(value) => updateAnnotation(annotation.id, { targetNodeId: value === '__none__' ? null : value })}
+      />
+      <ElementActions type="annotation" id={annotation.id} />
+      <div className="button-row">
+        <button type="button" className="button button--danger" onClick={deleteSelection}>
+          <Trash2 size={15} aria-hidden="true" /> Borrar
+        </button>
+      </div>
+      <p className="field__hint">Las notas no son componentes: no cuentan en el resumen ni salen en la leyenda.</p>
+    </>
+  );
+}
+
 function DocumentInspector({ doc }: { doc: DiagramDocument }) {
   return (
     <>
@@ -380,9 +405,21 @@ export function Inspector() {
   const node = primary?.type === 'node' ? doc.nodes.find((candidate) => candidate.id === primary.id) : undefined;
   const edge = primary?.type === 'edge' ? doc.edges.find((candidate) => candidate.id === primary.id) : undefined;
   const group = primary?.type === 'group' ? doc.groups.find((candidate) => candidate.id === primary.id) : undefined;
+  const annotation = primary?.type === 'annotation' ? doc.annotations.find((candidate) => candidate.id === primary.id) : undefined;
+  const content = node ? (
+    <NodeInspector node={node} doc={doc} />
+  ) : edge ? (
+    <EdgeInspector edge={edge} doc={doc} />
+  ) : group ? (
+    <GroupInspector group={group} doc={doc} />
+  ) : annotation ? (
+    <AnnotationInspector annotation={annotation} doc={doc} />
+  ) : (
+    <DocumentInspector doc={doc} />
+  );
   return (
     <div className="panel-section" key={primary ? `${primary.type}-${primary.id}` : 'doc'}>
-      {node ? <NodeInspector node={node} doc={doc} /> : edge ? <EdgeInspector edge={edge} doc={doc} /> : group ? <GroupInspector group={group} doc={doc} /> : <DocumentInspector doc={doc} />}
+      {content}
     </div>
   );
 }

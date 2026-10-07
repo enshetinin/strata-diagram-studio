@@ -10,7 +10,7 @@
  * `toWorld` transform, so nested groups are never offset twice.
  */
 import { KIND_INFO } from '../../domain/catalog';
-import { documentBounds, portOffset, resolveAbsoluteLayout, SIDE_NORMAL, type Point } from '../../domain/geometry';
+import { documentBounds, leaderLine, portOffset, rectsOverlap, resolveAbsoluteLayout, SIDE_NORMAL, type Point } from '../../domain/geometry';
 import type { DiagramDocument, DiagramEdge, NodeKind, Rect, RelationKind } from '../../domain/types';
 
 export const WORLD_SCALE = 0.01;
@@ -81,10 +81,21 @@ export interface SceneEdge {
   routing: 'flat' | 'elevated' | 'arc';
 }
 
+/** A note: a thin card on the ground plane, optionally with a leader to a node. */
+export interface SceneAnnotation extends WorldBox {
+  id: string;
+  text: string;
+  /** From the card edge to the side of the target node, half-way up its body. */
+  leader: [Vec3, Vec3] | null;
+}
+
+export const NOTE_CARD_HEIGHT = 0.012;
+
 export interface SceneModel {
   groups: SceneGroup[];
   nodes: SceneNode[];
   edges: SceneEdge[];
+  annotations: SceneAnnotation[];
   ports: { nodeId: string; portId: string; position: Vec3 }[];
   /** World-space bounds of everything (for camera fitting). */
   bounds: { min: Vec3; max: Vec3 };
@@ -320,7 +331,29 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
     });
   });
 
-  const all = [...nodes, ...groups];
+  const annotations: SceneAnnotation[] = doc.annotations.flatMap((annotation) => {
+    const rect = abs.annotations.get(annotation.id);
+    if (!rect) return [];
+    const targetRect = annotation.targetNodeId ? abs.nodes.get(annotation.targetNodeId) : undefined;
+    const target = annotation.targetNodeId ? nodeBox.get(annotation.targetNodeId) : undefined;
+    const line = targetRect ? leaderLine(rect, targetRect) : null;
+    // Rest on the highest platform underneath, as a sheet laid on the model.
+    const beneath = groups.filter((group) => {
+      const groupRect = abs.groups.get(group.id);
+      return groupRect !== undefined && rectsOverlap(groupRect, rect);
+    });
+    const base = Math.max(0, ...beneath.map((group) => group.top));
+    const leader: [Vec3, Vec3] | null =
+      line && target
+        ? [
+            { ...transform.toWorld(line.from), y: base + NOTE_CARD_HEIGHT },
+            { ...transform.toWorld(line.to), y: target.bottom + (target.top - target.bottom) * 0.5 },
+          ]
+        : null;
+    return [{ ...rectToBox(rect, transform, base, base + NOTE_CARD_HEIGHT), id: annotation.id, text: annotation.text, leader }];
+  });
+
+  const all = [...nodes, ...groups, ...annotations];
   const min = { x: Infinity, y: 0, z: Infinity };
   const max = { x: -Infinity, y: 0.5, z: -Infinity };
   for (const box of all) {
@@ -338,5 +371,5 @@ export function buildSceneModel(doc: DiagramDocument, options: SceneOptions): Sc
     max.z = 3;
   }
 
-  return { groups, nodes, edges, ports, bounds: { min, max } };
+  return { groups, nodes, edges, annotations, ports, bounds: { min, max } };
 }

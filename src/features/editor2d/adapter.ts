@@ -3,16 +3,28 @@
  * second editable copy of the graph.
  */
 import type { Edge, Node } from '@xyflow/react';
-import type { DiagramDocument, DiagramEdge, DiagramGroup, DiagramNode, ElementRef } from '../../domain/types';
+import type { DiagramAnnotation, DiagramDocument, DiagramEdge, DiagramGroup, DiagramNode, ElementRef } from '../../domain/types';
 
 export type StrataNodeData = { node: DiagramNode; accent: number };
 export type GroupNodeData = { group: DiagramGroup; accent: number; depth: number };
+export type NoteNodeData = { annotation: DiagramAnnotation };
 export type StrataEdgeData = { edge: DiagramEdge };
 
 export type StrataFlowNode = Node<StrataNodeData, 'strata'>;
 export type GroupFlowNode = Node<GroupNodeData, 'group'>;
-export type FlowNode = StrataFlowNode | GroupFlowNode;
+export type NoteFlowNode = Node<NoteNodeData, 'note'>;
+export type FlowNode = StrataFlowNode | GroupFlowNode | NoteFlowNode;
 export type FlowEdge = Edge<StrataEdgeData, 'strata'>;
+
+/** Notes float above every group and component. */
+const NOTE_Z = 1000;
+
+/** Document reference for a React Flow node id (ids are unique across element types). */
+export function refForFlowNode(doc: DiagramDocument, id: string): ElementRef {
+  if (doc.groups.some((group) => group.id === id)) return { type: 'group', id };
+  if (doc.annotations.some((annotation) => annotation.id === id)) return { type: 'annotation', id };
+  return { type: 'node', id };
+}
 
 function isSelected(selection: ElementRef[], type: ElementRef['type'], id: string) {
   return selection.some((ref) => ref.type === type && ref.id === id);
@@ -87,6 +99,23 @@ export function toFlowNodes(doc: DiagramDocument, selection: ElementRef[], isola
       data: { node, accent: accentOf(node.groupId) },
       selected: isSelected(selection, 'node', node.id),
       ariaLabel: `${node.label}`,
+    });
+  }
+  for (const annotation of doc.annotations) {
+    const rect = doc.layout.annotations[annotation.id];
+    if (!rect) continue;
+    result.push({
+      id: annotation.id,
+      type: 'note',
+      position: { x: rect.x, y: rect.y },
+      width: rect.width,
+      height: rect.height,
+      data: { annotation },
+      selected: isSelected(selection, 'annotation', annotation.id),
+      connectable: false,
+      zIndex: NOTE_Z,
+      ariaLabel: `Nota: ${annotation.text}`,
+      ...(isolatedGroupId ? { className: 'is-dimmed' } : {}),
     });
   }
   return result;

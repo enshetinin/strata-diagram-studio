@@ -65,7 +65,7 @@ export function graphToDocument(raw: unknown, styleId: StyleId): DiagramDocument
     );
   }
   const graph = parsed.data;
-  const layout: DiagramDocument['layout'] = { nodes: {}, groups: {} };
+  const layout: DiagramDocument['layout'] = { nodes: {}, groups: {}, annotations: {} };
   // Provisional grid; the real layout is computed by ELK before preview.
   graph.nodes.forEach((node, index) => {
     layout.nodes[node.id] = { x: (index % 6) * 240, y: Math.floor(index / 6) * 160, ...DEFAULT_NODE_SIZE };
@@ -91,6 +91,7 @@ export function graphToDocument(raw: unknown, styleId: StyleId): DiagramDocument
     groups: graph.groups,
     nodes: graph.nodes.map((node) => ({ ...node, ports: defaultPorts(), metadata: {} })),
     edges,
+    annotations: [],
     layout,
     presentation: { styleId, camera: { projection: 'style' }, appearance: { ...DEFAULT_APPEARANCE } },
     narrative: { steps: deriveNarrative({ edges }) },

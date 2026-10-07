@@ -16,7 +16,7 @@ test.describe('2D editing reflected in 3D', () => {
 
     // Add a component from the library.
     await openLeftTab(page, 'Biblioteca');
-    await page.getByRole('button', { name: 'Añadir Base de datos' }).click();
+    await page.getByRole('button', { name: 'Añadir Base de datos', exact: true }).click();
     await page.getByRole('radio', { name: 'Editar 2D' }).click();
     await expect(page.locator('.react-flow__node-strata')).toHaveCount(17);
 
@@ -223,6 +223,32 @@ test('dragging a selected edge slides its middle segment; double click restores 
   if (!moved) throw new Error('grip not visible');
   await page.mouse.dblclick(moved.x + moved.width / 2, moved.y + moved.height / 2);
   await expect.poll(drift).toBeLessThan(1);
+});
+
+test('a note points at the selected component, edits inline and is not counted as one', async ({ page }) => {
+  await freshStart(page, '?template=aws-load-testing');
+  await page.getByRole('radio', { name: 'Editar 2D' }).click();
+  await page.locator('.react-flow__node[data-id="n-runner"]').click();
+  await page.getByRole('button', { name: 'Añadir nota' }).click();
+  const note = page.locator('.strata-note');
+  await expect(note).toHaveCount(1);
+  await expect(note.locator('.strata-note__leader line')).toHaveCount(1);
+  await expect(page.getByLabel('Señala a')).toHaveValue('n-runner');
+
+  await note.dblclick();
+  await page.getByLabel('Texto de la nota').fill('Reintenta tres veces');
+  await page.keyboard.press('Control+Enter');
+  await expect(note).toContainText('Reintenta tres veces');
+
+  await openLeftTab(page, 'Estructura');
+  await expect(page.getByText('16 componentes · 17 relaciones · 5 grupos')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Nota → Task runner\s+Reintenta tres veces/ })).toBeVisible();
+
+  // Deleting the component keeps the note without its leader.
+  await page.locator('.react-flow__node[data-id="n-runner"]').click();
+  await page.keyboard.press('Delete');
+  await expect(note.locator('.strata-note__leader')).toHaveCount(0);
+  await expect(note).toContainText('Reintenta tres veces');
 });
 
 /** Point halfway along an SVG path, relative to the edge's interaction element box. */

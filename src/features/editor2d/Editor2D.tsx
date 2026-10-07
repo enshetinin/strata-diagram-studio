@@ -21,13 +21,15 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { moveElements, type Move } from '../../domain/commands';
 import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
 import { checkConnection } from '../../domain/invariants';
-import { NODE_KINDS, type EdgeEndpoint, type ElementRef, type NodeKind } from '../../domain/types';
+import { findPreset, presetSeed } from '../../domain/library';
+import type { EdgeEndpoint, ElementRef } from '../../domain/types';
 import { addNodeAt, connect, reconnect } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
-import { toFlowEdges, toFlowNodes, type FlowEdge, type FlowNode } from './adapter';
+import { refForFlowNode, toFlowEdges, toFlowNodes, type FlowEdge, type FlowNode } from './adapter';
 import { GroupNode } from './GroupNode';
+import { NoteNode } from './NoteNode';
 import { registerPasteAnchor } from './pasteAnchor';
 import { EdgeMarkers, StrataEdge } from './StrataEdge';
 import { StrataNode } from './StrataNode';
@@ -38,7 +40,7 @@ import { LIBRARY_MIME } from './dnd';
 import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 
 // Stable references outside render, as React Flow requires.
-const nodeTypes: NodeTypes = { strata: StrataNode, group: GroupNode };
+const nodeTypes: NodeTypes = { strata: StrataNode, group: GroupNode, note: NoteNode };
 const edgeTypes: EdgeTypes = { strata: StrataEdge };
 
 function endpoints(connection: Connection): { source: EdgeEndpoint; target: EdgeEndpoint } | null {
@@ -129,8 +131,8 @@ function Canvas2D() {
   const onNodesChange = useCallback((changes: NodeChange<FlowNode>[]) => {
     const transient = changes.filter((change) => change.type === 'position' || change.type === 'dimensions');
     if (transient.length > 0) setNodes((current) => applyNodeChanges(transient, current));
-    const groups = new Set(useDocumentStore.getState().doc.groups.map((group) => group.id));
-    applySelectChanges(changes.flatMap((change) => (change.type === 'select' ? [{ ref: { type: groups.has(change.id) ? ('group' as const) : ('node' as const), id: change.id }, selected: change.selected }] : [])));
+    const doc = useDocumentStore.getState().doc;
+    applySelectChanges(changes.flatMap((change) => (change.type === 'select' ? [{ ref: refForFlowNode(doc, change.id), selected: change.selected }] : [])));
   }, []);
 
   const onEdgesChange = useCallback((changes: EdgeChange<FlowEdge>[]) => {
@@ -153,10 +155,11 @@ function Canvas2D() {
 
   const onNodeDragStop = useCallback((_event: unknown, _node: FlowNode | null, dragged: FlowNode[]) => {
     const current = useDocumentStore.getState().doc;
+    const bucket = { node: current.layout.nodes, group: current.layout.groups, annotation: current.layout.annotations };
     const moves: Move[] = dragged
-      .map((node) => ({ type: node.type === 'group' ? ('group' as const) : ('node' as const), id: node.id, x: node.position.x, y: node.position.y }))
+      .map((node): Move => ({ type: node.type === 'group' ? 'group' : node.type === 'note' ? 'annotation' : 'node', id: node.id, x: node.position.x, y: node.position.y }))
       .filter((move) => {
-        const rect = move.type === 'group' ? current.layout.groups[move.id] : current.layout.nodes[move.id];
+        const rect = bucket[move.type][move.id];
         return rect && (Math.round(rect.x) !== Math.round(move.x) || Math.round(rect.y) !== Math.round(move.y));
       });
     if (moves.length === 0) return;
@@ -199,13 +202,13 @@ function Canvas2D() {
 
   const onDrop = useCallback(
     (event: DragEvent) => {
-      const kind = event.dataTransfer.getData(LIBRARY_MIME) as NodeKind;
-      if (!NODE_KINDS.includes(kind)) return;
+      const preset = findPreset(event.dataTransfer.getData(LIBRARY_MIME));
+      if (!preset) return;
       event.preventDefault();
       const point = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       // Deepest group under the cursor becomes the container.
       const target = deepestGroupAt(resolveAbsoluteLayout(useDocumentStore.getState().doc), point);
-      addNodeAt(kind, { x: point.x - 88, y: point.y - 40 }, target);
+      addNodeAt(presetSeed(preset), { x: point.x - 88, y: point.y - 40 }, target);
     },
     [screenToFlowPosition],
   );
@@ -223,7 +226,7 @@ function Canvas2D() {
     const element = wrapper.current;
     if (!element) return;
     const abs = resolveAbsoluteLayout(useDocumentStore.getState().doc);
-    const view = initialViewport([...abs.nodes.values(), ...abs.groups.values()], { width: element.clientWidth, height: element.clientHeight });
+    const view = initialViewport([...abs.nodes.values(), ...abs.groups.values(), ...abs.annotations.values()], { width: element.clientWidth, height: element.clientHeight });
     if (view) void setViewport(view);
   }, [setViewport]);
   // A replaced document (template, import, undo of it) opens the same way.
@@ -308,7 +311,12 @@ function Canvas2D() {
           ariaLabel="Minimapa"
           // Orientation only: small enough not to cover the components it maps.
           style={{ width: 168, height: 112 }}
-          nodeColor={(node) => (node.type === 'group' ? 'transparent' : accent2d((node as FlowNode).data.accent))}
+          nodeColor={(node) => {
+            const flow = node as FlowNode;
+            if (flow.type === 'group') return 'transparent';
+            if (flow.type === 'note') return 'var(--sheet-edge)';
+            return accent2d(flow.data.accent);
+          }}
           nodeStrokeColor={(node) => (node.type === 'group' ? 'var(--edge)' : 'transparent')}
           maskColor="var(--minimap-mask)"
         />
