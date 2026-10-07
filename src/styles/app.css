@@ -910,6 +910,163 @@ strong {
 .template-list,
 .library-list,
 .outline-tree,
+/* Walkthrough: an ordered index, not cards. Light oversized numerals on a
+   hairline grid; the open step takes the signal colour. */
+.narrative__list {
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.narrative-step {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-top: var(--hairline) solid var(--rule);
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.narrative-step.is-open {
+  border-top-color: var(--fg);
+}
+
+.narrative-step.is-dragging {
+  opacity: 0.4;
+}
+
+.narrative-step.is-drop-before {
+  box-shadow: inset 0 2px 0 var(--signal);
+}
+
+.narrative-step.is-drop-after {
+  box-shadow: inset 0 -2px 0 var(--signal);
+}
+
+.narrative-step__number {
+  font-family: var(--font-display-face);
+  font-size: 2rem;
+  font-weight: var(--weight-metric);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--muted);
+}
+
+.narrative-step.is-open .narrative-step__number {
+  color: var(--signal);
+}
+
+.narrative-step__main {
+  min-width: 0;
+}
+
+.narrative-step__title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-display-face);
+  font-size: var(--font-lead);
+  font-weight: 500;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-heading);
+}
+
+.narrative-step__title:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.narrative-step__caption {
+  display: -webkit-box;
+  margin: var(--space-1) 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: var(--font-small);
+  color: var(--muted);
+}
+
+.narrative-step__meta,
+.narrative-step__label {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.narrative-step__detail {
+  margin-top: var(--space-4);
+}
+
+.narrative-step__label {
+  margin: 0 0 var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+.narrative-step__edges {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.narrative-step__edges li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  border-top: var(--hairline) solid var(--rule);
+  font-size: var(--font-small);
+}
+
+.narrative-step__edges li span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.narrative-step__actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-4);
+  padding-top: var(--space-2);
+  border-top: var(--hairline) solid var(--rule);
+}
+
+.narrative-step__actions > :last-child {
+  margin-left: auto;
+}
+
+.narrative-step__grip {
+  align-self: start;
+  padding: var(--space-1);
+  color: var(--edge);
+  cursor: grab;
+}
+
+.narrative-step__grip:hover {
+  color: var(--fg);
+}
+
+.narrative-step__grip:active {
+  cursor: grabbing;
+}
+
+.inspector__step-link {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+}
+
 .suggestion-list {
   list-style: none;
   margin: 0;

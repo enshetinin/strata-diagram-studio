@@ -1,6 +1,7 @@
 import { ArrowLeftRight, Copy, Crosshair, Plus, Trash2, Ungroup } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import * as cmd from '../../domain/commands';
+import { effectiveNarrative } from '../../domain/narrative';
 import { GROUP_KIND_LABEL, KIND_INFO, RELATION_INFO } from '../../domain/catalog';
 import {
   EDGE_DIRECTIONS,
@@ -215,9 +216,48 @@ function NodeInspector({ node, doc }: { node: DiagramNode; doc: DiagramDocument 
   );
 }
 
+const NEW_STEP = '__new';
+
+/** Which walkthrough step narrates this relation; editing it makes the steps explicit. */
+function EdgeStepField({ edge, doc }: { edge: DiagramEdge; doc: DiagramDocument }) {
+  const steps = effectiveNarrative(doc);
+  const current = steps.find((step) => step.edgeIds.includes(edge.id));
+  const options = [
+    { value: '', label: 'Fuera del recorrido' },
+    ...steps.map((step, index) => ({ value: step.id, label: `${String(index + 1).padStart(2, '0')} · ${step.title}` })),
+    { value: NEW_STEP, label: 'Nuevo paso con esta relación' },
+  ];
+  const onChange = (value: string) => {
+    if (value === NEW_STEP) {
+      const id = cmd.nextStepId(doc);
+      run('Nuevo paso', (d) => cmd.addStep(d, { id, title: edge.label ?? `Paso ${steps.length + 1}`, edgeIds: [edge.id] }));
+      return;
+    }
+    run(value ? 'Mover relación a un paso' : 'Quitar relación del recorrido', (d) => cmd.setEdgeStep(d, edge.id, value || null));
+  };
+  return (
+    <>
+      <SelectField label="Paso del recorrido" value={current?.id ?? ''} options={options} onChange={onChange} />
+      {current ? (
+        <p className="field__hint inspector__step-link">
+          <button
+            type="button"
+            className="link-button"
+            onClick={() => {
+              useUiStore.getState().setNarrativeStep(current.id);
+              useUiStore.getState().setRight(true, 'narrative');
+            }}
+          >
+            Editar el paso en Recorrido
+          </button>
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 function EdgeInspector({ edge, doc }: { edge: DiagramEdge; doc: DiagramDocument }) {
   const label = (id: string) => doc.nodes.find((node) => node.id === id)?.label ?? id;
-  const orderId = useId();
   return (
     <>
       <p className="inspector__kind">Relación</p>
@@ -232,22 +272,7 @@ function EdgeInspector({ edge, doc }: { edge: DiagramEdge; doc: DiagramDocument 
         options={EDGE_DIRECTIONS.map((direction) => ({ value: direction, label: direction === 'forward' ? 'Origen → destino' : 'Bidireccional' }))}
         onChange={(direction) => run('Cambiar dirección', (d) => cmd.updateEdge(d, edge.id, { direction }))}
       />
-      <div className="field">
-        <label htmlFor={orderId}>Orden en el recorrido</label>
-        <input
-          id={orderId}
-          type="number"
-          min={1}
-          max={999}
-          defaultValue={edge.order ?? ''}
-          key={`${edge.id}-${edge.order ?? ''}`}
-          onBlur={(event) => {
-            const value = event.target.value ? Math.max(1, Math.min(999, Math.round(Number(event.target.value)))) : undefined;
-            if (value !== edge.order) run('Cambiar orden', (d) => cmd.updateEdge(d, edge.id, { order: value }));
-          }}
-        />
-        <p className="field__hint">Las relaciones con orden forman los pasos del modo presentación.</p>
-      </div>
+      <EdgeStepField edge={edge} doc={doc} />
       <TextField label="Explicación" value={edge.explanation ?? ''} multiline onCommit={(value) => run('Editar explicación', (d) => cmd.updateEdge(d, edge.id, { explanation: value || undefined }))} />
       <div className="button-row">
         <button type="button" className="button" onClick={() => run('Invertir relación', (d) => cmd.reverseEdge(d, edge.id))}>

@@ -4,7 +4,7 @@ import type { ElementRef } from '../domain/types';
 
 export type ViewMode = '3d' | '2d';
 export type LeftTab = 'templates' | 'library' | 'outline' | 'generate';
-export type RightTab = 'inspector' | 'appearance';
+export type RightTab = 'inspector' | 'narrative' | 'appearance';
 export type WebglStatus = 'unknown' | 'ok' | 'unsupported' | 'lost' | 'error';
 
 export interface Notice {
@@ -22,6 +22,8 @@ interface UiState {
   rightTab: RightTab;
   presenting: boolean;
   presentationStep: number;
+  /** Step open in the walkthrough editor. */
+  narrativeStepId: string | null;
   isolatedGroupId: string | null;
   /** Bumped to ask the active view to frame an element. */
   focusRequest: { ref: ElementRef; nonce: number } | null;
@@ -39,6 +41,7 @@ interface UiState {
   setRight(open: boolean, tab?: RightTab): void;
   setPresenting(presenting: boolean): void;
   setPresentationStep(step: number): void;
+  setNarrativeStep(id: string | null): void;
   isolateGroup(groupId: string | null): void;
   focus(ref: ElementRef): void;
   resetCamera(): void;
@@ -60,6 +63,7 @@ export const useUiStore = create<UiState>()((set) => ({
   rightTab: 'inspector',
   presenting: false,
   presentationStep: 0,
+  narrativeStepId: null,
   isolatedGroupId: null,
   focusRequest: null,
   cameraResetNonce: 0,
@@ -80,6 +84,7 @@ export const useUiStore = create<UiState>()((set) => ({
   setRight: (open, tab) => set((state) => ({ rightOpen: open, rightTab: tab ?? state.rightTab, ...(open && narrow() ? { leftOpen: false } : {}) })),
   setPresenting: (presenting) => set({ presenting, presentationStep: 0, ...(presenting ? { mode: '3d' as const } : {}) }),
   setPresentationStep: (presentationStep) => set({ presentationStep }),
+  setNarrativeStep: (narrativeStepId) => set({ narrativeStepId }),
   isolateGroup: (isolatedGroupId) => set({ isolatedGroupId }),
   focus: (ref) => set((state) => ({ focusRequest: { ref, nonce: (state.focusRequest?.nonce ?? 0) + 1 } })),
   resetCamera: () => set((state) => ({ cameraResetNonce: state.cameraResetNonce + 1 })),

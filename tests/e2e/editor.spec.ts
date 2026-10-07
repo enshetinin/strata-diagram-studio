@@ -78,6 +78,38 @@ test.describe('2D editing reflected in 3D', () => {
     await expect(summary).toContainText('17 nodos · 17 relaciones · 5 grupos');
   });
 
+  test('walkthrough editor: create, reorder, present and edit from the inspector', async ({ page }) => {
+    await freshStart(page, '?template=aws-load-testing');
+    await page.getByRole('tab', { name: 'Recorrido' }).click();
+    const steps = page.getByRole('list', { name: 'Pasos del recorrido' }).locator(':scope > li');
+    await expect(steps).toHaveCount(11);
+    await expect(page.getByText(/11 pasos · 15 relaciones narradas/)).toBeVisible();
+
+    // Opening a step selects its relation; a new step claims it and lands right after.
+    await page.getByRole('button', { name: 'Paso 2: HTTPS' }).click();
+    await page.getByRole('button', { name: 'Nuevo paso (1)' }).click();
+    await expect(steps).toHaveCount(12);
+    await expect(steps.nth(2).getByRole('button', { name: 'Paso 3: HTTPS' })).toHaveAttribute('aria-expanded', 'true');
+    await expect(steps.nth(1)).toContainText('Sin relaciones');
+
+    // Keyboard reorder, then present from that step.
+    await page.getByRole('button', { name: 'Paso 3: HTTPS' }).press('Alt+ArrowUp');
+    await expect(page.getByRole('button', { name: 'Paso 2: HTTPS' })).toBeFocused();
+    await page.getByRole('button', { name: 'Presentar desde este paso' }).click();
+    const presentation = page.getByRole('region', { name: 'Recorrido explicado' });
+    await expect(presentation).toContainText('Paso 2 de 12');
+    await expect(presentation.getByRole('heading', { name: 'HTTPS' })).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    // The open step's relation is still selected: the inspector takes it out of the walkthrough.
+    await page.getByRole('tab', { name: 'Inspector' }).click();
+    await page.getByLabel('Paso del recorrido').selectOption({ label: 'Fuera del recorrido' });
+    await page.getByRole('tab', { name: 'Recorrido' }).click();
+    await expect(page.getByText(/12 pasos · 14 relaciones narradas/)).toBeVisible();
+    await page.locator('body').press('Control+z');
+    await expect(page.getByText(/12 pasos · 15 relaciones narradas/)).toBeVisible();
+  });
+
   test('deleting a group keeps its children by default', async ({ page }) => {
     await freshStart(page, '?template=aws-load-testing');
     await page.getByRole('tab', { name: 'Estructura' }).click();

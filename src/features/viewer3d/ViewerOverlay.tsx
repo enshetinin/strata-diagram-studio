@@ -74,7 +74,7 @@ function Presentation() {
       ) : (
         <div className="presentation__caption">
           <h2>Sin recorrido</h2>
-          <p>Asigna un orden a las relaciones en el inspector para crear pasos.</p>
+          <p>Crea pasos en la pestaña Recorrido del panel derecho.</p>
         </div>
       )}
       <div className="presentation__controls">

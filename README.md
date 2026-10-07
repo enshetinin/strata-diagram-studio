@@ -45,9 +45,14 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   original. Pegar el JSON de un documento completo inserta todo su contenido. Los IDs se regeneran
   y el orden del recorrido no se copia.
 - **Inspector**: etiqueta, descripción, tipo, proveedor, grupo, puertos tipados, metadatos JSON;
-  relaciones (tipo, etiqueta, dirección, orden en el recorrido, explicación, invertir); grupos.
+  relaciones (tipo, etiqueta, dirección, paso del recorrido, explicación, invertir); grupos.
 - **Apariencia**: seis estilos, espaciado del auto-layout, altura de capas, densidad de etiquetas,
   cámara, partículas ilustrativas y calidad (preferencia local).
+- **Recorrido** (panel derecho): pasos ordenados con título, texto y las relaciones que iluminan.
+  Crear un paso con la selección, reordenar arrastrando o con Alt+↑/↓, quitar o añadir relaciones,
+  borrar y presentar desde cualquier paso. Un paso sin relaciones sirve de introducción o resumen.
+  Abrir un paso lo resalta en 2D y 3D. Cada relación pertenece como mucho a un paso, y su marcador
+  numerado (`order`) se renumera solo.
 - **Presentar**: oculta paneles, encuadra y recorre los pasos numerados (←/→, Esc).
 - **Generar**: «Nueva arquitectura» (reglas locales con seed y complejidad), «Nueva apariencia»
   (estilo/layout sin tocar el grafo) y descripción en texto (requiere proveedor; ver abajo).
@@ -88,6 +93,10 @@ DiagramDocument {
   narrative: { steps: { id, title, caption?, edgeIds }[] }
 }
 ```
+
+`narrative.steps` es la fuente del recorrido. `edge.order` es su reflejo (la posición del paso que
+narra la relación) y lo leen los marcadores de 2D, 3D y SVG. Un documento sin pasos explícitos
+deriva el recorrido de `order`; la primera edición lo convierte en pasos explícitos.
 
 Tipos de nodo: cliente, frontend, API, servicio, función, base de datos, almacenamiento, cola,
 caché, agente, modelo, herramienta, gateway, observabilidad y genérico. Los ciclos de relaciones son

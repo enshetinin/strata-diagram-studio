@@ -5,6 +5,7 @@ import { AppearancePanel } from './panels/AppearancePanel';
 import { GeneratePanel } from './panels/GeneratePanel';
 import { Inspector } from './panels/Inspector';
 import { LibraryPanel } from './panels/LibraryPanel';
+import { NarrativePanel } from './panels/NarrativePanel';
 import { OutlinePanel } from './panels/OutlinePanel';
 import { TemplatesPanel } from './panels/TemplatesPanel';
 
@@ -70,6 +71,7 @@ const LEFT_TABS: TabDef<LeftTab>[] = [
 
 const RIGHT_TABS: TabDef<RightTab>[] = [
   { id: 'inspector', label: 'Inspector' },
+  { id: 'narrative', label: 'Recorrido' },
   { id: 'appearance', label: 'Apariencia' },
 ];
 
@@ -90,10 +92,10 @@ export function RightPanel() {
   const tab = useUiStore((state) => state.rightTab);
   const setRight = useUiStore((state) => state.setRight);
   return (
-    <Panel side="right" label="Inspector y apariencia" onClose={() => setRight(false)}>
+    <Panel side="right" label="Inspector, recorrido y apariencia" onClose={() => setRight(false)}>
       <Tabs idPrefix="right" label="Propiedades" tabs={RIGHT_TABS} active={tab} onChange={(next) => setRight(true, next)} />
       <div className="side-panel__body" role="tabpanel" id="right-panel" aria-labelledby={`right-tab-${tab}`}>
-        {tab === 'inspector' ? <Inspector /> : <AppearancePanel />}
+        {tab === 'inspector' ? <Inspector /> : tab === 'narrative' ? <NarrativePanel /> : <AppearancePanel />}
       </div>
     </Panel>
   );

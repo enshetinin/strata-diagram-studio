@@ -9,6 +9,7 @@ import { extractFragment, parseClipboardText, pasteFragment, type DiagramFragmen
 import type { DiagramDocument, EdgeEndpoint, ElementRef, NodeKind, StyleId } from '../domain/types';
 import { STYLE_IDS } from '../domain/types';
 import { KIND_INFO } from '../domain/catalog';
+import { effectiveNarrative } from '../domain/narrative';
 import { pasteAnchor } from '../features/editor2d/pasteAnchor';
 import { computeAutoLayout, type LayoutDirection } from '../features/layout/elkLayout';
 import { createRng } from '../features/templates/random';
@@ -131,6 +132,35 @@ export function duplicateSelection(): void {
     return result.doc;
   });
   if (ok) ui().select(created.map((id) => ({ type: 'node' as const, id })));
+}
+
+// ─── Walkthrough ────────────────────────────────────────────────────────────
+
+/** Selects a step's relations so both views highlight it as the walkthrough would. */
+export function previewStep(stepId: string | null): void {
+  ui().setNarrativeStep(stepId);
+  if (stepId === null) return;
+  const step = effectiveNarrative(doc()).find((candidate) => candidate.id === stepId);
+  if (step) ui().select(step.edgeIds.map((id) => ({ type: 'edge' as const, id })));
+}
+
+/** New step after the open one (or at the end) with the selected relations. */
+export function addStepFromSelection(): void {
+  const current = doc();
+  const edgeIds = ui().selection.filter((ref) => ref.type === 'edge').map((ref) => ref.id);
+  const steps = effectiveNarrative(current);
+  const open = steps.findIndex((step) => step.id === ui().narrativeStepId);
+  const first = current.edges.find((edge) => edge.id === edgeIds[0]);
+  const id = cmd.nextStepId(current);
+  const title = first?.label ?? `Paso ${(open < 0 ? steps.length : open + 1) + 1}`;
+  const label = edgeIds.length > 0 ? 'Nuevo paso con la selección' : 'Nuevo paso';
+  if (run(label, (d) => cmd.addStep(d, { id, title, edgeIds, index: open < 0 ? undefined : open + 1 }))) ui().setNarrativeStep(id);
+}
+
+/** Opens the presentation at a given step. */
+export function presentFrom(index: number): void {
+  ui().setPresenting(true);
+  ui().setPresentationStep(index);
 }
 
 // ─── Clipboard ──────────────────────────────────────────────────────────────

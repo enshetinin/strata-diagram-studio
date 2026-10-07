@@ -3,6 +3,8 @@
  * `CommandError`; the store wraps them in a single history transaction.
  */
 import { checkConnection, wouldCreateGroupCycle } from './invariants';
+import { deriveNarrative, syncEdgeOrder } from './narrative';
+import { LIMITS } from './schema';
 import { GROUP_PADDING, resolveAbsoluteLayout, unionRects, type Point } from './geometry';
 import {
   DEFAULT_NODE_SIZE,
@@ -14,6 +16,7 @@ import {
   type EdgeEndpoint,
   type ElementRef,
   type NodeKind,
+  type NarrativeStep,
   type Port,
   type Presentation,
   type Rect,
@@ -68,19 +71,24 @@ function cloneLayout(layout: DiagramLayout): DiagramLayout {
   };
 }
 
-/** Removes edges (and their narrative references) matching a predicate. */
+/**
+ * Removes edges (and their narrative references) matching a predicate. A step
+ * left without relations disappears; steps that never had any (an intro, a
+ * summary) stay.
+ */
 function withoutEdges(doc: DiagramDocument, remove: (edge: DiagramEdge) => boolean): DiagramDocument {
   const removed = new Set(doc.edges.filter(remove).map((edge) => edge.id));
   if (removed.size === 0) return doc;
-  return {
+  return syncEdgeOrder({
     ...doc,
     edges: doc.edges.filter((edge) => !removed.has(edge.id)),
     narrative: {
-      steps: doc.narrative.steps
-        .map((step) => ({ ...step, edgeIds: step.edgeIds.filter((id) => !removed.has(id)) }))
-        .filter((step) => step.edgeIds.length > 0),
+      steps: doc.narrative.steps.flatMap((step) => {
+        const edgeIds = step.edgeIds.filter((id) => !removed.has(id));
+        return edgeIds.length === 0 && step.edgeIds.length > 0 ? [] : [{ ...step, edgeIds }];
+      }),
     },
-  };
+  });
 }
 
 /**
@@ -526,6 +534,107 @@ export function duplicateNodes(doc: DiagramDocument, nodeIds: string[], offset: 
   let next: DiagramDocument = { ...doc, nodes: [...doc.nodes, ...copies], edges: [...doc.edges, ...edgeCopies], layout };
   for (const groupId of new Set(copies.map((copy) => copy.groupId))) next = growGroupsToContain(next, groupId);
   return { doc: next, ids: [...idMap.values()] };
+}
+
+// ─── Narrative ──────────────────────────────────────────────────────────────
+
+const NUMBER_PREFIX = /^\d+\.\s+(?=\S)/;
+
+/**
+ * Every walkthrough edit starts here: documents that only had `edge.order`
+ * get explicit steps, and the "1. " prefixes older documents baked into
+ * titles go away (the position is shown separately and changes on reorder).
+ */
+function editableNarrative(doc: DiagramDocument): NarrativeStep[] {
+  const steps = doc.narrative.steps.length > 0 ? doc.narrative.steps : deriveNarrative(doc);
+  return steps.map((step) => (NUMBER_PREFIX.test(step.title) ? { ...step, title: step.title.replace(NUMBER_PREFIX, '') } : step));
+}
+
+function withSteps(doc: DiagramDocument, steps: NarrativeStep[]): DiagramDocument {
+  return syncEdgeOrder({ ...doc, narrative: { steps } });
+}
+
+function requireStepIndex(steps: NarrativeStep[], id: string): number {
+  const index = steps.findIndex((step) => step.id === id);
+  if (index < 0) throw new CommandError(`El paso «${id}» no existe.`);
+  return index;
+}
+
+/** Deterministic step id that collides neither with steps nor with elements. */
+export function nextStepId(doc: DiagramDocument): string {
+  const used = new Set(editableNarrative(doc).map((step) => step.id));
+  let index = 1;
+  while (used.has(`step-${index}`)) index += 1;
+  return `step-${index}`;
+}
+
+export interface NewStep {
+  id: string;
+  title: string;
+  caption?: string;
+  edgeIds?: string[];
+  /** Insert position (0-based); appended when omitted. */
+  index?: number;
+}
+
+/** Adds a step. Its relations leave any step that narrated them before. */
+export function addStep(doc: DiagramDocument, input: NewStep): DiagramDocument {
+  const steps = editableNarrative(doc);
+  if (steps.some((step) => step.id === input.id)) throw new CommandError(`ID de paso duplicado «${input.id}».`);
+  const edgeIds = [...new Set(input.edgeIds ?? [])];
+  edgeIds.forEach((id) => requireEdge(doc, id));
+  const claimed = new Set(edgeIds);
+  const rest = steps.map((step) => (step.edgeIds.some((id) => claimed.has(id)) ? { ...step, edgeIds: step.edgeIds.filter((id) => !claimed.has(id)) } : step));
+  const step: NarrativeStep = { id: input.id, title: input.title, ...(input.caption ? { caption: input.caption } : {}), edgeIds };
+  const index = Math.max(0, Math.min(rest.length, input.index ?? rest.length));
+  return withSteps(doc, [...rest.slice(0, index), step, ...rest.slice(index)]);
+}
+
+export function updateStep(doc: DiagramDocument, id: string, patch: { title?: string; caption?: string }): DiagramDocument {
+  const steps = editableNarrative(doc);
+  const index = requireStepIndex(steps, id);
+  const next = { ...steps[index]!, ...patch };
+  next.title = next.title.trim();
+  if (!next.title) throw new CommandError('El paso necesita un título.');
+  if (next.title.length > LIMITS.maxLabel) throw new CommandError(`El título admite como máximo ${LIMITS.maxLabel} caracteres.`);
+  if (next.caption && next.caption.length > LIMITS.maxText) throw new CommandError(`El texto admite como máximo ${LIMITS.maxText} caracteres.`);
+  if (!next.caption) delete next.caption;
+  return withSteps(doc, steps.map((step, i) => (i === index ? next : step)));
+}
+
+/** Moves a step to `toIndex` (clamped); the markers on the relations renumber. */
+export function moveStep(doc: DiagramDocument, id: string, toIndex: number): DiagramDocument {
+  const steps = editableNarrative(doc);
+  const from = requireStepIndex(steps, id);
+  const to = Math.max(0, Math.min(steps.length - 1, toIndex));
+  if (from === to) return doc;
+  const next = [...steps];
+  const [step] = next.splice(from, 1);
+  next.splice(to, 0, step!);
+  return withSteps(doc, next);
+}
+
+export function removeStep(doc: DiagramDocument, id: string): DiagramDocument {
+  const steps = editableNarrative(doc);
+  requireStepIndex(steps, id);
+  return withSteps(doc, steps.filter((step) => step.id !== id));
+}
+
+/**
+ * Narrates a relation in exactly one step (`null` takes it out of the
+ * walkthrough). Steps it leaves are kept, even if empty, while editing.
+ */
+export function setEdgeStep(doc: DiagramDocument, edgeId: string, stepId: string | null): DiagramDocument {
+  requireEdge(doc, edgeId);
+  const steps = editableNarrative(doc);
+  if (stepId !== null) requireStepIndex(steps, stepId);
+  return withSteps(
+    doc,
+    steps.map((step) => {
+      const without = step.edgeIds.filter((id) => id !== edgeId);
+      return step.id === stepId ? { ...step, edgeIds: [...without, edgeId] } : without.length === step.edgeIds.length ? step : { ...step, edgeIds: without };
+    }),
+  );
 }
 
 // ─── Layout, presentation and metadata ──────────────────────────────────────
