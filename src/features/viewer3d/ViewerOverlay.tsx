@@ -1,6 +1,7 @@
 /**
  * DOM overlays over the canvas: title, legend, primary "Edit in 2D" access,
- * camera actions and the presentation walkthrough. Not part of PNG exports.
+ * camera actions and the presentation walkthrough. PNG exports redraw the
+ * title and legend themselves (features/export/pngComposition).
  */
 import { ChevronLeft, ChevronRight, Crosshair, PencilRuler, RotateCcw, X } from 'lucide-react';
 import { useEffect, useMemo } from 'react';

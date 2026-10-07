@@ -6,9 +6,16 @@ export interface PngExportOptions {
   width: number;
   height: number;
   transparent: boolean;
+  /**
+   * Size of one layout unit relative to a 1080 px reference. Pixel-sized
+   * strokes (fat connector lines) scale by it so a 4K render or a small
+   * preview keeps the proportions of the 1080p image.
+   */
+  scale: number;
 }
 
-export type PngExporter = (options: PngExportOptions) => Promise<Blob>;
+/** Renders the 3D scene off-screen and returns a 2D canvas holding the frame. */
+export type PngExporter = (options: PngExportOptions) => Promise<HTMLCanvasElement>;
 
 let current: PngExporter | null = null;
 const waiters = new Set<(exporter: PngExporter) => void>();

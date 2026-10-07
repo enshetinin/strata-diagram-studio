@@ -13,7 +13,7 @@ features/
   templates/ seis plantillas, DSL de autoría, generador por reglas y fixture de rendimiento
   generation/ DiagramGenerator, proveedor local/remoto, validación y vista previa
   persistence/ autosave con debounce, carga validada con copia de seguridad
-  export/    JSON, SVG (desde el documento) y registro del exportador PNG
+  export/    JSON, SVG (desde el documento), registro del exportador PNG y composición de la imagen
 app/         shell, paneles, diálogos, atajos y arranque
 ```
 
@@ -44,9 +44,12 @@ app/         shell, paneles, diálogos, atajos y arranque
    etiquetan los nodos más conectados, la selección y sus vecinos. Los títulos de grupo se colocan
    en la franja de cabecera evitando colisiones en espacio de cámara.
 9. **PNG mediante renderer dedicado.** Un `WebGLRenderer` temporal (con `preserveDrawingBuffer`
-   solo en él) renderiza la misma escena a 1920×1080 con una cámara propia ajustada al aspecto; se
-   esperan las fuentes, se adapta la resolución de líneas gruesas y todo se restaura y libera. El
-   canvas principal nunca cambia de tamaño ni conserva el buffer.
+   solo en él) renderiza la misma escena al tamaño del área de escena con una cámara propia ajustada
+   al aspecto; se esperan las fuentes, se adapta la resolución de líneas gruesas (escalada por la
+   unidad `u`, 1 a 1080 px, para que 4K y la vista previa conserven proporciones) y todo se
+   restaura y libera. El canvas principal nunca cambia de tamaño ni conserva el buffer. Después,
+   `pngComposition` compone en un canvas 2D el fotograma con título, descripción y leyenda,
+   dibujados con las mismas fuentes, glifos y tokens del overlay.
 10. **SVG desde el documento**, no desde el DOM: mismas funciones de puertos y de rutas que React
     Flow (`getSmoothStepPath`) y fuentes incrustadas en base64.
 11. **Fallback.** Sin WebGL, con error del canvas o con pérdida de contexto se muestra un estado con

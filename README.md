@@ -111,8 +111,9 @@ Decisiones: [`docs/architecture.md`](docs/architecture.md).
 - Importar JSON: límite 2 MB, Zod, límites de recuento y comprobación referencial; versiones
   desconocidas se rechazan explícitamente. Un import inválido no cambia nada.
 - Exportar: JSON portable; **SVG** de la vista 2D (vectorial, fuentes incrustadas); **PNG** de la
-  escena 3D a 1920×1080, opaco o transparente, con etiquetas y flechas WebGL. Los overlays DOM
-  (título, leyenda) no forman parte del PNG.
+  escena 3D desde un diálogo con vista previa: 16:9 Full HD, 4K, 1:1 o 4:5, opaco o transparente,
+  con título, descripción y leyenda opcionales (columna a la izquierda en formatos anchos; arriba y
+  abajo en cuadrado y vertical). Las últimas opciones se recuerdan en este navegador.
 
 ## Generación
 

@@ -83,22 +83,32 @@ test.describe('save, reload, import and export', () => {
     expect(svg).toContain('@font-face');
   });
 
-  test('PNG export renders the 3D scene at 1920×1080 (opaque and transparent)', async ({ page }, testInfo) => {
+  test('PNG export composes the 3D scene with title and legend in several formats', async ({ page }, testInfo) => {
     await freshStart(page, '?template=aws-load-testing');
     await expectSceneCounts(page, { nodes: 16, edges: 17 });
-    for (const transparent of [false, true]) {
+    const cases = [
+      { format: /16:9 · Full HD/, transparent: false, width: 1920, height: 1080, file: 'scene-hd.png' },
+      { format: /1:1 · Cuadrado/, transparent: true, width: 1080, height: 1080, file: 'scene-square-transparent.png' },
+      { format: /16:9 · 4K/, transparent: false, width: 3840, height: 2160, file: 'scene-4k.png' },
+    ];
+    for (const { format, transparent, width, height, file } of cases) {
       await page.getByRole('button', { name: 'Exportar' }).click();
-      const [download] = await Promise.all([
-        page.waitForEvent('download', { timeout: 30_000 }),
-        page.getByRole('menuitem', { name: transparent ? /PNG 3D transparente/ : /PNG 3D 1920×1080/ }).click(),
-      ]);
-      const path = testInfo.outputPath(transparent ? 'scene-transparent.png' : 'scene.png');
+      await page.getByRole('menuitem', { name: /Imagen PNG/ }).click();
+      const dialog = page.getByRole('dialog', { name: 'Exportar imagen' });
+      await dialog.getByRole('radio', { name: format }).check();
+      const background = dialog.getByRole('checkbox', { name: 'Fondo transparente' });
+      if (transparent) await background.check();
+      else await background.uncheck();
+      await expect(dialog.locator('figure')).toHaveAttribute('data-state', 'ready', { timeout: 20_000 });
+      const [download] = await Promise.all([page.waitForEvent('download', { timeout: 60_000 }), dialog.getByRole('button', { name: 'Exportar PNG' }).click()]);
+      await expect(dialog).toBeHidden();
+      const path = testInfo.outputPath(file);
       await download.saveAs(path);
       const buffer = await readFile(path);
       const info = pngSize(buffer);
       expect(info.signature).toBe('89504e470d0a1a0a');
-      expect(info.width).toBe(1920);
-      expect(info.height).toBe(1080);
+      expect(info.width).toBe(width);
+      expect(info.height).toBe(height);
       // Decode in the browser and check it is not a blank frame.
       const stats = await page.evaluate(async (base64) => {
         const image = new Image();

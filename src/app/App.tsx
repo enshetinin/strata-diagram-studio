@@ -1,6 +1,7 @@
 import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { FluidLines } from '../components/ui/FluidLines';
 import { useUiStore } from '../state/uiStore';
+import { ExportPngDialog } from './ExportPngDialog';
 import { GenerationPreviewDialog } from './GenerationPreviewDialog';
 import { GroupDeleteDialog } from './GroupDeleteDialog';
 import { ImportErrorDialog } from './ImportErrorDialog';
@@ -71,6 +72,7 @@ export function App() {
       <GroupDeleteDialog />
       <ImportErrorDialog />
       <GenerationPreviewDialog />
+      <ExportPngDialog />
     </div>
   );
 }

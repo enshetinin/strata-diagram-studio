@@ -592,6 +592,93 @@ strong {
   margin-top: var(--space-6);
 }
 
+/* PNG export: preview on the left, choices on the right; stacks on phones. */
+.png-export {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.png-export__preview {
+  margin: 0;
+}
+
+.png-export__preview canvas {
+  display: block;
+  width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  border: var(--hairline) solid var(--rule);
+  background: var(--surface);
+  transition: opacity var(--duration-default) var(--ease-standard);
+}
+
+.png-export__preview.is-transparent canvas {
+  background: repeating-conic-gradient(var(--surface) 0% 25%, var(--block) 0% 50%) 0 0 / 16px 16px;
+}
+
+.png-export__preview[data-state='loading'] canvas {
+  opacity: 0.55;
+}
+
+.png-export__preview figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.png-export__options fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.png-export__options fieldset + fieldset {
+  margin-top: var(--space-5);
+}
+
+.png-export__options legend {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+}
+
+.png-export__format {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-top: var(--hairline) solid var(--rule);
+  font-size: var(--font-small);
+  cursor: pointer;
+}
+
+.png-export__format:last-of-type {
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.png-export__format input {
+  margin: 0;
+  accent-color: var(--fg);
+}
+
+.png-export__format code {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.png-export__format:has(input:checked) {
+  font-weight: var(--weight-strong);
+  box-shadow: inset 2px 0 0 var(--signal);
+  padding-left: var(--space-2);
+}
+
 .preview-image {
   display: block;
   width: 100%;
@@ -1768,6 +1855,11 @@ strong {
 
   .dialog {
     padding: var(--space-5) var(--space-4) var(--space-4);
+  }
+
+  .png-export {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
   }
 
   .dialog__actions {

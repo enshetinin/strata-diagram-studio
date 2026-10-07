@@ -1,7 +1,8 @@
 /**
  * Dedicated off-screen render for PNG export: its own renderer and camera at
- * the output size, fonts awaited, everything disposed afterwards. The live
- * canvas keeps `preserveDrawingBuffer: false`, its camera and its size.
+ * the requested size (the scene area of the composed image), fonts awaited,
+ * everything disposed afterwards. The live canvas keeps
+ * `preserveDrawingBuffer: false`, its camera and its size.
  */
 import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
@@ -30,7 +31,7 @@ export function PngExporter({ projection }: { projection: 'orthographic' | 'pers
   const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
-    const exporter = async ({ width, height, transparent }: PngExportOptions): Promise<Blob> => {
+    const exporter = async ({ width, height, transparent, scale }: PngExportOptions): Promise<HTMLCanvasElement> => {
       await Promise.all([loadFont(FONT_REGULAR), loadFont(FONT_BOLD), document.fonts?.ready]);
       const canvas = document.createElement('canvas');
       canvas.width = width;
@@ -58,13 +59,20 @@ export function PngExporter({ projection }: { projection: 'orthographic' | 'pers
           for (const item of Array.isArray(material) ? material : material ? [material] : []) {
             if (hasResolution(item)) {
               lineMaterials.push({ material: item, resolution: item.resolution.clone() });
-              item.resolution.set(width, height);
+              item.resolution.set(width / scale, height / scale);
             }
           }
         });
         const camera = exportCamera(model, projection, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), theme.camera.fov, width / height);
         renderer.render(scene, camera);
-        return await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('El navegador no generó el PNG.'))), 'image/png'));
+        // Copy the frame before the WebGL context is released.
+        const frame = document.createElement('canvas');
+        frame.width = width;
+        frame.height = height;
+        const context = frame.getContext('2d');
+        if (!context) throw new Error('El navegador no permite componer la imagen.');
+        context.drawImage(canvas, 0, 0);
+        return frame;
       } finally {
         scene.background = previousBackground;
         lineMaterials.forEach(({ material, resolution }) => material.resolution.copy(resolution));

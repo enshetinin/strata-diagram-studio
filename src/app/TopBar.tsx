@@ -9,8 +9,9 @@ import { useUiStore } from '../state/uiStore';
 import { IconButton } from '../components/ui/IconButton';
 import { Menu } from '../components/ui/Menu';
 import { StrataMark } from '../components/ui/FluidLines';
-import { exportJson, exportPngFile, exportSvgFile } from '../features/export/exportActions';
+import { exportJson, exportSvgFile } from '../features/export/exportActions';
 import { saveNow, useSaveStatus } from '../features/persistence/autosave';
+import { usePngDialog } from './ExportPngDialog';
 import { useImportErrors } from './ImportErrorDialog';
 
 function SaveIndicator() {
@@ -134,8 +135,7 @@ export function TopBar() {
           items={[
             { label: 'JSON del documento', hint: 'portable, validado', onSelect: exportJson },
             { label: 'SVG de la vista 2D', hint: 'vectorial', onSelect: () => void exportSvgFile() },
-            { label: 'PNG 3D 1920×1080', hint: 'con fondo', onSelect: () => void exportPngFile(false) },
-            { label: 'PNG 3D transparente', hint: '1920×1080', onSelect: () => void exportPngFile(true) },
+            { label: 'Imagen PNG de la escena 3D…', hint: 'título, leyenda, hasta 4K', onSelect: () => usePngDialog.setState({ open: true }) },
           ]}
         />
         <button type="button" className="button button--primary button--cta" title="Presentar" onClick={() => useUiStore.getState().setPresenting(true)}>
