@@ -81,6 +81,21 @@ export function unionRects(rects: Rect[]): Rect | null {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
+/** Deepest group whose rectangle contains `point`, or `null` for the canvas. */
+export function deepestGroupAt(abs: AbsoluteLayout, point: Point): string | null {
+  let target: string | null = null;
+  let depth = -1;
+  for (const [id, rect] of abs.groups) {
+    const inside = point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
+    const d = abs.groupDepth.get(id) ?? 0;
+    if (inside && d > depth) {
+      target = id;
+      depth = d;
+    }
+  }
+  return target;
+}
+
 export function rectsOverlap(a: Rect, b: Rect, gap = 0): boolean {
   return a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap;
 }

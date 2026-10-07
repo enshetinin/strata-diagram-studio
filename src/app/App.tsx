@@ -7,6 +7,7 @@ import { ImportErrorDialog } from './ImportErrorDialog';
 import { Notices } from './Notices';
 import { LeftPanel, RightPanel } from './SidePanels';
 import { TopBar } from './TopBar';
+import { useClipboard } from './useClipboard';
 import { useShortcuts } from './useShortcuts';
 
 const Viewer3D = lazy(() => import('../features/viewer3d/Viewer3D'));
@@ -48,6 +49,7 @@ export function App() {
   const rightOpen = useUiStore((state) => state.rightOpen);
   const presenting = useUiStore((state) => state.presenting);
   useShortcuts();
+  useClipboard();
 
   const showLeft = leftOpen && !presenting;
   const showRight = rightOpen && !presenting;

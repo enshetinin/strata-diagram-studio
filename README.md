@@ -39,6 +39,11 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
 - **2D**: crear (botón «+» o arrastrando desde *Biblioteca*, también sobre un grupo), arrastrar,
   conectar puerto a puerto (feedback verde/rojo y motivo del rechazo), reconectar arrastrando un
   extremo, agrupar, desagrupar, duplicar, borrar, redimensionar grupos, minimapa y ajuste a rejilla.
+- **Copiar y pegar**: copia nodos y grupos (con su contenido y las relaciones internas) al
+  portapapeles del sistema como JSON, así que funciona entre pestañas y documentos. En 2D se pega
+  bajo el cursor y dentro del grupo que haya debajo; sin cursor, desplazado en cascada respecto al
+  original. Pegar el JSON de un documento completo inserta todo su contenido. Los IDs se regeneran
+  y el orden del recorrido no se copia.
 - **Inspector**: etiqueta, descripción, tipo, proveedor, grupo, puertos tipados, metadatos JSON;
   relaciones (tipo, etiqueta, dirección, orden en el recorrido, explicación, invertir); grupos.
 - **Apariencia**: seis estilos, espaciado del auto-layout, altura de capas, densidad de etiquetas,
@@ -48,7 +53,7 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   (estilo/layout sin tocar el grafo) y descripción en texto (requiere proveedor; ver abajo).
 
 Atajos (ignorados mientras se escribe): Ctrl/⌘+Z deshacer, Ctrl/⌘+Shift+Z o Ctrl+Y rehacer,
-Supr/Retroceso borrar, Ctrl/⌘+D duplicar, Ctrl/⌘+G agrupar, Ctrl/⌘+Shift+G desagrupar,
+Supr/Retroceso borrar, Ctrl/⌘+C / X / V copiar, cortar y pegar, Ctrl/⌘+D duplicar, Ctrl/⌘+G agrupar, Ctrl/⌘+Shift+G desagrupar,
 Ctrl/⌘+S guardar, F enfocar, Esc deseleccionar, flechas mover en 2D (Mayús: ×4).
 
 Parámetros de URL útiles: `?template=rag|aws-load-testing|multi-agent|event-commerce|data-platform|edge-iot`,

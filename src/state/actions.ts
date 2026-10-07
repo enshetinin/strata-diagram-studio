@@ -4,10 +4,12 @@
  * mutating state directly.
  */
 import * as cmd from '../domain/commands';
-import { resolveAbsoluteLayout } from '../domain/geometry';
+import { deepestGroupAt, documentBounds, resolveAbsoluteLayout, type Point } from '../domain/geometry';
+import { extractFragment, parseClipboardText, pasteFragment, type DiagramFragment, type PastePlacement } from '../domain/fragment';
 import type { DiagramDocument, EdgeEndpoint, ElementRef, NodeKind, StyleId } from '../domain/types';
 import { STYLE_IDS } from '../domain/types';
 import { KIND_INFO } from '../domain/catalog';
+import { pasteAnchor } from '../features/editor2d/pasteAnchor';
 import { computeAutoLayout, type LayoutDirection } from '../features/layout/elkLayout';
 import { createRng } from '../features/templates/random';
 import { useDocumentStore } from './documentStore';
@@ -129,6 +131,89 @@ export function duplicateSelection(): void {
     return result.doc;
   });
   if (ok) ui().select(created.map((id) => ({ type: 'node' as const, id })));
+}
+
+// ─── Clipboard ──────────────────────────────────────────────────────────────
+
+const PASTE_STEP = 32;
+
+/**
+ * Last text this app put on the clipboard. Serves as the fallback when the
+ * browser does not deliver clipboard events, and counts repeated pastes so
+ * successive copies cascade instead of stacking.
+ */
+let lastCopied: { text: string; pastes: number } | null = null;
+
+/** Serializes the selection for the clipboard; `null` (with a notice) when nothing is copyable. */
+export function copySelection(): string | null {
+  const fragment = extractFragment(doc(), ui().selection);
+  if (!fragment) {
+    ui().notify('warning', 'Selecciona nodos o grupos para copiar.');
+    return null;
+  }
+  const text = JSON.stringify(fragment);
+  lastCopied = { text, pastes: 0 };
+  return text;
+}
+
+/** Copies, then removes the selection including group contents (they travel in the clipboard). */
+export function cutSelection(): string | null {
+  const text = copySelection();
+  if (!text) return null;
+  const selection = ui().selection;
+  if (!run('Cortar', (d) => cmd.deleteElements(d, selection, { groupContents: 'delete' }))) return null;
+  ui().clearSelection();
+  return text;
+}
+
+/** Text to paste when the browser gave none (no clipboard event / no permission). */
+export function lastCopiedText(): string | null {
+  return lastCopied?.text ?? null;
+}
+
+function placementFor(current: DiagramDocument, fragment: DiagramFragment, repeat: number): PastePlacement {
+  const anchor: Point | null = ui().mode === '2d' ? pasteAnchor() : null;
+  if (anchor) {
+    const containerId = deepestGroupAt(resolveAbsoluteLayout(current), anchor);
+    return { containerId, at: { x: anchor.x + repeat * PASTE_STEP, y: anchor.y + repeat * PASTE_STEP } };
+  }
+  const { documentId, containerId } = fragment.origin;
+  if (documentId === current.id) {
+    const container = containerId !== null && current.groups.some((group) => group.id === containerId) ? containerId : null;
+    const step = (repeat + 1) * PASTE_STEP;
+    return { containerId: container, offset: { x: step, y: step } };
+  }
+  // Coordinates from another document mean nothing here: place it beside the content.
+  const bounds = current.nodes.length + current.groups.length > 0 ? documentBounds(current) : { x: 0, y: 0, width: 0, height: 0 };
+  return { containerId: null, at: { x: bounds.x + bounds.width + 96, y: bounds.y + repeat * PASTE_STEP } };
+}
+
+/**
+ * Pastes Strata content (a copied fragment or a whole document JSON).
+ * Returns `false` for unrelated text so the caller can let the browser handle it.
+ */
+export function pasteText(text: string): boolean {
+  const parsed = parseClipboardText(text);
+  if (parsed.status === 'none') return false;
+  if (parsed.status === 'invalid') {
+    ui().notify('error', parsed.message);
+    return true;
+  }
+  const current = doc();
+  const repeat = lastCopied?.text === text ? lastCopied.pastes : 0;
+  const placement = placementFor(current, parsed.fragment, repeat);
+  let roots: ElementRef[] = [];
+  const ok = run('Pegar', (d) => {
+    const result = pasteFragment(d, parsed.fragment, placement);
+    roots = result.roots;
+    return result.doc;
+  });
+  if (!ok) return true;
+  if (lastCopied?.text === text) lastCopied.pastes += 1;
+  ui().select(roots);
+  const count = parsed.fragment.nodes.length + parsed.fragment.groups.length;
+  ui().notify('success', count === 1 ? 'Elemento pegado.' : `${count} elementos pegados.`);
+  return true;
 }
 
 export function replaceDocument(next: DiagramDocument, label: string, message?: string): boolean {

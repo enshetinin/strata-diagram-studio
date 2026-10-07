@@ -18,7 +18,7 @@ import {
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { moveElements, type Move } from '../../domain/commands';
-import { resolveAbsoluteLayout } from '../../domain/geometry';
+import { deepestGroupAt, resolveAbsoluteLayout } from '../../domain/geometry';
 import { checkConnection } from '../../domain/invariants';
 import { NODE_KINDS, type EdgeEndpoint, type ElementRef, type NodeKind } from '../../domain/types';
 import { addNodeAt, connect, reconnect } from '../../state/actions';
@@ -27,6 +27,7 @@ import { usePreferences } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import { toFlowEdges, toFlowNodes, type FlowEdge, type FlowNode } from './adapter';
 import { GroupNode } from './GroupNode';
+import { registerPasteAnchor } from './pasteAnchor';
 import { EdgeMarkers, StrataEdge } from './StrataEdge';
 import { StrataNode } from './StrataNode';
 import { accent2d } from './visual';
@@ -151,23 +152,19 @@ function Canvas2D() {
       if (!NODE_KINDS.includes(kind)) return;
       event.preventDefault();
       const point = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      const current = useDocumentStore.getState().doc;
-      const abs = resolveAbsoluteLayout(current);
       // Deepest group under the cursor becomes the container.
-      let target: string | null = null;
-      let depth = -1;
-      for (const [id, rect] of abs.groups) {
-        const inside = point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height;
-        const d = abs.groupDepth.get(id) ?? 0;
-        if (inside && d > depth) {
-          target = id;
-          depth = d;
-        }
-      }
+      const target = deepestGroupAt(resolveAbsoluteLayout(useDocumentStore.getState().doc), point);
       addNodeAt(kind, { x: point.x - 88, y: point.y - 40 }, target);
     },
     [screenToFlowPosition],
   );
+
+  // Pastes land under the pointer while it is over the canvas.
+  const pointer = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    registerPasteAnchor(() => (pointer.current ? screenToFlowPosition(pointer.current) : null));
+    return () => registerPasteAnchor(null);
+  }, [screenToFlowPosition]);
 
   // Frame the requested / selected element when this view mounts or is asked to.
   const mounted = useRef(false);
@@ -182,7 +179,17 @@ function Canvas2D() {
   }, [focusRequest, fitView]);
 
   return (
-    <div className="editor2d" onDragOver={(event) => event.dataTransfer.types.includes(LIBRARY_MIME) && event.preventDefault()} onDrop={onDrop}>
+    <div
+      className="editor2d"
+      onDragOver={(event) => event.dataTransfer.types.includes(LIBRARY_MIME) && event.preventDefault()}
+      onDrop={onDrop}
+      onPointerMove={(event) => {
+        pointer.current = { x: event.clientX, y: event.clientY };
+      }}
+      onPointerLeave={() => {
+        pointer.current = null;
+      }}
+    >
       <EdgeMarkers />
       <ReactFlow<FlowNode, FlowEdge>
         nodes={nodes}

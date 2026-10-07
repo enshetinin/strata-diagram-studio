@@ -85,7 +85,7 @@ export const edgeSchema = z.object({
   explanation: text.optional(),
 });
 
-const rect = z.object({
+export const rectSchema = z.object({
   x: finite.min(-1e6).max(1e6),
   y: finite.min(-1e6).max(1e6),
   width: finite.min(8).max(1e5),
@@ -101,8 +101,8 @@ export const documentSchema = z.object({
   groups: z.array(groupSchema).max(LIMITS.maxGroups),
   edges: z.array(edgeSchema).max(LIMITS.maxEdges),
   layout: z.object({
-    nodes: z.record(id, rect),
-    groups: z.record(id, rect),
+    nodes: z.record(id, rectSchema),
+    groups: z.record(id, rectSchema),
   }),
   presentation: z.object({
     styleId: z.enum(STYLE_IDS),

@@ -46,6 +46,38 @@ test.describe('2D editing reflected in 3D', () => {
     await expectSceneCounts(page, { nodes: 17, edges: 18 });
   });
 
+  test('copy, cut and paste nodes and groups with the keyboard', async ({ page }) => {
+    await freshStart(page, '?template=aws-load-testing');
+    await page.getByRole('tab', { name: 'Estructura' }).click();
+    const summary = page.getByText(/\d+ nodos · \d+ relaciones · \d+ grupos/);
+    await expect(summary).toContainText('16 nodos · 17 relaciones · 5 grupos');
+
+    // A single node: copy + paste adds one, cut removes the original.
+    await page.getByRole('button', { name: /Frontend\s+Panel de resultados/ }).click();
+    await page.locator('body').press('Control+c');
+    await page.locator('body').press('Control+v');
+    await expect(summary).toContainText('17 nodos · 17 relaciones · 5 grupos');
+    await page.locator('body').press('Control+x');
+    await expect(summary).toContainText('16 nodos · 17 relaciones · 5 grupos');
+    await page.locator('body').press('Control+v');
+    await expect(summary).toContainText('17 nodos · 17 relaciones · 5 grupos');
+
+    // A group travels with its nested groups, nodes and internal relations; one undo reverts it.
+    await page.getByRole('button', { name: /Grupo\s+Región AWS/ }).click();
+    await page.locator('body').press('Control+c');
+    await page.getByRole('radio', { name: 'Editar 2D' }).click();
+    await page.locator('body').press('Control+v');
+    await expect(summary).not.toContainText('17 nodos · 17 relaciones · 5 grupos');
+    const [nodes, edges, groups] = (await summary.textContent())!.match(/\d+/g)!.map(Number);
+    expect(nodes).toBeGreaterThan(17);
+    expect(edges).toBeGreaterThan(17);
+    expect(groups).toBeGreaterThan(5);
+    await page.getByRole('radio', { name: '3D' }).click();
+    await expectSceneCounts(page, { nodes: nodes!, edges: edges! });
+    await page.locator('body').press('Control+z');
+    await expect(summary).toContainText('17 nodos · 17 relaciones · 5 grupos');
+  });
+
   test('deleting a group keeps its children by default', async ({ page }) => {
     await freshStart(page, '?template=aws-load-testing');
     await page.getByRole('tab', { name: 'Estructura' }).click();

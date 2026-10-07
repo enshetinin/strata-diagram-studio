@@ -6,7 +6,7 @@ import { useUiStore } from '../state/uiStore';
 import { saveNow } from '../features/persistence/autosave';
 
 /** Never intercept keys while the user types or interacts with a dialog. */
-function isTyping(target: EventTarget | null): boolean {
+export function isTyping(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
   if (target.closest('dialog[open]')) return true;
