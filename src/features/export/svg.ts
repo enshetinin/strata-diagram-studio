@@ -83,7 +83,11 @@ export function documentToSvg(doc: DiagramDocument, options: SvgOptions = {}): s
     const x = rect.x + ox;
     const y = rect.y + oy;
     out.push(`<g data-group="${escapeXml(group.id)}">`);
-    out.push(`<rect x="${x}" y="${y}" width="${rect.width}" height="${rect.height}" rx="0" fill="${accent}" fill-opacity="${0.05 + (depths.get(group.id) ?? 0) * 0.03}" stroke="#8A93A3" stroke-width="1"/>`);
+    const frame =
+      group.kind === 'boundary'
+        ? 'fill="none" stroke="#0D1B2E" stroke-width="1.5" stroke-dasharray="6 4"'
+        : `fill="${accent}" fill-opacity="${0.05 + (depths.get(group.id) ?? 0) * 0.03}" stroke="#8A93A3" stroke-width="1"`;
+    out.push(`<rect x="${x}" y="${y}" width="${rect.width}" height="${rect.height}" rx="0" ${frame}/>`);
     out.push(`<rect x="${x}" y="${y}" width="${rect.width}" height="3" fill="${accent}"/>`);
     out.push(`<text class="kind" x="${x + 16}" y="${y + 22}">${escapeXml(GROUP_KIND_LABEL[group.kind].toUpperCase())}</text>`);
     out.push(`<text class="group" x="${x + 16}" y="${y + 39}">${escapeXml(fit(group.label, Math.floor(rect.width / 8)))}</text>`);

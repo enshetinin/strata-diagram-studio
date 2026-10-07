@@ -49,5 +49,11 @@ export const RELATION_STROKE: Record<RelationKind, { color: string; dash?: strin
   dependency: { color: '#6B7280', dash: '3 3' },
   telemetry: { color: '#6B7280', dash: '1 3' },
   control: { color: '#9A3412' },
+  auth: { color: '#4B5E8A', dash: '8 3 2 3' },
+  stream: { color: '#2F6B63' },
+  replication: { color: '#2F4A5E', dash: '10 4' },
+  sync: { color: '#2F4A5E', dash: '4 2' },
+  backup: { color: '#6B7280', dash: '8 3 2 3' },
+  deploy: { color: '#9A7A1F', dash: '5 3' },
 };
 

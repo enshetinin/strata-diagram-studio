@@ -10,7 +10,7 @@ import { accent2d } from './visual';
 export const GroupNode = memo(function GroupNode({ id, data, selected }: NodeProps<GroupFlowNode>) {
   const { group, accent, depth } = data;
   return (
-    <div className={`strata-group${selected ? ' is-selected' : ''}`} data-depth={depth} style={{ '--accent': accent2d(accent) } as React.CSSProperties}>
+    <div className={`strata-group${selected ? ' is-selected' : ''}`} data-depth={depth} data-kind={group.kind} style={{ '--accent': accent2d(accent) } as React.CSSProperties}>
       <NodeResizer
         isVisible={selected}
         minWidth={160}

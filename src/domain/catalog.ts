@@ -46,6 +46,12 @@ export const RELATION_INFO: Record<RelationKind, { label: string; dashed: boolea
   dependency: { label: 'Dependencia', dashed: true },
   telemetry: { label: 'Telemetría', dashed: true },
   control: { label: 'Control', dashed: false },
+  auth: { label: 'Autenticación', dashed: true },
+  stream: { label: 'Stream', dashed: false },
+  replication: { label: 'Replicación', dashed: true },
+  sync: { label: 'Sincronización', dashed: true },
+  backup: { label: 'Copia de seguridad', dashed: true },
+  deploy: { label: 'Despliegue', dashed: true },
 };
 
 export const GROUP_KIND_LABEL: Record<GroupKind, string> = {
@@ -55,4 +61,10 @@ export const GROUP_KIND_LABEL: Record<GroupKind, string> = {
   cluster: 'Clúster',
   lane: 'Carril',
   zone: 'Zona',
+  account: 'Cuenta',
+  environment: 'Entorno',
+  'availability-zone': 'Zona de disponibilidad',
+  subnet: 'Subred',
+  namespace: 'Namespace',
+  boundary: 'Límite de confianza',
 };

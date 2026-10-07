@@ -56,13 +56,19 @@ export const RELATION_KINDS = [
   'dependency',
   'telemetry',
   'control',
+  'auth',
+  'stream',
+  'replication',
+  'sync',
+  'backup',
+  'deploy',
 ] as const;
 export type RelationKind = (typeof RELATION_KINDS)[number];
 
 export const EDGE_DIRECTIONS = ['forward', 'bidirectional'] as const;
 export type EdgeDirection = (typeof EDGE_DIRECTIONS)[number];
 
-export const GROUP_KINDS = ['domain', 'region', 'network', 'cluster', 'lane', 'zone'] as const;
+export const GROUP_KINDS = ['domain', 'region', 'network', 'cluster', 'lane', 'zone', 'account', 'environment', 'availability-zone', 'subnet', 'namespace', 'boundary'] as const;
 export type GroupKind = (typeof GROUP_KINDS)[number];
 
 export type JsonPrimitive = string | number | boolean | null;

@@ -177,6 +177,13 @@
   border-style: dashed;
 }
 
+/* Trust boundary: a line the flow crosses, not a container — no tint, ink dashes. */
+.strata-group[data-kind='boundary'] {
+  background: transparent;
+  border: 1.5px dashed var(--sheet-ink);
+  border-top: 3px solid var(--accent);
+}
+
 .strata-group.is-selected {
   outline: 2px solid var(--signal);
   outline-offset: 2px;
@@ -184,6 +191,8 @@
 
 .strata-group__handle {
   display: grid;
+  /* React Flow centres node text by default; long kind labels exposed it. */
+  text-align: left;
   padding: 0.5rem 0.875rem;
   cursor: grab;
   width: fit-content;
