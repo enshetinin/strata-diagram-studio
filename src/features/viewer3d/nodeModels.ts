@@ -236,6 +236,41 @@ function archPane(openWidth: number, openHeight: number): Shape {
   return shape;
 }
 
+/** Closed polygon from [x, y] points. */
+function polygon(points: [number, number][]): Shape {
+  const shape = new Shape();
+  points.forEach(([x, y], index) => (index === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)));
+  shape.closePath();
+  return shape;
+}
+
+/** Rectangle centred on the origin. */
+function rect(width: number, height: number): Shape {
+  return polygon([
+    [-width / 2, -height / 2],
+    [width / 2, -height / 2],
+    [width / 2, height / 2],
+    [-width / 2, height / 2],
+  ]);
+}
+
+function circle(radius: number): Shape {
+  const shape = new Shape();
+  shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+  return shape;
+}
+
+/** Sheet of paper with a folded top-right corner (`fold` long), base at y = 0. */
+function page(width: number, height: number, fold: number): Shape {
+  return polygon([
+    [-width / 2, 0],
+    [width / 2, 0],
+    [width / 2, height - fold],
+    [width / 2 - fold, height],
+    [-width / 2, height],
+  ]);
+}
+
 // ── Models by kind ───────────────────────────────────────────────────────
 
 type Builder = (kit: Kit, w: number, d: number, h: number) => void;
@@ -437,6 +472,186 @@ const MODELS: Record<NodeKind, Builder> = {
     for (const side of [-1, 1]) kit.block('body', w * 0.16, (h - PLINTH) * 0.3, d * 0.5, side * (aw / 2 + w * 0.08), PLINTH);
   },
 
+  /** Connected hardware: a chip with pins on a glass pad and an antenna. */
+  device(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.pad(w, d);
+    const base = PLINTH + 0.022;
+    const cw = Math.min(w * 0.56, d * 0.68);
+    const ch = (h - base) * 0.24;
+    kit.block('body', cw, ch, cw, 0, base, 0, 0.02);
+    for (let i = 0; i < 3; i += 1) {
+      const offset = (i - 1) * cw * 0.28;
+      kit.block('detail', 0.03, ch * 0.5, 0.06, offset, base + ch * 0.2, cw / 2 + 0.02, 0.004);
+      kit.block('detail', 0.03, ch * 0.5, 0.06, offset, base + ch * 0.2, -cw / 2 - 0.02, 0.004);
+      kit.block('detail', 0.06, ch * 0.5, 0.03, cw / 2 + 0.02, base + ch * 0.2, offset, 0.004);
+      kit.block('detail', 0.06, ch * 0.5, 0.03, -cw / 2 - 0.02, base + ch * 0.2, offset, 0.004);
+    }
+    kit.block('glass', cw * 0.56, 0.03, cw * 0.56, 0, base + ch + GAP * 0.5, 0, 0.01);
+    const top = base + ch;
+    kit.cylinder('body', 0.012, 0.016, h - top - 0.06, cw * 0.32, top, -cw * 0.32, 12);
+    kit.sphere('accent', 0.034, cw * 0.32, h - 0.034, -cw * 0.32);
+  },
+
+  /** Orchestrated steps: three ascending blocks joined by links, the last one lit. */
+  workflow(kit, w, d, h) {
+    kit.plinth(w, d);
+    const sw = w * 0.22;
+    const sd = d * 0.6;
+    const cap = 0.03;
+    const usable = h - PLINTH - cap - GAP;
+    const steps = [0.38, 0.66, 0.94];
+    steps.forEach((fraction, index) => {
+      const x = (index - 1) * w * 0.3;
+      const sh = usable * fraction;
+      kit.block('body', sw, sh, sd, x, PLINTH);
+      kit.block(index === steps.length - 1 ? 'accent' : 'glass', sw, cap, sd, x, PLINTH + sh + GAP, 0, 0.01);
+      kit.block('detail', sw * 0.5, 0.012, 0.012, x, PLINTH + sh * 0.5, sd / 2);
+      if (index < steps.length - 1) kit.block('detail', w * 0.08 + 0.02, 0.014, 0.014, x + w * 0.15, PLINTH + sh * 0.85, 0);
+    });
+  },
+
+  /** Similarity search: a glass cube holding a scatter of points over a pedestal. */
+  vector(kit, w, d, h) {
+    kit.plinth(w, d);
+    const ph = (h - PLINTH) * 0.16;
+    kit.block('body', w * 0.78, ph, d * 0.72, 0, PLINTH);
+    kit.block('detail', w * 0.36, 0.012, 0.012, -w * 0.14, PLINTH + ph * 0.5, d * 0.36);
+    const base = PLINTH + ph + GAP;
+    const gh = h - base;
+    const cs = Math.min(w * 0.62, d * 0.66);
+    kit.block('glass', cs, gh, cs, 0, base, 0, 0.02);
+    for (let i = 0; i < 3; i += 1) {
+      for (let j = 0; j < 3; j += 1) {
+        // Fixed pseudo-random heights: a cloud, not a lattice.
+        const lift = 0.5 + 0.5 * Math.sin(i * 2.3 + j * 4.1 + 0.7);
+        kit.crystal((i + j) % 3 === 0 ? 'accent' : 'detail', 0.026, (i - 1) * cs * 0.28, base + gh * (0.2 + 0.6 * lift), (j - 1) * cs * 0.28);
+      }
+    }
+  },
+
+  /** Analytical store: three receding terraces split by glass strata. */
+  warehouse(kit, w, d, h) {
+    kit.plinth(w, d);
+    const ring = 0.024;
+    const level = (h - PLINTH - ring * 2 - 0.012) / 3;
+    let y = PLINTH;
+    for (let k = 0; k < 3; k += 1) {
+      const lw = w * 0.88 * (1 - k * 0.2);
+      const ld = d * 0.78 * (1 - k * 0.16);
+      kit.block('body', lw, level, ld, 0, y);
+      y += level;
+      if (k < 2) {
+        kit.block('glass', w * 0.88 * (1 - (k + 1) * 0.2), ring, d * 0.78 * (1 - (k + 1) * 0.16), 0, y, 0, 0.008);
+        y += ring;
+      }
+    }
+    kit.block('accent', w * 0.88 * 0.6 * 0.5, 0.012, d * 0.78 * 0.68 * 0.5, 0, y, 0, 0.004);
+    for (let i = 0; i < 4; i += 1) kit.block('detail', w * 0.1, 0.012, 0.012, -w * 0.3 + i * w * 0.13, PLINTH + level * 0.5, d * 0.39);
+  },
+
+  /** Reference content: an upright page with a folded corner over glass sheets. */
+  document(kit, w, d, h) {
+    kit.plinth(w, d);
+    const pw = Math.min(w * 0.5, (h - PLINTH) * 0.8);
+    const ph = h - PLINTH - 0.02;
+    const front = d * 0.12;
+    kit.block('glass', pw, ph * 0.9, 0.02, -w * 0.14, PLINTH, front - d * 0.3, 0.006);
+    kit.block('glass', pw, ph * 0.95, 0.02, -w * 0.07, PLINTH, front - d * 0.15, 0.006);
+    const fold = pw * 0.24;
+    kit.upright('body', page(pw, ph, fold), 0.03, w * 0.04, PLINTH, front);
+    kit.upright(
+      'accent',
+      polygon([
+        [pw / 2 - fold, ph - fold],
+        [pw / 2, ph - fold],
+        [pw / 2 - fold, ph],
+      ]),
+      0.012,
+      w * 0.04,
+      PLINTH,
+      front + 0.021,
+    );
+    const lines = [0.62, 0.62, 0.62, 0.4];
+    lines.forEach((fraction, index) => {
+      const lw = pw * fraction;
+      kit.block('detail', lw, 0.014, 0.008, w * 0.04 - pw * 0.42 + lw / 2, PLINTH + ph * (0.56 - index * 0.12), front + 0.019, 0.004);
+    });
+  },
+
+  /** Ordered event log: parallel partitions carrying records, heads lit. */
+  stream(kit, w, d, h) {
+    kit.plinth(w, d);
+    const rw = w * 0.92;
+    const rh = (h - PLINTH) * 0.24;
+    const rd = d * 0.18;
+    const step = 0.085;
+    const capacity = Math.max(4, Math.floor((rw - 0.06) / step));
+    const lengths = [capacity, capacity - 2, capacity - 1];
+    lengths.forEach((length, k) => {
+      const z = (k - 1) * d * 0.27;
+      kit.block('body', rw, rh, rd, 0, PLINTH, z, 0.012);
+      for (let i = 0; i < length; i += 1) {
+        const x = -rw / 2 + 0.05 + i * step;
+        kit.block(i === length - 1 ? 'accent' : 'glass', 0.05, (h - PLINTH - rh - GAP) * 0.7, rd * 0.8, x, PLINTH + rh + GAP, z, 0.006);
+      }
+    });
+  },
+
+  /** Traffic distribution: a console whose hub fans out to three replicas. */
+  balancer(kit, w, d, h) {
+    kit.plinth(w, d);
+    const bh = (h - PLINTH) * 0.46;
+    kit.block('body', w * 0.86, bh, d * 0.76, 0, PLINTH);
+    kit.block('detail', w * 0.4, 0.012, 0.012, -w * 0.14, PLINTH + bh * 0.5, d * 0.38);
+    const top = PLINTH + bh;
+    const hx = -w * 0.28;
+    const hub = Math.min(w, d) * 0.1;
+    kit.cylinder('accent', hub, hub, (h - top) * 0.7, hx, top, 0, 24);
+    const reach = w * 0.5;
+    // Narrow the fan on shallow nodes so the replicas stay on the plinth.
+    const spread = Math.min(0.5, Math.asin(Math.min(1, (d * 0.34) / reach)));
+    for (const angle of [-spread, 0, spread]) {
+      const cx = Math.cos(angle);
+      const cz = -Math.sin(angle);
+      kit.flat('glass', rect(reach, 0.04), 0.03, hx + (cx * reach) / 2, top, (cz * reach) / 2, angle);
+      kit.block('body', 0.08, (h - top) * 0.5, 0.08, hx + cx * reach, top, cz * reach, 0.02);
+    }
+  },
+
+  /** Identity: a badge on a stand, portrait in accent, glass face. */
+  identity(kit, w, d, h) {
+    kit.plinth(w, d);
+    kit.block('body', w * 0.52, 0.04, d * 0.42, 0, PLINTH, 0, 0.012);
+    const cw = Math.min(w * 0.62, (h - PLINTH) * 0.9);
+    const ch = h - PLINTH - 0.1;
+    const z = -d * 0.04;
+    const y = PLINTH + 0.04;
+    kit.block('body', cw, ch, 0.05, 0, y, z, 0.02);
+    kit.block('body', cw * 0.2, 0.05, 0.03, 0, y + ch, z, 0.01);
+    const face = z + 0.025;
+    kit.block('glass', cw * 0.9, ch * 0.86, 0.012, 0, y + ch * 0.07, face);
+    kit.upright('accent', circle(Math.min(cw * 0.14, ch * 0.16)), 0.014, -cw * 0.2, y + ch * 0.58, face + 0.013);
+    kit.block('accent', cw * 0.3, ch * 0.08, 0.012, -cw * 0.2, y + ch * 0.26, face + 0.012, 0.006);
+    for (const fraction of [0.62, 0.48, 0.34]) kit.block('detail', cw * 0.3, 0.014, 0.008, cw * 0.2, y + ch * fraction, face + 0.012, 0.004);
+  },
+
+  /** Secrets: a safe with an accent dial, a handle and a glass lid. */
+  secret(kit, w, d, h) {
+    kit.plinth(w, d);
+    const bw = w * 0.64;
+    const bd = d * 0.7;
+    const bh = (h - PLINTH) * 0.76;
+    kit.block('body', bw, bh, bd, 0, PLINTH, 0, 0.03);
+    kit.block('glass', bw, (h - PLINTH) * 0.18, bd, 0, PLINTH + bh + GAP, 0, 0.02);
+    const face = bd / 2;
+    const r = Math.min(bw, bh) * 0.2;
+    kit.upright('accent', circle(r), 0.024, -bw * 0.1, PLINTH + bh * 0.5, face + 0.012);
+    kit.upright('detail', circle(r * 0.32), 0.05, -bw * 0.1, PLINTH + bh * 0.5, face + 0.025);
+    kit.block('detail', 0.03, bh * 0.36, 0.03, bw * 0.32, PLINTH + bh * 0.32, face + 0.015, 0.008);
+    for (const fraction of [0.2, 0.7]) kit.block('body', 0.03, bh * 0.14, 0.04, -bw / 2 - 0.01, PLINTH + bh * fraction, face - 0.04, 0.008);
+  },
+
   /** Telemetry: a console carrying a bar chart in glass and accent. */
   observability(kit, w, d, h) {
     kit.plinth(w, d);
@@ -488,6 +703,30 @@ const MODELS: Record<NodeKind, Builder> = {
       figure(0, d * 0.1, 1);
     } else {
       figure(0, 0, 1);
+    }
+  },
+
+  /** Third party: a sealed block behind a dashed fence of posts — outside your boundary. */
+  external(kit, w, d, h) {
+    kit.plinth(w, d);
+    const bh = (h - PLINTH) * 0.58;
+    kit.block('body', w * 0.54, bh, d * 0.5, 0, PLINTH, 0, 0.05);
+    kit.block('glass', w * 0.54, (h - PLINTH) * 0.22, d * 0.5, 0, PLINTH + bh + GAP, 0, 0.04);
+    kit.block('accent', 0.04, 0.04, 0.014, w * 0.2, PLINTH + bh * 0.55, d * 0.25, 0.008);
+    const fw = w * 0.86;
+    const fd = d * 0.82;
+    const post = (h - PLINTH) * 0.26;
+    const spacing = 0.15;
+    // Posts only, no rails: a dashed outline in three dimensions.
+    for (let x = -fw / 2; x <= fw / 2 + 1e-6; x += fw / Math.max(2, Math.round(fw / spacing))) {
+      kit.block('glass', 0.024, post, 0.024, x, PLINTH, fd / 2, 0.006);
+      kit.block('glass', 0.024, post, 0.024, x, PLINTH, -fd / 2, 0.006);
+    }
+    const sideSteps = Math.max(2, Math.round(fd / spacing));
+    for (let i = 1; i < sideSteps; i += 1) {
+      const z = -fd / 2 + (i * fd) / sideSteps;
+      kit.block('glass', 0.024, post, 0.024, fw / 2, PLINTH, z, 0.006);
+      kit.block('glass', 0.024, post, 0.024, -fw / 2, PLINTH, z, 0.006);
     }
   },
 
