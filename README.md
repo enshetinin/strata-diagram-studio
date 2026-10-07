@@ -36,7 +36,7 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   **Editar en 2D** (lleva al elemento seleccionado).
 - **3D**: órbita limitada, pan y zoom; clic selecciona, doble clic enfoca; la selección resalta
   vecinos y atenúa el resto. Aislar un grupo desde *Estructura* o el inspector. Restablecer cámara.
-- **2D**: crear (botón «+» o arrastrando desde *Biblioteca*, también sobre un grupo), arrastrar,
+- **2D**: crear (botón «Añadir» de la barra, «+» o arrastrando desde *Biblioteca*, también sobre un grupo), arrastrar,
   conectar puerto a puerto (feedback verde/rojo y motivo del rechazo), reconectar arrastrando un
   extremo, mover el tramo central de una relación seleccionada (doble clic lo restablece; el
   auto-layout también), agrupar, desagrupar, duplicar, borrar, redimensionar grupos, minimapa y

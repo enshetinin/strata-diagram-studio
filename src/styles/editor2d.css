@@ -325,3 +325,132 @@
 .react-flow__minimap {
   border: 1px solid var(--sheet-rule);
 }
+
+/* "Añadir": the one labelled action, the main way in for a new diagram. */
+.editor-toolbar__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: var(--control-h);
+  padding: 0 0.875rem 0 0.625rem;
+  border: 0;
+  background: var(--sheet-ink);
+  color: var(--sheet-raised);
+  font-size: var(--font-meta);
+  font-weight: var(--weight-strong);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.editor-toolbar__add:hover {
+  opacity: 0.88;
+}
+
+.editor-toolbar .menu__list {
+  min-width: 15rem;
+}
+
+/* Immediate tooltips under the icon tools. */
+.editor-toolbar__tool {
+  position: relative;
+}
+
+.editor-toolbar__tool::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  z-index: 12;
+  padding: 0.25rem 0.5rem;
+  background: var(--sheet-ink);
+  color: var(--sheet-raised);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -2px);
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.editor-toolbar__tool:hover::after,
+.editor-toolbar__tool:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.editor-toolbar__tool[aria-expanded='true']::after {
+  opacity: 0;
+}
+
+/* Canvas help: a definition list hung under the toolbar. */
+.editor-help {
+  position: relative;
+}
+
+.editor-help__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 12;
+  width: min(22rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.25rem 1rem;
+  background: var(--sheet-raised);
+  border: 1px solid var(--sheet-rule);
+  box-shadow: var(--shadow-float);
+  color: var(--sheet-ink);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.editor-help__panel > div {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+}
+
+.editor-help__panel > div + div {
+  border-top: 1px solid var(--sheet-rule);
+}
+
+.editor-help__panel dt {
+  font-size: var(--font-meta);
+  font-weight: var(--weight-strong);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+.editor-help__panel dd {
+  margin: 0;
+  color: var(--sheet-muted);
+}
+
+/* First-connection hint, set along the bottom edge of the sheet. */
+.editor2d__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 6;
+  max-width: min(34rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  background: var(--sheet-raised);
+  border: 1px solid var(--sheet-rule);
+  border-left: 3px solid var(--signal);
+  color: var(--sheet-ink);
+  font-size: 0.8125rem;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 600px) {
+  .editor-toolbar__wide {
+    display: none;
+  }
+}

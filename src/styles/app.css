@@ -578,6 +578,29 @@ strong {
   left: 0;
 }
 
+/* Long menus (e.g. component kinds) scroll inside the viewport. */
+.menu__list {
+  max-height: min(70vh, 34rem);
+  overflow-y: auto;
+}
+
+.menu__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.menu__label svg {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .menu__item {
   display: flex;
   width: 100%;

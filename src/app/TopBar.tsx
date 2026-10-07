@@ -109,6 +109,7 @@ export function TopBar() {
         {!readOnly ? (
           <Menu
             compact
+            align="start"
             label="Documento: nuevo, plantilla, importar"
             icon={<ChevronDown size={16} strokeWidth={1.75} aria-hidden="true" />}
             items={[

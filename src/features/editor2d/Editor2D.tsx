@@ -78,6 +78,7 @@ function applySelectChanges(changes: { ref: ElementRef; selected: boolean }[]) {
 
 function Canvas2D() {
   const doc = useDocumentStore((state) => state.doc);
+  const readOnly = useDocumentStore((state) => state.readOnly !== null);
   const selection = useUiStore((state) => state.selection);
   const isolated = useUiStore((state) => state.isolatedGroupId);
   const focusRequest = useUiStore((state) => state.focusRequest);
@@ -241,7 +242,8 @@ function Canvas2D() {
         snapToGrid={snap}
         snapGrid={[16, 16]}
         fitView
-        fitViewOptions={{ padding: 0.15 }}
+        // A diagram that starts empty must not frame its first node at max zoom.
+        fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
         minZoom={0.1}
         maxZoom={2.5}
         elevateNodesOnSelect={false}
@@ -259,6 +261,11 @@ function Canvas2D() {
         />
         <Controls showInteractive={false} aria-label="Zoom y encuadre" />
       </ReactFlow>
+      {!invalidReason && !readOnly && doc.nodes.length >= 2 && doc.edges.length === 0 ? (
+        <p className="editor2d__hint" role="status">
+          Para conectar, pasa el ratón por un componente y arrastra desde uno de sus puntos hasta otro.
+        </p>
+      ) : null}
       {invalidReason ? (
         <p className="editor2d__invalid" role="status">
           Conexión no válida: {invalidReason}
@@ -267,7 +274,7 @@ function Canvas2D() {
       {doc.nodes.length === 0 && doc.groups.length === 0 ? (
         <CanvasEmpty
           title="Empieza por un componente"
-          text="Arrastra componentes desde Biblioteca al lienzo o pulsa «+» junto a cada uno. Después conéctalos arrastrando de un punto de conexión a otro."
+          text="Pulsa «Añadir» o arrastra componentes desde Biblioteca. Después conéctalos arrastrando desde los puntos que aparecen al pasar el ratón."
           action={{ label: 'Abrir Biblioteca', onClick: () => useUiStore.getState().setLeft(true, 'library') }}
         />
       ) : null}

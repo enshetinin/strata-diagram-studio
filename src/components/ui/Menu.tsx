@@ -3,15 +3,31 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 export interface MenuItem {
   label: string;
   hint?: string;
+  icon?: ReactNode;
   onSelect: () => void;
 }
 
 /**
  * Menu button with arrow-key navigation and Escape to close. `compact`
- * renders an icon-only trigger (label as accessible name and tooltip) whose
- * list opens towards the right.
+ * renders an icon-only trigger (label as accessible name and tooltip);
+ * `align="start"` opens the list towards the right of the trigger.
  */
-export function Menu({ label, icon, items, compact = false }: { label: string; icon: ReactNode; items: MenuItem[]; compact?: boolean }) {
+export function Menu({
+  label,
+  icon,
+  items,
+  compact = false,
+  align = 'end',
+  className = 'button',
+}: {
+  label: string;
+  icon: ReactNode;
+  items: MenuItem[];
+  compact?: boolean;
+  align?: 'start' | 'end';
+  /** Trigger class for labelled menus. */
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -47,7 +63,7 @@ export function Menu({ label, icon, items, compact = false }: { label: string; i
       <button
         ref={button}
         type="button"
-        className={compact ? 'icon-button icon-button--small' : 'button'}
+        className={compact ? 'icon-button icon-button--small' : className}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={id}
@@ -59,7 +75,7 @@ export function Menu({ label, icon, items, compact = false }: { label: string; i
         {compact ? null : <span>{label}</span>}
       </button>
       {open ? (
-        <div className={`menu__list${compact ? ' menu__list--start' : ''}`} role="menu" id={id} aria-label={label}>
+        <div className={`menu__list${align === 'start' ? ' menu__list--start' : ''}`} role="menu" id={id} aria-label={label}>
           {items.map((item) => (
             <button
               key={item.label}
@@ -71,7 +87,10 @@ export function Menu({ label, icon, items, compact = false }: { label: string; i
                 item.onSelect();
               }}
             >
-              <span>{item.label}</span>
+              <span className="menu__label">
+                {item.icon}
+                {item.label}
+              </span>
               {item.hint ? <span className="menu__hint">{item.hint}</span> : null}
             </button>
           ))}
