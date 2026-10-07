@@ -186,9 +186,15 @@ strong {
 .stage {
   grid-area: stage;
   position: relative;
+  /* Canvas layers (toolbars, React Flow) never rise above the top bar's menus. */
+  isolation: isolate;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+.drawer-scrim {
+  display: none;
 }
 
 /* ── Header: white band, identity over the context column, nav, actions ── */
@@ -211,6 +217,15 @@ strong {
   min-width: 0;
   height: 100%;
   padding-inline: var(--space-4) var(--space-4);
+}
+
+.topbar__more {
+  display: none;
+}
+
+.topbar__identity .menu {
+  flex: none;
+  margin-left: calc(-1 * var(--space-2));
 }
 
 .topbar__brand {
@@ -566,6 +581,34 @@ strong {
   animation: drop-in var(--duration-default) var(--ease-out);
 }
 
+.menu__list--start {
+  right: auto;
+  left: 0;
+}
+
+/* Long menus (e.g. component kinds) scroll inside the viewport. */
+.menu__list {
+  max-height: min(70vh, 34rem);
+  overflow-y: auto;
+}
+
+.menu__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.menu__label svg {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .menu__item {
   display: flex;
   width: 100%;
@@ -610,6 +653,48 @@ strong {
 
 .dialog--wide {
   width: min(64rem, calc(100vw - 2rem));
+}
+
+/* New diagram: templates read as a two-column index; generators side by side. */
+.dialog .tabs {
+  margin: var(--space-5) 0 0;
+}
+
+.new-doc__body {
+  margin-top: var(--space-5);
+}
+
+.new-doc__body > .panel-section {
+  padding: 0;
+}
+
+.new-doc__body .template-list {
+  margin-top: 0;
+}
+
+@media (min-width: 720px) {
+  .new-doc__body .template-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-7);
+  }
+
+  .new-doc__body > .panel-section:has(> section) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-7);
+    align-items: start;
+  }
+
+  .new-doc__body > .panel-section > section + section {
+    margin-top: 0;
+    padding-top: 0;
+    /* The divider sits in the middle of the column gap. */
+    padding-left: calc(var(--space-7) / 2);
+    border-top: 0;
+    border-left: var(--hairline) solid var(--rule);
+    margin-left: calc(var(--space-7) / -2);
+  }
 }
 
 .dialog::backdrop {
@@ -807,6 +892,11 @@ strong {
 
 .notice > span {
   flex: 1;
+}
+
+.notice__action {
+  align-self: center;
+  white-space: nowrap;
 }
 
 .notice__close {
@@ -1450,6 +1540,50 @@ strong {
   border-bottom: var(--hairline) solid var(--rule);
 }
 
+/* Advanced fields fold behind a ruled summary: present, not in the way. */
+.advanced {
+  margin: var(--space-5) 0;
+  border-top: var(--hairline) solid var(--rule);
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.advanced > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.advanced > summary::before {
+  content: '+';
+  width: 1ch;
+  font-family: var(--font-mono, monospace);
+  color: var(--fg);
+}
+
+.advanced[open] > summary::before {
+  content: '−';
+}
+
+.advanced > summary:hover {
+  color: var(--fg);
+}
+
+.advanced[open] {
+  padding-bottom: var(--space-3);
+}
+
 .ports {
   margin: var(--space-5) 0 var(--space-4);
   padding: 0;
@@ -1629,6 +1763,45 @@ strong {
   color: var(--muted);
 }
 
+/* ── Empty canvas: guidance set on the grid, the canvas stays droppable ── */
+.canvas-empty {
+  position: absolute;
+  top: 50%;
+  left: clamp(var(--gutter), 10%, 8rem);
+  right: var(--gutter);
+  z-index: 4;
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-width: 30rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.canvas-empty h2 {
+  margin: 0;
+  font-family: var(--font-display-face);
+  font-weight: var(--weight-display);
+  font-size: clamp(1.75rem, 1rem + 2.4vw, 3rem);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+}
+
+.canvas-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.canvas-empty .eyebrow {
+  color: var(--fg);
+}
+
+.canvas-empty .button {
+  margin-top: var(--space-2);
+  pointer-events: auto;
+}
+
 /* ── Viewer states (loading, error, WebGL fallback) ───────────────────── */
 .viewer-state {
   position: relative;
@@ -1694,6 +1867,12 @@ strong {
 }
 
 /* ── Motion ───────────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1805,6 +1984,15 @@ strong {
     grid-template-columns: 0 minmax(0, 1fr) 0;
   }
 
+  .drawer-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+    background: var(--backdrop);
+    animation: fade-in var(--duration-structural) var(--ease-out);
+  }
+
   .side-panel {
     position: fixed;
     top: 0;
@@ -1897,6 +2085,23 @@ strong {
 @media (max-width: 600px) {
   .segmented {
     gap: var(--space-5);
+  }
+
+  .topbar__secondary {
+    display: none;
+  }
+
+  .topbar__more {
+    display: block;
+  }
+
+  /* The document menu opens from mid-bar: keep it inside the screen. */
+  .menu__list--start {
+    min-width: 14rem;
+  }
+
+  .menu__list--start .menu__hint {
+    display: none;
   }
 
   /* Every action stays reachable; labels collapse to icons with accessible names. */

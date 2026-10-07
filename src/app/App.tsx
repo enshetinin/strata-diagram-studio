@@ -6,6 +6,7 @@ import { ExportPngDialog } from './ExportPngDialog';
 import { GenerationPreviewDialog } from './GenerationPreviewDialog';
 import { GroupDeleteDialog } from './GroupDeleteDialog';
 import { ImportErrorDialog } from './ImportErrorDialog';
+import { NewDocumentDialog } from './NewDocumentDialog';
 import { Notices } from './Notices';
 import { ShareDialog } from './ShareDialog';
 import { SharedViewBanner } from './SharedViewBanner';
@@ -73,9 +74,22 @@ export function App() {
         </ViewBoundary>
       </main>
       {showRight ? <RightPanel /> : null}
+      {/* Narrow screens: panels are drawers; tapping outside closes them. */}
+      {showLeft || showRight ? (
+        <div
+          className="drawer-scrim"
+          aria-hidden="true"
+          onClick={() => {
+            const ui = useUiStore.getState();
+            ui.setLeft(false);
+            ui.setRight(false);
+          }}
+        />
+      ) : null}
       <Notices />
       <GroupDeleteDialog />
       <ImportErrorDialog />
+      <NewDocumentDialog />
       <GenerationPreviewDialog />
       <ExportPngDialog />
       <ShareDialog />

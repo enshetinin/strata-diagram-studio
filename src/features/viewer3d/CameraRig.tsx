@@ -35,13 +35,14 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
   const resetNonce = useUiStore((state) => state.cameraResetNonce);
   const focusRequest = useUiStore((state) => state.focusRequest);
   const presenting = useUiStore((state) => state.presenting);
+  const insets = useUiStore((state) => state.overlayInsets);
 
   const direction = useMemo(() => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), [theme.camera.azimuthDeg, theme.camera.elevationDeg]);
   const fit = useMemo(
-    () => computeDefaultView(model, direction, projection, theme.camera.fov, size, presenting),
+    () => computeDefaultView(model, direction, projection, theme.camera.fov, size, presenting, insets),
     // Refit only on explicit triggers, not on every model edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [projection, direction, size.width, size.height, presenting, resetNonce, theme.camera.fov],
+    [projection, direction, size.width, size.height, presenting, resetNonce, theme.camera.fov, insets?.top, insets?.bottom],
   );
 
   const frameAll = useCallback(
@@ -79,11 +80,11 @@ export function CameraRig({ projection }: { projection: 'orthographic' | 'perspe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce, projection, presenting, direction]);
 
-  // Keep framing on resize unless the user has navigated.
+  // Keep framing on resize (stage or overlay) unless the user has navigated.
   useEffect(() => {
     if (!userMoved.current) frameAll(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size.width, size.height]);
+  }, [size.width, size.height, insets?.top, insets?.bottom]);
 
   // Focus a node or group requested from the inspector, outline or double click.
   useEffect(() => {

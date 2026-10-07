@@ -76,7 +76,7 @@ function PortsEditor({ node }: { node: DiagramNode }) {
   };
   return (
     <fieldset className="ports">
-      <legend>Puertos tipados</legend>
+      <legend>Puntos de conexión</legend>
       <table className="ports__table">
         <thead>
           <tr>
@@ -126,8 +126,8 @@ function PortsEditor({ node }: { node: DiagramNode }) {
                 <button
                   type="button"
                   className="icon-button icon-button--small"
-                  aria-label={`Quitar puerto ${port.id} (y sus relaciones)`}
-                  title="Quitar puerto y sus relaciones"
+                  aria-label={`Quitar punto ${port.id} (y sus relaciones)`}
+                  title="Quitar punto y sus relaciones"
                   disabled={node.ports.length <= 1}
                   onClick={() => update(node.ports.filter((_, i) => i !== index), 'Quitar puerto')}
                 >
@@ -139,7 +139,7 @@ function PortsEditor({ node }: { node: DiagramNode }) {
         </tbody>
       </table>
       <button type="button" className="button button--small" onClick={() => update([...node.ports, { id: nextPortId(), side: 'right', direction: 'out', dataType: 'any' }], 'Añadir puerto')}>
-        <Plus size={14} aria-hidden="true" /> Añadir puerto
+        <Plus size={14} aria-hidden="true" /> Añadir punto
       </button>
     </fieldset>
   );
@@ -195,11 +195,17 @@ function NodeInspector({ node, doc }: { node: DiagramNode; doc: DiagramDocument 
         label="Grupo"
         value={node.groupId ?? '__none__'}
         options={groupOptions(doc)}
-        hint="Conserva la posición absoluta al cambiar de grupo."
+        hint="El componente no se mueve en el lienzo al cambiarlo de grupo."
         onChange={(value) => run('Cambiar grupo', (d) => cmd.setNodeGroup(d, node.id, value === '__none__' ? null : value))}
       />
-      <PortsEditor node={node} />
-      <MetadataField node={node} />
+      <details className="advanced">
+        <summary>Avanzado: puntos de conexión y metadatos</summary>
+        <PortsEditor node={node} />
+        <MetadataField node={node} />
+        <p className="field__hint">
+          ID estable: <code>{node.id}</code>
+        </p>
+      </details>
       <ElementActions type="node" id={node.id} />
       <div className="button-row">
         <button type="button" className="button" onClick={duplicateSelection}>
@@ -209,9 +215,6 @@ function NodeInspector({ node, doc }: { node: DiagramNode; doc: DiagramDocument 
           <Trash2 size={15} aria-hidden="true" /> Borrar
         </button>
       </div>
-      <p className="field__hint">
-        ID estable: <code>{node.id}</code>
-      </p>
     </>
   );
 }
@@ -333,7 +336,7 @@ function DocumentInspector({ doc }: { doc: DiagramDocument }) {
       <TextField label="Descripción" value={doc.description} multiline onCommit={(description) => run('Editar descripción', (d) => cmd.setDocumentInfo(d, { description }))} />
       <dl className="stats">
         <div>
-          <dt>Nodos</dt>
+          <dt>Componentes</dt>
           <dd>{doc.nodes.length}</dd>
         </div>
         <div>
@@ -343,10 +346,6 @@ function DocumentInspector({ doc }: { doc: DiagramDocument }) {
         <div>
           <dt>Grupos</dt>
           <dd>{doc.groups.length}</dd>
-        </div>
-        <div>
-          <dt>Esquema</dt>
-          <dd>v{doc.schemaVersion}</dd>
         </div>
       </dl>
       <p className="field__hint">Selecciona un elemento en cualquier vista o en «Estructura» para editarlo.</p>
@@ -368,7 +367,7 @@ export function Inspector() {
             Agrupar
           </button>
           <button type="button" className="button" onClick={duplicateSelection}>
-            Duplicar nodos
+            Duplicar componentes
           </button>
           <button type="button" className="button button--danger" onClick={deleteSelection}>
             Borrar

@@ -66,6 +66,9 @@
   line-height: var(--leading-display);
   letter-spacing: var(--tracking-display);
   text-transform: uppercase;
+  /* The reveal's clip-path ends at the box: a long word must wrap, not overflow. */
+  overflow-wrap: break-word;
+  hyphens: auto;
   animation: text-rise var(--duration-reveal) var(--ease-out) both;
 }
 
@@ -291,6 +294,42 @@
   gap: var(--space-1);
 }
 
+/*
+ * Narrow stage (both panels open on a laptop): the description already
+ * lives in the inspector, so the colophon keeps only a compact legend
+ * and leaves the height to the scene.
+ */
+@container (max-width: 52rem) {
+  /* The eyebrow shares the actions row; the headline takes the full width below it. */
+  .scene-title {
+    max-width: calc(100cqi - 2 * var(--gutter));
+  }
+
+  .scene-title__style {
+    display: flex;
+    align-items: center;
+    min-height: var(--control-h);
+    margin-bottom: var(--space-2);
+    /* Leaves room for the actions; on the narrowest stages it simply hides. */
+    max-width: calc(100cqi - 2 * var(--gutter) - 20rem);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .scene-colophon {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .scene-title__description {
+    display: none;
+  }
+
+  .legend ul {
+    gap: var(--space-1) var(--space-3);
+  }
+}
 
 @media (max-width: 960px) {
   .scene-title {
@@ -340,4 +379,23 @@
   .presentation__controls {
     justify-content: flex-end;
   }
+}
+
+/* Empty diagram: follows the scene's colours; the scene stays orbitable around it. */
+.viewer-overlay > .canvas-empty {
+  pointer-events: none;
+}
+
+.viewer-overlay .canvas-empty .eyebrow {
+  color: var(--o-fg);
+}
+
+.viewer-overlay .canvas-empty p {
+  color: var(--o-muted);
+}
+
+.viewer-overlay .canvas-empty .button--primary {
+  background: var(--o-primary);
+  border-color: var(--o-primary);
+  color: var(--o-primary-fg);
 }

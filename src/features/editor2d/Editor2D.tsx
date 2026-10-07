@@ -33,7 +33,9 @@ import { EdgeMarkers, StrataEdge } from './StrataEdge';
 import { StrataNode } from './StrataNode';
 import { accent2d } from './visual';
 import { EditorToolbar } from './EditorToolbar';
+import { initialViewport } from './viewport';
 import { LIBRARY_MIME } from './dnd';
+import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 
 // Stable references outside render, as React Flow requires.
 const nodeTypes: NodeTypes = { strata: StrataNode, group: GroupNode };
@@ -75,13 +77,47 @@ function applySelectChanges(changes: { ref: ElementRef; selected: boolean }[]) {
   if (!same) ui.select(next);
 }
 
+const SMALL_SCREEN_NOTE = 'strata:note:small-screen-2d';
+
+/** Phones get a heads-up once: viewing works, building is easier with a pointer. Shown by CSS below 600px. */
+function SmallScreenNote() {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(SMALL_SCREEN_NOTE) === '1';
+    } catch {
+      return false;
+    }
+  });
+  if (dismissed) return null;
+  return (
+    <p className="editor2d__small-note" role="note">
+      <span>Editar es más cómodo en una pantalla grande. Aquí puedes revisar, mover componentes y presentar.</span>
+      <button
+        type="button"
+        className="link-button"
+        onClick={() => {
+          setDismissed(true);
+          try {
+            localStorage.setItem(SMALL_SCREEN_NOTE, '1');
+          } catch {
+            // Private mode: the note simply comes back next time.
+          }
+        }}
+      >
+        Entendido
+      </button>
+    </p>
+  );
+}
+
 function Canvas2D() {
   const doc = useDocumentStore((state) => state.doc);
+  const readOnly = useDocumentStore((state) => state.readOnly !== null);
   const selection = useUiStore((state) => state.selection);
   const isolated = useUiStore((state) => state.isolatedGroupId);
   const focusRequest = useUiStore((state) => state.focusRequest);
   const snap = usePreferences((state) => state.snapToGrid);
-  const { fitView, screenToFlowPosition } = useReactFlow();
+  const { fitView, screenToFlowPosition, setViewport } = useReactFlow();
   const [invalidReason, setInvalidReason] = useState<string | null>(null);
 
   const derivedNodes = useMemo(() => toFlowNodes(doc, selection, isolated), [doc, selection, isolated]);
@@ -181,6 +217,24 @@ function Canvas2D() {
     return () => registerPasteAnchor(null);
   }, [screenToFlowPosition]);
 
+  // Opening view: legible zoom, framed on the content (or its start when it is large).
+  const wrapper = useRef<HTMLDivElement>(null);
+  const applyInitialViewport = useCallback(() => {
+    const element = wrapper.current;
+    if (!element) return;
+    const abs = resolveAbsoluteLayout(useDocumentStore.getState().doc);
+    const view = initialViewport([...abs.nodes.values(), ...abs.groups.values()], { width: element.clientWidth, height: element.clientHeight });
+    if (view) void setViewport(view);
+  }, [setViewport]);
+  // A replaced document (template, import, undo of it) opens the same way.
+  const resetNonce = useUiStore((state) => state.cameraResetNonce);
+  const seenReset = useRef(resetNonce);
+  useEffect(() => {
+    if (seenReset.current === resetNonce) return;
+    seenReset.current = resetNonce;
+    applyInitialViewport();
+  }, [resetNonce, applyInitialViewport]);
+
   // Frame the requested / selected element when this view mounts or is asked to.
   const mounted = useRef(false);
   useEffect(() => {
@@ -195,6 +249,7 @@ function Canvas2D() {
 
   return (
     <div
+      ref={wrapper}
       className="editor2d"
       onDragOver={(event) => event.dataTransfer.types.includes(LIBRARY_MIME) && event.preventDefault()}
       onDrop={onDrop}
@@ -239,8 +294,7 @@ function Canvas2D() {
         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
         snapToGrid={snap}
         snapGrid={[16, 16]}
-        fitView
-        fitViewOptions={{ padding: 0.15 }}
+        onInit={applyInitialViewport}
         minZoom={0.1}
         maxZoom={2.5}
         elevateNodesOnSelect={false}
@@ -252,18 +306,33 @@ function Canvas2D() {
           pannable
           zoomable
           ariaLabel="Minimapa"
+          // Orientation only: small enough not to cover the components it maps.
+          style={{ width: 168, height: 112 }}
           nodeColor={(node) => (node.type === 'group' ? 'transparent' : accent2d((node as FlowNode).data.accent))}
           nodeStrokeColor={(node) => (node.type === 'group' ? 'var(--edge)' : 'transparent')}
           maskColor="var(--minimap-mask)"
         />
         <Controls showInteractive={false} aria-label="Zoom y encuadre" />
       </ReactFlow>
+      {!invalidReason && !readOnly && doc.nodes.length >= 2 && doc.edges.length === 0 ? (
+        <p className="editor2d__hint" role="status">
+          Para conectar, pasa el ratón por un componente y arrastra desde uno de sus puntos hasta otro.
+        </p>
+      ) : null}
       {invalidReason ? (
         <p className="editor2d__invalid" role="status">
           Conexión no válida: {invalidReason}
         </p>
       ) : null}
+      {doc.nodes.length === 0 && doc.groups.length === 0 ? (
+        <CanvasEmpty
+          title="Empieza por un componente"
+          text="Pulsa «Añadir» o arrastra componentes desde Biblioteca. Después conéctalos arrastrando desde los puntos que aparecen al pasar el ratón."
+          action={{ label: 'Abrir Biblioteca', onClick: () => useUiStore.getState().setLeft(true, 'library') }}
+        />
+      ) : null}
       <EditorToolbar />
+      {!readOnly ? <SmallScreenNote /> : null}
     </div>
   );
 }

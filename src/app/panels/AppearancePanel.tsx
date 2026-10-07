@@ -1,15 +1,36 @@
 import { setPresentation, type PresentationPatch } from '../../domain/commands';
 import { LABEL_MODES, STYLE_IDS, type CameraProjection, type LabelMode } from '../../domain/types';
-import { setStyle } from '../../state/actions';
+import { useState } from 'react';
+import { newAppearance, setStyle } from '../../state/actions';
 import { useDocumentStore } from '../../state/documentStore';
 import { usePreferences, type Quality } from '../../state/preferencesStore';
 import { useUiStore } from '../../state/uiStore';
 import { CheckboxField, RangeField, SelectField } from '../../components/ui/fields';
 import { THEMES } from '../../features/viewer3d/themes';
+import { SeedInput } from './GeneratePanel';
 
 function update(label: string, patch: PresentationPatch) {
   const result = useDocumentStore.getState().execute(label, (doc) => setPresentation(doc, patch));
   if (!result.ok) useUiStore.getState().notify('error', result.error);
+}
+
+/** Random restyle: style, layer height, spacing and layout direction; the graph and its ids stay. */
+function AppearanceShuffle() {
+  const [seed, setSeed] = useState(3);
+  const [relayout, setRelayout] = useState(true);
+  return (
+    <section className="appearance-shuffle" aria-labelledby="appearance-shuffle">
+      <h3 id="appearance-shuffle" className="panel-heading">
+        Probar otra apariencia
+      </h3>
+      <p className="panel-intro">Combina estilo, altura de capas, espaciado y dirección al azar. Conserva componentes, grupos y relaciones.</p>
+      <SeedInput label="Variante nº" value={seed} onChange={setSeed} />
+      <CheckboxField label="Reordenar también el diagrama" checked={relayout} onChange={setRelayout} />
+      <button type="button" className="button button--block" onClick={() => void newAppearance(seed, relayout)}>
+        Aplicar apariencia
+      </button>
+    </section>
+  );
 }
 
 const LABEL_MODE_TEXT: Record<LabelMode, string> = { all: 'Todas', auto: 'Automático según densidad', selection: 'Solo selección y grupos' };
@@ -25,7 +46,7 @@ export function AppearancePanel() {
     <div className="panel-section">
       <fieldset className="style-picker">
         <legend>Estilo</legend>
-        <p className="panel-intro">Cambia materiales, geometría, luz, cámara y conectores. Nunca modifica el grafo.</p>
+        <p className="panel-intro">Cambia materiales, luz, cámara y líneas. No toca el contenido del diagrama.</p>
         <div className="style-picker__grid" role="radiogroup" aria-label="Preset de estilo">
           {STYLE_IDS.map((id) => {
             const theme = THEMES[id];
@@ -45,14 +66,16 @@ export function AppearancePanel() {
         </div>
       </fieldset>
 
+      <AppearanceShuffle />
+
       <RangeField
-        label="Espaciado del auto-layout"
+        label="Espaciado al ordenar"
         value={appearance.spacing}
         min={0.6}
         max={1.8}
         step={0.05}
         format={(value) => `×${value.toFixed(2)}`}
-        hint="Se aplica al pulsar «Auto-layout»."
+        hint="Se aplica al pulsar «Ordenar»."
         onCommit={(spacing) => update('Cambiar espaciado', { appearance: { spacing } })}
       />
       <RangeField
@@ -86,11 +109,11 @@ export function AppearancePanel() {
         label="Calidad 3D (este dispositivo)"
         value={quality}
         options={[
-          { value: 'low', label: 'Baja · DPR 1, sin sombras' },
-          { value: 'medium', label: 'Media · DPR ≤ 1,5, sombras' },
-          { value: 'high', label: 'Alta · DPR ≤ 2, sombras' },
+          { value: 'low', label: 'Baja · más fluida, sin sombras' },
+          { value: 'medium', label: 'Media · con sombras' },
+          { value: 'high', label: 'Alta · máxima nitidez' },
         ]}
-        hint={autoDegraded ? 'Reducida automáticamente por rendimiento.' : 'Preferencia local; no se guarda en el documento.'}
+        hint={autoDegraded ? 'Se bajó sola porque el equipo iba lento.' : 'Solo para este dispositivo; no se guarda en el diagrama.'}
         onChange={(value) => setQuality(value)}
       />
     </div>

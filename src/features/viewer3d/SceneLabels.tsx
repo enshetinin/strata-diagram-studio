@@ -4,10 +4,12 @@
  * selection and main elements labelled.
  */
 import { Billboard, Text } from '@react-three/drei';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { KIND_INFO } from '../../domain/catalog';
 import type { LabelMode } from '../../domain/types';
 import type { SceneEdge, SceneNode } from '../layout/sceneModel';
+import { viewDirection } from './cameraFit';
+import { declutterNodeLabels, markerCollides, placeGroupTitles, titleSize } from './labelPlacement';
 import { dimColor } from './materials';
 import { DIM_AMOUNT, FONT_BOLD, FONT_REGULAR, LABEL_MATERIAL, useScene } from './sceneContext';
 
@@ -85,8 +87,14 @@ const EdgeLabel = memo(function EdgeLabel({ edge, compact }: { edge: SceneEdge; 
   );
 });
 
-/** Decides which labels to draw for the current density mode. */
-export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneEdge[], priority: Set<string>, activeEdges: string[], crowded = false) {
+type Declutter = (ranked: SceneNode[], keep: Set<string>) => Set<string>;
+
+/**
+ * Decides which labels to draw for the current density mode. In automatic
+ * mode, `declutter` drops node labels that would overlap a more connected
+ * one; selected and related nodes always keep theirs.
+ */
+export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneEdge[], priority: Set<string>, activeEdges: string[], crowded = false, declutter?: Declutter) {
   const degree = new Map<string, number>();
   for (const edge of edges) {
     degree.set(edge.sourceId, (degree.get(edge.sourceId) ?? 0) + 1);
@@ -95,12 +103,8 @@ export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneE
   const dense = nodes.length > 36 || crowded;
   // In dense scenes keep only the most connected components (deterministic order).
   const budget = Math.max(6, Math.min(20, Math.round(nodes.length * 0.2)));
-  const hubs = new Set(
-    [...nodes]
-      .sort((a, b) => (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) || a.id.localeCompare(b.id))
-      .slice(0, budget)
-      .map((node) => node.id),
-  );
+  const ranked = [...nodes].sort((a, b) => (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) || a.id.localeCompare(b.id));
+  const hubs = new Set(ranked.slice(0, budget).map((node) => node.id));
   const nodeVisible = (node: SceneNode) => {
     if (priority.has(node.id)) return true;
     if (mode === 'all') return true;
@@ -115,16 +119,28 @@ export function visibleLabels(mode: LabelMode, nodes: SceneNode[], edges: SceneE
     if (edges.length <= 10) return [{ edge, compact: false }];
     return edge.order !== undefined && !dense ? [{ edge, compact: true }] : [];
   });
-  return { nodes: nodes.filter(nodeVisible), edges: edgeLabels, showKind: mode === 'all' };
+  const shown = ranked.filter(nodeVisible);
+  const kept = mode === 'auto' && declutter ? declutter(shown, priority) : null;
+  return { nodes: kept ? nodes.filter((node) => kept.has(node.id)) : nodes.filter(nodeVisible), edges: edgeLabels, showKind: mode === 'all' };
 }
 
 export function SceneLabels({ mode }: { mode: LabelMode }) {
-  const { model, highlight, crowded } = useScene();
-  const visible = visibleLabels(mode, model.nodes, model.edges, highlight.labelPriority, highlight.activeEdges, crowded);
+  const { model, highlight, crowded, theme, labelSize } = useScene();
+  const direction = useMemo(() => viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), [theme.camera.azimuthDeg, theme.camera.elevationDeg]);
+  // Same placement as ScenePlatforms (pure and deterministic): node labels yield to group titles.
+  const titles = useMemo(
+    () => [...placeGroupTitles(model.groups, model.nodes, direction, labelSize, (group) => titleSize(labelSize, group), model.edges).values()].map((title) => title.rect),
+    [model.groups, model.nodes, model.edges, direction, labelSize],
+  );
+  const visible = visibleLabels(mode, model.nodes, model.edges, highlight.labelPriority, highlight.activeEdges, crowded, (ranked, keep) =>
+    declutterNodeLabels(ranked, keep, direction, labelSize, titles),
+  );
   return (
     <group name="labels">
       {visible.nodes.map((node) => (highlight.node(node.id) === 'isolatedOut' ? null : <NodeLabel key={node.id} node={node} showKind={visible.showKind} />))}
-      {visible.edges.map(({ edge, compact }) => (highlight.edge(edge.id) === 'isolatedOut' ? null : <EdgeLabel key={edge.id} edge={edge} compact={compact} />))}
+      {visible.edges.map(({ edge, compact }) =>
+        highlight.edge(edge.id) === 'isolatedOut' || (compact && markerCollides(edge, direction, labelSize, titles)) ? null : <EdgeLabel key={edge.id} edge={edge} compact={compact} />,
+      )}
     </group>
   );
 }

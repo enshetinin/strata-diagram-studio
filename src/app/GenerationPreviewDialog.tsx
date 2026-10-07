@@ -41,7 +41,7 @@ export function GenerationPreviewDialog() {
       {doc && pending ? (
         <>
           <p className="preview-meta">
-            <strong>{pending.result.provider.label}</strong> · {doc.nodes.length} nodos · {doc.edges.length} relaciones · {doc.groups.length} grupos
+            <strong>{pending.result.provider.label}</strong> · {doc.nodes.length} componentes · {doc.edges.length} relaciones · {doc.groups.length} grupos
           </p>
           {pending.result.notes.map((note) => (
             <p key={note} className="field__hint">

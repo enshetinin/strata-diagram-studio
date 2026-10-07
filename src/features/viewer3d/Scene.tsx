@@ -42,6 +42,7 @@ export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; r
   const isolated = useUiStore((state) => state.isolatedGroupId);
   const presenting = useUiStore((state) => state.presenting);
   const step = useUiStore((state) => state.presentationStep);
+  const insets = useUiStore((state) => state.overlayInsets);
   const invalidate = useThree((state) => state.invalidate);
   const size = useThree((state) => state.size);
 
@@ -61,10 +62,10 @@ export function Scene({ quality, reducedMotion, onStats }: { quality: Quality; r
   const shadows = quality !== 'low' && theme.light.shadows;
 
   const { labelSize, crowded } = useMemo(() => {
-    const view = computeDefaultView(model, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), projection, theme.camera.fov, size, presenting);
+    const view = computeDefaultView(model, viewDirection(theme.camera.azimuthDeg, theme.camera.elevationDeg), projection, theme.camera.fov, size, presenting, insets);
     const ideal = 12 * view.worldPerPixel;
     return { labelSize: Math.min(0.6, Math.max(0.12, ideal)) * (theme.label.size / 0.15), crowded: ideal > 0.42 };
-  }, [model, projection, size, presenting, theme]);
+  }, [model, projection, size, presenting, theme, insets]);
 
   const value = useMemo<SceneContextValue>(() => ({ theme, materials, model, highlight, shadows, reducedMotion, labelSize, crowded }), [theme, materials, model, highlight, shadows, reducedMotion, labelSize, crowded]);
 

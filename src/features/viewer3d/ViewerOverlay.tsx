@@ -4,12 +4,13 @@
  * title and legend themselves (features/export/pngComposition).
  */
 import { ChevronLeft, ChevronRight, Crosshair, PencilRuler, RotateCcw, X } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { KIND_INFO, RELATION_INFO } from '../../domain/catalog';
 import { effectiveNarrative } from '../../domain/narrative';
 import type { NodeKind, RelationKind } from '../../domain/types';
 import { useDocumentStore } from '../../state/documentStore';
 import { selectPrimary, useUiStore } from '../../state/uiStore';
+import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 import { IconButton } from '../../components/ui/IconButton';
 import { KIND_GLYPH, RELATION_STROKE } from '../editor2d/visual';
 import { THEMES } from './themes';
@@ -87,6 +88,49 @@ function Presentation() {
   );
 }
 
+/** Elements that frame the scene; the camera fits the content between them. */
+const FRAMING = '.scene-title, .viewer-actions, .scene-colophon';
+const GAP = 16;
+
+/**
+ * Publishes how much of the stage the title (top) and the colophon or
+ * actions (bottom) cover, so the default framing never hides content
+ * behind them, whatever the stage width or legend length.
+ */
+function useOverlayInsets(root: React.RefObject<HTMLDivElement | null>, active: boolean, docId: string) {
+  useLayoutEffect(() => {
+    const element = root.current;
+    const setInsets = useUiStore.getState().setOverlayInsets;
+    if (!element || !active) {
+      setInsets(null);
+      return;
+    }
+    const measure = () => {
+      const box = element.getBoundingClientRect();
+      const middle = box.top + box.height / 2;
+      let top = 0;
+      let bottom = 0;
+      for (const child of element.querySelectorAll<HTMLElement>(FRAMING)) {
+        const rect = child.getBoundingClientRect();
+        if (rect.height === 0) continue;
+        if (rect.top < middle) top = Math.max(top, rect.bottom - box.top + GAP);
+        else bottom = Math.max(bottom, box.bottom - rect.top + GAP);
+      }
+      // Coarse steps keep text reflow from nudging the camera.
+      const step = (value: number) => Math.ceil(value / 8) * 8;
+      setInsets({ top: step(top), bottom: step(bottom) });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    for (const child of element.querySelectorAll<HTMLElement>(FRAMING)) observer.observe(child);
+    return () => {
+      observer.disconnect();
+      setInsets(null);
+    };
+  }, [root, active, docId]);
+}
+
 export function ViewerOverlay() {
   const doc = useDocumentStore((state) => state.doc);
   const presenting = useUiStore((state) => state.presenting);
@@ -99,6 +143,8 @@ export function ViewerOverlay() {
   const relations = useMemo(() => [...new Set(doc.edges.map((edge) => edge.relation))], [doc.edges]);
   const particlesVisible = doc.presentation.appearance.flowParticles && (presenting || selection.some((ref) => ref.type === 'edge'));
   const isolatedLabel = isolated ? doc.groups.find((group) => group.id === isolated)?.label : null;
+  const root = useRef<HTMLDivElement>(null);
+  useOverlayInsets(root, !presenting, doc.id);
 
   const editIn2d = () => {
     const ui = useUiStore.getState();
@@ -108,7 +154,7 @@ export function ViewerOverlay() {
   };
 
   return (
-    <div className={`viewer-overlay viewer-overlay--${theme.overlay}`}>
+    <div ref={root} className={`viewer-overlay viewer-overlay--${theme.overlay}`}>
       <header className="scene-title" key={doc.id}>
         <p className="scene-title__style">{theme.name}</p>
         <h1>
@@ -142,7 +188,21 @@ export function ViewerOverlay() {
         </p>
       ) : null}
 
-      {!presenting ? (
+      {doc.nodes.length === 0 && !presenting ? (
+        <CanvasEmpty
+          title="Aún no hay nada que ver"
+          text="La vista 3D se construye sola a partir del diagrama. Añade componentes en el editor 2D."
+          action={{
+            label: readOnly ? 'Ver en 2D' : 'Empezar en 2D',
+            onClick: () => {
+              useUiStore.getState().setMode('2d');
+              if (!readOnly) useUiStore.getState().setLeft(true, 'library');
+            },
+          }}
+        />
+      ) : null}
+
+      {!presenting && doc.nodes.length > 0 ? (
         <footer className="scene-colophon">
           {doc.description ? <p className="scene-title__description">{doc.description}</p> : null}
           <Legend kinds={kinds} relations={relations} />

@@ -36,10 +36,10 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   **Editar en 2D** (lleva al elemento seleccionado).
 - **3D**: órbita limitada, pan y zoom; clic selecciona, doble clic enfoca; la selección resalta
   vecinos y atenúa el resto. Aislar un grupo desde *Estructura* o el inspector. Restablecer cámara.
-- **2D**: crear (botón «+» o arrastrando desde *Biblioteca*, también sobre un grupo), arrastrar,
+- **2D**: crear (botón «Añadir» de la barra, «+» o arrastrando desde *Biblioteca*, también sobre un grupo), arrastrar,
   conectar puerto a puerto (feedback verde/rojo y motivo del rechazo), reconectar arrastrando un
   extremo, mover el tramo central de una relación seleccionada (doble clic lo restablece; el
-  auto-layout también), agrupar, desagrupar, duplicar, borrar, redimensionar grupos, minimapa y
+  «Ordenar» también), agrupar, desagrupar, duplicar, borrar, redimensionar grupos, minimapa y
   ajuste a rejilla. Lienzo tipo Figma: arrastrar sobre el vacío (también dentro de un grupo) dibuja
   un marco de selección (Mayús lo suma a la selección); los grupos se seleccionan por su etiqueta;
   pan con espacio + arrastrar, botón central/derecho o scroll del trackpad; zoom con pellizco o
@@ -51,7 +51,7 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   y el orden del recorrido no se copia.
 - **Inspector**: etiqueta, descripción, tipo, proveedor, grupo, puertos tipados, metadatos JSON;
   relaciones (tipo, etiqueta, dirección, paso del recorrido, explicación, invertir); grupos.
-- **Apariencia**: seis estilos, espaciado del auto-layout, altura de capas, densidad de etiquetas,
+- **Apariencia**: seis estilos, espaciado al ordenar (auto-layout ELK), altura de capas, densidad de etiquetas,
   cámara, partículas ilustrativas y calidad (preferencia local).
 - **Recorrido** (panel derecho): pasos ordenados con título, texto y las relaciones que iluminan.
   Crear un paso con la selección, reordenar arrastrando o con Alt+↑/↓, quitar o añadir relaciones,
@@ -59,8 +59,12 @@ Medición de rendimiento: `pnpm build && pnpm preview`, y en otra terminal
   Abrir un paso lo resalta en 2D y 3D. Cada relación pertenece como mucho a un paso, y su marcador
   numerado (`order`) se renumera solo.
 - **Presentar**: oculta paneles, encuadra y recorre los pasos numerados (←/→, Esc).
-- **Generar**: «Nueva arquitectura» (reglas locales con seed y complejidad), «Nueva apariencia»
-  (estilo/layout sin tocar el grafo) y descripción en texto (requiere proveedor; ver abajo).
+- **Menú de documento** (chevron junto al nombre): nuevo diagrama en blanco, plantillas, generar
+  («Nueva arquitectura» con reglas locales, número de variante (seed) y complejidad, o descripción en texto, que requiere
+  proveedor; ver abajo) e importar JSON. Todo reemplaza el diagrama actual (solo se guarda uno) y el
+  aviso ofrece «Deshacer».
+- **Paneles**: a la izquierda *Estructura* y *Biblioteca*; a la derecha *Inspector*, *Recorrido* y
+  *Apariencia*, que incluye «Probar otra apariencia» (estilo/layout al azar sin tocar el grafo).
 
 Atajos (ignorados mientras se escribe): Ctrl/⌘+Z deshacer, Ctrl/⌘+Shift+Z o Ctrl+Y rehacer,
 Supr/Retroceso borrar, Ctrl/⌘+C / X / V copiar, cortar y pegar, Ctrl/⌘+D duplicar, Ctrl/⌘+G agrupar, Ctrl/⌘+Shift+G desagrupar,

@@ -34,3 +34,10 @@ export async function dragHandle(page: Page, from: string, to: string) {
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 8 });
   await page.mouse.up();
 }
+
+/** The left panel starts closed: open it (if needed) on the given tab. */
+export async function openLeftTab(page: Page, name: 'Estructura' | 'Biblioteca') {
+  const show = page.getByRole('button', { name: 'Mostrar estructura y biblioteca' });
+  if (await show.isVisible()) await show.click();
+  await page.getByRole('tab', { name }).click();
+}

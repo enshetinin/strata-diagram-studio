@@ -61,7 +61,7 @@ export function confirmPending(): void {
   const pending = useGeneration.getState().pending;
   if (!pending) return;
   const label = pending.result.provider.kind === 'local' ? 'Nueva arquitectura (reglas locales)' : 'Insertar diagrama generado';
-  replaceDocument(pending.result.document, label, 'Diagrama insertado. «Deshacer» recupera el anterior.');
+  replaceDocument(pending.result.document, label, 'Diagrama generado.');
   useGeneration.setState({ pending: null });
 }
 
