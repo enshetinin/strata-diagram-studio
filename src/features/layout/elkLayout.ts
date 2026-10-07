@@ -96,7 +96,13 @@ let elkInstance: Promise<{ layout: (graph: ElkNode) => Promise<ElkNode> }> | nul
 
 /** ELK is ~1.5 MB; it is only loaded when the user asks for auto-layout. */
 async function getElk() {
-  elkInstance ??= import('elkjs/lib/elk.bundled.js').then(({ default: ELK }) => new ELK());
+  elkInstance ??= import('elkjs/lib/elk.bundled.js')
+    .then(({ default: ELK }) => new ELK())
+    .catch((error: unknown) => {
+      // A failed chunk load (offline, new deploy) must not poison every later attempt.
+      elkInstance = null;
+      throw error;
+    });
   return elkInstance;
 }
 

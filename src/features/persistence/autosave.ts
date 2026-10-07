@@ -25,6 +25,11 @@ export function saveNow(): boolean {
   return result.ok;
 }
 
+/** Saves now only if a debounced save is waiting. */
+export function flushPendingSave(): void {
+  if (timer) saveNow();
+}
+
 /** Starts debounced autosave; returns the unsubscribe function. */
 export function startAutosave(): () => void {
   const unsubscribe = useDocumentStore.subscribe((state, previous) => {
@@ -34,12 +39,9 @@ export function startAutosave(): () => void {
     if (timer) clearTimeout(timer);
     timer = setTimeout(saveNow, DEBOUNCE_MS);
   });
-  const flush = () => {
-    if (timer) saveNow();
-  };
-  window.addEventListener('pagehide', flush);
+  window.addEventListener('pagehide', flushPendingSave);
   return () => {
     unsubscribe();
-    window.removeEventListener('pagehide', flush);
+    window.removeEventListener('pagehide', flushPendingSave);
   };
 }

@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import { useDocumentStore } from '../../state/documentStore';
 import { useUiStore } from '../../state/uiStore';
-import { saveNow } from '../persistence/autosave';
+import { flushPendingSave, saveNow } from '../persistence/autosave';
 import { backupSavedDocument, loadSaved } from '../persistence/storage';
 import { defaultDocument } from '../templates';
 import { decodeDocument, readShareHash, type ShareHash } from './shareLink';
@@ -29,9 +29,14 @@ function resetView() {
   ui.resetCamera();
 }
 
+let openRequest = 0;
+
 /** Decodes a link and shows it read-only. Invalid links leave everything untouched. */
 export async function openSharedLink(share: ShareHash): Promise<boolean> {
+  // Decoding is async: a link pasted after this one must win even if it decodes first.
+  const request = ++openRequest;
   const result = await decodeDocument(share.payload);
+  if (request !== openRequest) return false;
   const ui = useUiStore.getState();
   if (!result.ok) {
     ui.notify('error', `No se pudo abrir el enlace compartido: ${result.message}`);
@@ -39,6 +44,8 @@ export async function openSharedLink(share: ShareHash): Promise<boolean> {
     return false;
   }
   const store = useDocumentStore.getState();
+  // Edits still inside the autosave debounce would be dropped once the store is read-only.
+  flushPendingSave();
   // Read-only first, so autosave ignores the load below.
   store.setReadOnly(READ_ONLY_MESSAGE);
   store.load(result.document);
