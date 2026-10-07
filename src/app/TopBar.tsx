@@ -1,4 +1,4 @@
-import { ChevronDown, Download, Link2, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
+import { ChevronDown, Download, Ellipsis, Link2, Moon, PanelLeft, PanelRight, Play, Redo2, Sun, Undo2, Workflow } from 'lucide-react';
 import { useRef } from 'react';
 import { setDocumentInfo } from '../domain/commands';
 import { parseDocumentText } from '../domain/parse';
@@ -84,6 +84,15 @@ export function TopBar() {
   const readOnly = useDocumentStore((state) => state.readOnly !== null);
   const setTheme = usePreferences((state) => state.setTheme);
 
+  const themeLabel = theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+  const openShare = () => useShareDialog.setState({ open: true });
+  const exportItems = [
+    { label: 'JSON del documento', menuLabel: 'Exportar JSON', hint: 'portable, validado', onSelect: exportJson },
+    { label: 'SVG de la vista 2D', menuLabel: 'Exportar SVG (2D)', hint: 'vectorial', onSelect: () => void exportSvgFile() },
+    { label: 'Imagen PNG de la escena 3D…', menuLabel: 'Exportar imagen PNG…', hint: 'título, leyenda, hasta 4K', onSelect: () => usePngDialog.setState({ open: true }) },
+  ];
+
   const onImport = async (file: File | undefined) => {
     if (!file) return;
     const result = parseDocumentText(await file.text());
@@ -142,11 +151,7 @@ export function TopBar() {
 
       <div className="topbar__group topbar__group--end">
         {!readOnly ? <SaveIndicator /> : null}
-        <IconButton
-          label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          icon={theme === 'dark' ? Sun : Moon}
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        />
+        <IconButton className="topbar__secondary" label={themeLabel} icon={theme === 'dark' ? Sun : Moon} onClick={toggleTheme} />
         <input
           ref={fileInput}
           type="file"
@@ -158,16 +163,23 @@ export function TopBar() {
             event.target.value = '';
           }}
         />
-        <Menu
-          label="Exportar"
-          icon={<Download size={17} strokeWidth={1.75} aria-hidden="true" />}
-          items={[
-            { label: 'JSON del documento', hint: 'portable, validado', onSelect: exportJson },
-            { label: 'SVG de la vista 2D', hint: 'vectorial', onSelect: () => void exportSvgFile() },
-            { label: 'Imagen PNG de la escena 3D…', hint: 'título, leyenda, hasta 4K', onSelect: () => usePngDialog.setState({ open: true }) },
-          ]}
-        />
-        <IconButton label="Compartir enlace" icon={Link2} onClick={() => useShareDialog.setState({ open: true })} />
+        <div className="topbar__secondary">
+          <Menu label="Exportar" icon={<Download size={17} strokeWidth={1.75} aria-hidden="true" />} items={exportItems} />
+        </div>
+        <IconButton className="topbar__secondary" label="Compartir enlace" icon={Link2} onClick={openShare} />
+        {/* Phones: theme, export and share fold into one menu. */}
+        <div className="topbar__more">
+          <Menu
+            compact
+            label="Más acciones"
+            icon={<Ellipsis size={17} strokeWidth={1.75} aria-hidden="true" />}
+            items={[
+              { label: 'Compartir enlace…', hint: 'solo lectura', onSelect: openShare },
+              ...exportItems.map((item) => ({ ...item, label: item.menuLabel })),
+              { label: themeLabel, onSelect: toggleTheme },
+            ]}
+          />
+        </div>
         <button type="button" className="button button--primary button--cta" title="Presentar" onClick={() => useUiStore.getState().setPresenting(true)}>
           <Play className="button__compact-icon" size={17} strokeWidth={1.75} aria-hidden="true" />
           <span className="button__label">Presentar</span>

@@ -74,6 +74,18 @@ export function App() {
         </ViewBoundary>
       </main>
       {showRight ? <RightPanel /> : null}
+      {/* Narrow screens: panels are drawers; tapping outside closes them. */}
+      {showLeft || showRight ? (
+        <div
+          className="drawer-scrim"
+          aria-hidden="true"
+          onClick={() => {
+            const ui = useUiStore.getState();
+            ui.setLeft(false);
+            ui.setRight(false);
+          }}
+        />
+      ) : null}
       <Notices />
       <GroupDeleteDialog />
       <ImportErrorDialog />

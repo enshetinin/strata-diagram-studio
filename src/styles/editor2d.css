@@ -454,3 +454,44 @@
     display: none;
   }
 }
+
+.editor2d__small-note {
+  display: none;
+}
+
+/* Phones: no minimap (pinch and pan instead) and a one-time heads-up. */
+@media (max-width: 600px) {
+  .react-flow__minimap {
+    display: none;
+  }
+
+  .editor2d__small-note {
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 7;
+    display: flex;
+    gap: 0.75rem;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0.625rem 0.875rem;
+    background: var(--sheet-raised);
+    border: 1px solid var(--sheet-rule);
+    border-left: 3px solid var(--signal);
+    color: var(--sheet-ink);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  /* The first-connection hint yields to the note's spot. */
+  .editor2d__small-note ~ .editor2d__hint,
+  .editor2d__hint:has(~ .editor2d__small-note) {
+    display: none;
+  }
+
+  .editor2d:has(.editor2d__small-note) .react-flow__controls {
+    bottom: 4.5rem;
+  }
+}

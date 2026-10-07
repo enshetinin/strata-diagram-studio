@@ -77,6 +77,39 @@ function applySelectChanges(changes: { ref: ElementRef; selected: boolean }[]) {
   if (!same) ui.select(next);
 }
 
+const SMALL_SCREEN_NOTE = 'strata:note:small-screen-2d';
+
+/** Phones get a heads-up once: viewing works, building is easier with a pointer. Shown by CSS below 600px. */
+function SmallScreenNote() {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(SMALL_SCREEN_NOTE) === '1';
+    } catch {
+      return false;
+    }
+  });
+  if (dismissed) return null;
+  return (
+    <p className="editor2d__small-note" role="note">
+      <span>Editar es más cómodo en una pantalla grande. Aquí puedes revisar, mover componentes y presentar.</span>
+      <button
+        type="button"
+        className="link-button"
+        onClick={() => {
+          setDismissed(true);
+          try {
+            localStorage.setItem(SMALL_SCREEN_NOTE, '1');
+          } catch {
+            // Private mode: the note simply comes back next time.
+          }
+        }}
+      >
+        Entendido
+      </button>
+    </p>
+  );
+}
+
 function Canvas2D() {
   const doc = useDocumentStore((state) => state.doc);
   const readOnly = useDocumentStore((state) => state.readOnly !== null);
@@ -299,6 +332,7 @@ function Canvas2D() {
         />
       ) : null}
       <EditorToolbar />
+      {!readOnly ? <SmallScreenNote /> : null}
     </div>
   );
 }

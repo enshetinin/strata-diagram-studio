@@ -193,6 +193,10 @@ strong {
   overflow: hidden;
 }
 
+.drawer-scrim {
+  display: none;
+}
+
 /* ── Header: white band, identity over the context column, nav, actions ── */
 .topbar {
   grid-area: top;
@@ -213,6 +217,10 @@ strong {
   min-width: 0;
   height: 100%;
   padding-inline: var(--space-4) var(--space-4);
+}
+
+.topbar__more {
+  display: none;
 }
 
 .topbar__identity .menu {
@@ -1859,6 +1867,12 @@ strong {
 }
 
 /* ── Motion ───────────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1970,6 +1984,15 @@ strong {
     grid-template-columns: 0 minmax(0, 1fr) 0;
   }
 
+  .drawer-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+    background: var(--backdrop);
+    animation: fade-in var(--duration-structural) var(--ease-out);
+  }
+
   .side-panel {
     position: fixed;
     top: 0;
@@ -2062,6 +2085,14 @@ strong {
 @media (max-width: 600px) {
   .segmented {
     gap: var(--space-5);
+  }
+
+  .topbar__secondary {
+    display: none;
+  }
+
+  .topbar__more {
+    display: block;
   }
 
   /* The document menu opens from mid-bar: keep it inside the screen. */

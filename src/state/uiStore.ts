@@ -104,6 +104,15 @@ export const useUiStore = create<UiState>()((set) => ({
     set((state) => (state.overlayInsets?.top === overlayInsets?.top && state.overlayInsets?.bottom === overlayInsets?.bottom ? state : { overlayInsets })),
 }));
 
+// Panels become drawers below 960px and only one fits: crossing into that
+// width with both open keeps the right one (inspector) and closes the left.
+if (typeof window !== 'undefined' && window.matchMedia) {
+  window.matchMedia('(max-width: 960px)').addEventListener('change', (event) => {
+    const state = useUiStore.getState();
+    if (event.matches && state.leftOpen && state.rightOpen) useUiStore.setState({ leftOpen: false });
+  });
+}
+
 export function isSelected(selection: ElementRef[], ref: ElementRef): boolean {
   return selection.some((item) => item.type === ref.type && item.id === ref.id);
 }
