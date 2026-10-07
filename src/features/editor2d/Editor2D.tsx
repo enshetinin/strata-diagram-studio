@@ -33,6 +33,7 @@ import { EdgeMarkers, StrataEdge } from './StrataEdge';
 import { StrataNode } from './StrataNode';
 import { accent2d } from './visual';
 import { EditorToolbar } from './EditorToolbar';
+import { initialViewport } from './viewport';
 import { LIBRARY_MIME } from './dnd';
 import { CanvasEmpty } from '../../components/ui/CanvasEmpty';
 
@@ -83,7 +84,7 @@ function Canvas2D() {
   const isolated = useUiStore((state) => state.isolatedGroupId);
   const focusRequest = useUiStore((state) => state.focusRequest);
   const snap = usePreferences((state) => state.snapToGrid);
-  const { fitView, screenToFlowPosition } = useReactFlow();
+  const { fitView, screenToFlowPosition, setViewport } = useReactFlow();
   const [invalidReason, setInvalidReason] = useState<string | null>(null);
 
   const derivedNodes = useMemo(() => toFlowNodes(doc, selection, isolated), [doc, selection, isolated]);
@@ -183,6 +184,24 @@ function Canvas2D() {
     return () => registerPasteAnchor(null);
   }, [screenToFlowPosition]);
 
+  // Opening view: legible zoom, framed on the content (or its start when it is large).
+  const wrapper = useRef<HTMLDivElement>(null);
+  const applyInitialViewport = useCallback(() => {
+    const element = wrapper.current;
+    if (!element) return;
+    const abs = resolveAbsoluteLayout(useDocumentStore.getState().doc);
+    const view = initialViewport([...abs.nodes.values(), ...abs.groups.values()], { width: element.clientWidth, height: element.clientHeight });
+    if (view) void setViewport(view);
+  }, [setViewport]);
+  // A replaced document (template, import, undo of it) opens the same way.
+  const resetNonce = useUiStore((state) => state.cameraResetNonce);
+  const seenReset = useRef(resetNonce);
+  useEffect(() => {
+    if (seenReset.current === resetNonce) return;
+    seenReset.current = resetNonce;
+    applyInitialViewport();
+  }, [resetNonce, applyInitialViewport]);
+
   // Frame the requested / selected element when this view mounts or is asked to.
   const mounted = useRef(false);
   useEffect(() => {
@@ -197,6 +216,7 @@ function Canvas2D() {
 
   return (
     <div
+      ref={wrapper}
       className="editor2d"
       onDragOver={(event) => event.dataTransfer.types.includes(LIBRARY_MIME) && event.preventDefault()}
       onDrop={onDrop}
@@ -241,9 +261,7 @@ function Canvas2D() {
         multiSelectionKeyCode={['Meta', 'Control', 'Shift']}
         snapToGrid={snap}
         snapGrid={[16, 16]}
-        fitView
-        // A diagram that starts empty must not frame its first node at max zoom.
-        fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
+        onInit={applyInitialViewport}
         minZoom={0.1}
         maxZoom={2.5}
         elevateNodesOnSelect={false}
@@ -255,6 +273,8 @@ function Canvas2D() {
           pannable
           zoomable
           ariaLabel="Minimapa"
+          // Orientation only: small enough not to cover the components it maps.
+          style={{ width: 168, height: 112 }}
           nodeColor={(node) => (node.type === 'group' ? 'transparent' : accent2d((node as FlowNode).data.accent))}
           nodeStrokeColor={(node) => (node.type === 'group' ? 'var(--edge)' : 'transparent')}
           maskColor="var(--minimap-mask)"

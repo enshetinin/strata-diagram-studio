@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { dragHandle, expectSceneCounts, freshStart } from './helpers';
+import { dragHandle, expectSceneCounts, freshStart, openLeftTab } from './helpers';
 
 test.describe('2D editing reflected in 3D', () => {
   test('first launch shows a complete 3D architecture with title, legend and 2D access', async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe('2D editing reflected in 3D', () => {
     await expectSceneCounts(page, { nodes: 16, edges: 17 });
 
     // Add a component from the library.
-    await page.getByRole('tab', { name: 'Biblioteca' }).click();
+    await openLeftTab(page, 'Biblioteca');
     await page.getByRole('button', { name: 'Añadir Base de datos' }).click();
     await page.getByRole('radio', { name: 'Editar 2D' }).click();
     await expect(page.locator('.react-flow__node-strata')).toHaveCount(17);
@@ -27,7 +27,7 @@ test.describe('2D editing reflected in 3D', () => {
     await expect(page.locator('.react-flow__node-strata', { hasText: 'Sesiones' })).toBeVisible();
 
     // Frame two neighbours and connect them by dragging ports.
-    await page.getByRole('tab', { name: 'Estructura' }).click();
+    await openLeftTab(page, 'Estructura');
     await page.getByRole('button', { name: /Frontend\s+Panel de resultados/ }).click();
     await page.getByRole('button', { name: 'Enfocar en la vista' }).first().click();
     await page.waitForTimeout(600);
@@ -48,7 +48,7 @@ test.describe('2D editing reflected in 3D', () => {
 
   test('copy, cut and paste nodes and groups with the keyboard', async ({ page }) => {
     await freshStart(page, '?template=aws-load-testing');
-    await page.getByRole('tab', { name: 'Estructura' }).click();
+    await openLeftTab(page, 'Estructura');
     const summary = page.getByText(/\d+ componentes · \d+ relaciones · \d+ grupos/);
     await expect(summary).toContainText('16 componentes · 17 relaciones · 5 grupos');
 
@@ -112,7 +112,7 @@ test.describe('2D editing reflected in 3D', () => {
 
   test('deleting a group keeps its children by default', async ({ page }) => {
     await freshStart(page, '?template=aws-load-testing');
-    await page.getByRole('tab', { name: 'Estructura' }).click();
+    await openLeftTab(page, 'Estructura');
     await page.getByRole('button', { name: /Grupo\s+VPC/ }).click();
     await page.locator('body').press('Delete');
     const dialog = page.getByRole('dialog');
@@ -161,7 +161,7 @@ test('losing the WebGL context falls back to 2D without touching the document', 
 
 test('reconnecting an edge end in 2D keeps its id and updates the target', async ({ page }) => {
   await freshStart(page, '?template=aws-load-testing&mode=2d');
-  await page.getByRole('tab', { name: 'Estructura' }).click();
+  await openLeftTab(page, 'Estructura');
   await page.getByRole('button', { name: /Frontend\s+Panel de resultados/ }).click();
   await page.getByRole('button', { name: 'Enfocar en la vista' }).first().click();
   await page.waitForTimeout(600);
@@ -173,6 +173,9 @@ test('reconnecting an edge end in 2D keeps its id and updates the target', async
 test('marquee drag on the 2D canvas selects every enclosed element and moves them together', async ({ page }) => {
   await freshStart(page, '?template=aws-load-testing&mode=2d');
   await expect(page.locator('.react-flow__node-strata')).toHaveCount(16);
+  // The editor opens at a legible zoom; frame everything before the corner-to-corner drag.
+  await page.getByRole('button', { name: 'Encuadrar todo' }).click();
+  await page.waitForTimeout(400);
   const pane = await page.locator('.react-flow__pane').boundingBox();
   if (!pane) throw new Error('pane not visible');
   // Corner to corner: groups let the drag through, so the marquee starts anywhere.
@@ -191,7 +194,7 @@ test('marquee drag on the 2D canvas selects every enclosed element and moves the
 
 test('dragging a selected edge slides its middle segment; double click restores it', async ({ page }) => {
   await freshStart(page, '?template=aws-load-testing&mode=2d');
-  await page.getByRole('tab', { name: 'Estructura' }).click();
+  await openLeftTab(page, 'Estructura');
   await page.getByRole('button', { name: /Frontend\s+Panel de resultados/ }).click();
   await page.getByRole('button', { name: 'Enfocar en la vista' }).first().click();
   await page.waitForTimeout(600);

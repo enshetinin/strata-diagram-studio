@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { freshStart } from './helpers';
+import { freshStart, openLeftTab } from './helpers';
 
 const savedName = (page: Page) => page.evaluate(() => (JSON.parse(localStorage.getItem('strata:document') ?? 'null') as { document?: { name?: string } } | null)?.document?.name ?? null);
 
@@ -36,8 +36,7 @@ test.describe('share links', () => {
     await expect(page.getByRole('button', { name: /Deshacer/ })).toHaveCount(0);
 
     // Edits are refused and nothing is saved.
-    await page.getByRole('button', { name: 'Mostrar estructura y biblioteca' }).click();
-    await page.getByRole('tab', { name: 'Estructura' }).click();
+    await openLeftTab(page, 'Estructura');
     await page.getByRole('button', { name: /Base de datos|Índice|Almacenamiento/ }).first().click();
     await page.locator('body').press('Delete');
     await expect(page.getByText(/Vista compartida en solo lectura/)).toBeVisible();

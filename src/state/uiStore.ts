@@ -62,7 +62,9 @@ const narrow = () => typeof window !== 'undefined' && window.matchMedia?.('(max-
 export const useUiStore = create<UiState>()((set) => ({
   mode: '3d',
   selection: [],
-  leftOpen: !narrow(),
+  // One panel at a time on first sight: the canvas is the subject. Structure
+  // and library open on demand (and with a new blank diagram).
+  leftOpen: false,
   rightOpen: !narrow(),
   leftTab: 'outline',
   rightTab: 'inspector',

@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
-import { expectSceneCounts, freshStart } from './helpers';
+import { expectSceneCounts, freshStart, openLeftTab } from './helpers';
 
 function pngSize(buffer: Buffer) {
   const signature = buffer.subarray(0, 8).toString('hex');
@@ -11,7 +11,7 @@ test.describe('save, reload, import and export', () => {
   test('autosave survives a reload', async ({ page }) => {
     await freshStart(page, '?template=edge-iot');
     await expectSceneCounts(page, { nodes: 17, edges: 20 });
-    await page.getByRole('tab', { name: 'Biblioteca' }).click();
+    await openLeftTab(page, 'Biblioteca');
     await page.getByRole('button', { name: 'Añadir Caché' }).click();
     await expect(page.getByRole('status').filter({ hasText: /^Guardado/ })).toBeVisible({ timeout: 10_000 });
     // Reload without URL parameters: the autosaved document must come back.
