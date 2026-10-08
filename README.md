@@ -370,6 +370,7 @@ pnpm install --frozen-lockfile  →  lint  →  typecheck  →  tests unitarios 
 | [`docs/generation-contract.md`](docs/generation-contract.md) | Contrato HTTP del generador remoto |
 | [`docs/qa.md`](docs/qa.md) | Mediciones de rendimiento y comprobaciones manuales |
 | [`docs/assets.md`](docs/assets.md) | Fuentes, iconos y licencias de terceros |
+| [`CHANGELOG.md`](CHANGELOG.md) | Cambios de cada versión |
 
 ## Hoja de ruta
 

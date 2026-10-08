@@ -1,6 +1,6 @@
 # QA y verificación
 
-Fecha: 2026-10-05. Equipo: MacBook Air (Apple M3, 8 GB), macOS 27.0.1, Node 24.21, pnpm 12.9.1,
+Fecha: 2026-10-08 (v1.0.0). Equipo: MacBook Air (Apple M3, 8 GB), macOS 27.0.1, Node 24.21, pnpm 12.9.1,
 Chromium de Playwright 1.63 (headless shell 153).
 
 ## Checks automáticos
@@ -9,10 +9,15 @@ Chromium de Playwright 1.63 (headless shell 153).
 | --- | --- |
 | `pnpm typecheck` | sin errores |
 | `pnpm check` | sin errores ni avisos (formato, imports y lint de Biome) |
-| `pnpm test` | 52 tests en 7 ficheros, todos pasan |
-| `pnpm build` | correcto; chunk inicial 137 kB gzip, 3D/2D/ELK/SVG en chunks diferidos |
-| `pnpm test:e2e` | 12 tests, todos pasan (WebGL por SwiftShader) |
+| `pnpm test` | 145 tests en 18 ficheros, todos pasan |
+| `pnpm build` | correcto; chunk inicial 160 kB gzip, 3D/2D/ELK/SVG en chunks diferidos |
+| `pnpm test:e2e` | 30 tests, todos pasan (WebGL por SwiftShader) |
 | `pnpm qa:screens` | 4 tests, capturas en `docs/qa/` (con `QA_GPU=metal`) |
+| `pnpm audit --prod` | sin vulnerabilidades conocidas |
+
+El CI (`.github/workflows/ci.yml`) ejecuta en cada pull request y en `main` todo lo anterior salvo
+`qa:screens` y `audit`: lint, typecheck, unitarios y build en el job `validate`, y los E2E con
+accesibilidad en el job `e2e` (Chromium con SwiftShader, un reintento en CI).
 
 ### Unit (Vitest)
 
@@ -23,7 +28,10 @@ conservación semántica al cambiar de estilo, comandos (borrado con aristas, gr
 hijos, agrupar/desagrupar, duplicar, puertos), historial (undo/redo, drag = 1 entrada, redo
 invalidado, comandos rechazados sin efecto), variaciones deterministas (6 categorías × 3
 complejidades × 25 seeds sin solapes), ELK, validación de salida remota, persistencia (corrupción,
-versión, cuota), énfasis 3D y fixture de rendimiento.
+versión, cuota), énfasis 3D y fixture de rendimiento. Además: copiar/pegar fragmentos, notas,
+biblioteca de componentes, recorridos narrativos, encuadre inicial del 2D, exportación SVG, enlaces
+compartidos y sesión de solo lectura, modelos 3D por arquetipo, descripción textual de la escena y
+contraste de los tokens de diagrama.
 
 ### Accesibilidad (WCAG 2.2 AA)
 
@@ -37,19 +45,41 @@ pantalla.
 
 ### E2E (Playwright)
 
+Edición (`editor.spec.ts`):
+
 1. Primer arranque: título, leyenda, «Editar en 2D» y escena con 16 nodos / 17 relaciones.
 2. Añadir componente, renombrar en el inspector, conectar arrastrando puertos en 2D → la escena 3D
    contiene 17/18 (conteo leído del grafo de escena real); Ctrl+Z / Ctrl+Shift+Z.
-3. Borrar grupo «VPC» → diálogo → conservar hijos (16 nodos, 4 grupos).
-4. Cambiar a Blueprint conserva IDs, pertenencia y conexiones.
-5. Generador local: vista previa → insertar.
-6. Pérdida de contexto WebGL → «Continuar en 2D» con el documento intacto.
-7. Autosave → recarga sin parámetros → documento recuperado.
-8. Guardado corrupto → aviso, copia de seguridad `strata:recovered:*`, plantilla por defecto.
-9. Exportar JSON → reimportar; `schemaVersion: 99` y referencias rotas se rechazan sin mutar.
-10. SVG: dimensiones > 0, 12 nodos, 15 relaciones, fuentes incrustadas.
-11. PNG 3D: firma PNG, 1920×1080, > 40 colores muestreados; versión transparente con píxeles alpha 0.
-12. Reconectar el extremo de una relación en 2D conserva su ID y cambia el destino.
+3. Copiar, cortar y pegar un nodo y un grupo con sus subgrupos y relaciones internas; un solo
+   deshacer revierte el pegado.
+4. Recorrido: crear un paso, reordenarlo con teclado, presentar desde él y sacarlo del recorrido
+   desde el inspector (con deshacer).
+5. Borrar grupo «VPC» → diálogo → conservar hijos (16 nodos, 4 grupos).
+6. Cambiar a Blueprint conserva IDs, pertenencia y conexiones.
+7. Generador local: vista previa → insertar.
+8. Pérdida de contexto WebGL → «Continuar en 2D» con el documento intacto.
+9. Reconectar el extremo de una relación en 2D conserva su ID y cambia el destino.
+10. Marco de selección de esquina a esquina selecciona 16 nodos y 5 grupos; clic en vacío limpia.
+11. Arrastrar una arista seleccionada desplaza su tramo central; doble clic lo restaura.
+12. Una nota señala al componente seleccionado, se edita en línea, no cuenta como componente y
+    sobrevive sin línea guía al borrar su destino.
+
+Persistencia y exportación (`persistence.spec.ts`):
+
+13. Autosave → recarga sin parámetros → documento recuperado.
+14. Guardado corrupto → aviso, copia de seguridad `strata:recovered:*`, plantilla por defecto.
+15. Exportar JSON → reimportar; `schemaVersion: 99` y referencias rotas se rechazan sin mutar.
+16. SVG: dimensiones > 0, 12 nodos, 15 relaciones, fuentes incrustadas.
+17. PNG 3D en Full HD, 1:1 transparente y 4K: firma PNG, dimensiones exactas, imagen no vacía y
+    píxeles con alpha 0 en la versión transparente.
+
+Enlaces compartidos (`share.spec.ts`):
+
+18. Un enlace abre en solo lectura sin tocar el diagrama guardado; «Volver a mi diagrama» limpia el
+    fragmento; «Editar una copia» pide confirmación y guarda copia de seguridad `strata:replaced:*`.
+19. Un enlace de presentación arranca presentando; un enlace roto muestra aviso y no se carga.
+
+Accesibilidad (`a11y.spec.ts`): 11 tests, descritos en la sección anterior.
 
 ## Revisión visual
 
