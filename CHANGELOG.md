@@ -38,6 +38,7 @@ Primera versión estable.
   lienzo 3D, alternativas sin arrastre y descripción textual de la escena.
 - **Calidad:** Biome, TypeScript strict, tests unitarios con Vitest, E2E y accesibilidad con
   Playwright, e integración continua en GitHub Actions.
+- **Demo pública** en GitHub Pages, desplegada automáticamente tras el CI en `main`.
 
 [Sin publicar]: https://github.com/enshetinin/strata-diagram-studio/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/enshetinin/strata-diagram-studio/releases/tag/v1.0.0
