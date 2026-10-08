@@ -7,6 +7,8 @@ un editor 2D y una escena 3D isométrica real.**
 
 Sin backend, sin claves, sin cuentas. Todo vive en tu navegador.
 
+**[Abrir la demo →](https://enshetinin.github.io/strata-diagram-studio/)**
+
 [![CI](https://github.com/enshetinin/strata-diagram-studio/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/enshetinin/strata-diagram-studio/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -93,6 +95,9 @@ pnpm preview        # sirve dist/ en http://localhost:4173
 ```
 
 El resultado es un sitio estático: `dist/` se puede desplegar en cualquier hosting de archivos.
+
+La demo se publica en GitHub Pages con `.github/workflows/deploy.yml` cada vez que el CI pasa en
+`main`. Para un subdirectorio, construye con `pnpm exec vite build --base=/<ruta>/`.
 
 ## Scripts disponibles
 
@@ -370,6 +375,7 @@ pnpm install --frozen-lockfile  →  lint  →  typecheck  →  tests unitarios 
 | [`docs/generation-contract.md`](docs/generation-contract.md) | Contrato HTTP del generador remoto |
 | [`docs/qa.md`](docs/qa.md) | Mediciones de rendimiento y comprobaciones manuales |
 | [`docs/assets.md`](docs/assets.md) | Fuentes, iconos y licencias de terceros |
+| [`CHANGELOG.md`](CHANGELOG.md) | Cambios de cada versión |
 
 ## Hoja de ruta
 

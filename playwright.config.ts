@@ -1,12 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4317;
+const CI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,
+  forbidOnly: CI,
+  retries: CI ? 1 : 0,
   reporter: [['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,
@@ -21,7 +24,7 @@ export default defineConfig({
   webServer: {
     command: `pnpm exec vite --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: true,
+    reuseExistingServer: !CI,
     timeout: 60_000,
   },
 });
